@@ -1,0 +1,22 @@
+{
+    "require": {
+        "workerman/workerman-for-win": "*",
+        "workerman/gateway-worker-for-win":"*",
+        "workerman/gatewayclient":"*",
+        "topthink/think-orm":"*",
+        "ahead4/captcha": "*",
+        "topthink/think-cache":"dev-master", 
+        "topthink/think-log":"*"
+    },
+    "autoload":{
+        "psr-4":{
+            "utils\\":"core/utils/"
+        }
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}

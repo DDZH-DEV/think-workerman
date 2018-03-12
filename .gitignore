@@ -1,0 +1,12 @@
+
+\.idea/
+
+app/
+
+vendor/
+
+start*cmd
+
+*Cache*
+
+composer\.lock
