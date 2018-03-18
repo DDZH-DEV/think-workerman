@@ -10,3 +10,5 @@ start*cmd
 *Cache*
 
 composer\.lock
+
+public/

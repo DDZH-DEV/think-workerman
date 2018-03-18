@@ -36,6 +36,7 @@ class WebServer extends \Workerman\WebServer
         $controller = 'app\\' . $_['module'] . '\\controller\\' . ucfirst($_['controller']);
 
 
+        //new $controller();
 
         if (class_exists($controller) && method_exists($controller,$_['action'])) {
 

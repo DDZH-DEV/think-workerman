@@ -351,21 +351,12 @@ function img_fix($url){
 function addToQueue($type,$data){
     $Queue=\utils\Queue::instance();
     $data['_type']=$type;
-    $Queue->put(\Config::$app['name'],json_encode($data));
+    @$Queue->put(\Config::$app['name'],json_encode($data));
 }
 
 
 
-function  user_log($type,$uid,$result=''){
 
-    $data=[
-        'type'=>$type,
-        'uid'=>$uid,
-        'ip'=>$_SERVER['REMOTE_ADDR'],
-        'result'=>$result
-    ];
-    \think\Db::table('chat_log')->insert($data);
-}
 
 /**
  * 快捷发送post
