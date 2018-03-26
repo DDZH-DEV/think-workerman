@@ -24,8 +24,6 @@ class Events
        $message = json_decode($data, true);
        $message_type = $message['type'];
 
-
-
        switch($message_type) {
            case 'init':
                // 通知当前客户端初始化

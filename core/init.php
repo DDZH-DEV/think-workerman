@@ -18,6 +18,7 @@ $app_path=dirname(dirname(debug_backtrace()[0]['file']));
 
 define('APP_PATH',$app_path.DIRECTORY_SEPARATOR);
 
+//console('[APP_PATH] : '.APP_PATH);
 include_once APP_PATH.'Config.php';
 
 

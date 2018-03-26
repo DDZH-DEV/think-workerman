@@ -106,9 +106,16 @@ class Demo{
      * http接口形式向所有用户发送消息
      * @Author: zaoyongvip@gmail.com
      */
-    function webscket_send_message(){
+    function websocket_send_message(){
         Gateway::$registerAddress=\Config::$register['address'];
 
-        Gateway::sendToAll(json_encode(['message'=>'test']));
+        //打印所有客户端
+        p(Gateway::getAllClientInfo());
+
+
+        //请使用http://tool.hibbba.com/websocket/ 输入ws://127.0.0.1:8282 自行监控数据 在请求本控制器
+        Gateway::sendToAll(json_encode(['message'=>date('Y-m-d H:i:s')]));
+
+
     }
 }
