@@ -28,6 +28,8 @@ class Queue {
             if(!$handler){
 
                 $class=  ucfirst(\Config::$cache['type']);
+
+
                 /**
                  * @var $handler \Memcache
                  */

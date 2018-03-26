@@ -14,38 +14,40 @@
 
 use \Workerman\Worker;
 use \utils\Queue;
-use GatewayClient\Gateway;
-
 
 // 自动加载类
 require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'core/init.php';
 
-Gateway::$registerAddress = \Config::$register['address'];
 
 //消息队列 进程
 $worker = new Worker();
 // worker名称
-$worker->name = 'MemCacheQueue';
+$worker->name = 'Queue';
 
 $worker->count = 1;
 
 
 $worker->onWorkerStart = function () {
 
+    if(!in_array(Config::$cache['type'],['memcache','redis'])){
+        return console('Queue service depends on memcache or redis,Please edit your Config.php!','error');
+    }
+
+    $key=md5(json_encode(Config::$app));
+
     while (true) {
 
         $Queue = Queue::instance();
 
-        while ($row = $Queue->get(Config::$app['http_port'])) {
+        while ($row = $Queue->get($key)) {
             $task = json_decode($row, true);
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
 
             switch ($task['_type']) {
-                case 'sms_log':
-                    //短信插入队列
-                    unset($task['_type']);
-                    \think\Db::table('sms_log')->insert($task);
+                case 'demo':
+                    //演示队列，不干活
+                    console($task);
                     break;
                 default:
                     break;

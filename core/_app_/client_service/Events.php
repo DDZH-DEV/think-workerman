@@ -24,7 +24,6 @@ class Events
        $message = json_decode($data, true);
        $message_type = $message['type'];
 
-       $user=$_SESSION;
 
 
        switch($message_type) {
@@ -36,12 +35,11 @@ class Events
                );
                Gateway::sendToClient($client_id, json_encode($init_message));
                return;
-           
            case 'ping':
                Gateway::sendToClient($client_id, json_encode(['message_type' => 'ping','client_id'    => $client_id,]));
                return;
            default:
-               echo "unknown message $data";
+               console($data);
        }
    }
    

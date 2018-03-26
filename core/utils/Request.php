@@ -91,7 +91,7 @@ class Request
      */
     public static function put($key = null)
     {
-        parse_str(file_get_contents('php://input'), $_PUT);
+        parse_str($GLOBALS['HTTP_RAW_POST_DATA'], $_PUT);
         if (isset($_PUT[$key])) {
             return $_PUT[$key];
         }
@@ -108,7 +108,7 @@ class Request
      */
     public static function del($key)
     {
-        parse_str(file_get_contents('php://input'), $_DEL);
+        parse_str($GLOBALS['HTTP_RAW_POST_DATA'], $_DEL);
         return (isset($_DEL[$key])) ? $_DEL[$key] : null;
     }
     /**

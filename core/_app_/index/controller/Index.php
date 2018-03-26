@@ -2,20 +2,16 @@
 
 namespace app\index\controller;
 
-use GatewayClient\Gateway;
-use think\Db;
- 
-
 class Index{
 
-    function session(){
-        p(session(''));
-    }
 
-
+    /**
+     * index
+     */
     function  index(){
-    	p()
-        echo "hello !";
+        p(session(''));
+        p(get_included_files());
+        p(convert(true));
     }
 
 }

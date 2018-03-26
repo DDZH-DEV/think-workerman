@@ -349,9 +349,16 @@ function img_fix($url){
  * @Author: zaoyongvip@gmail.com
  */
 function addToQueue($type,$data){
+
+    if(!in_array(Config::$cache['type'],['memcache','redis'])){
+        return console('队列服务依赖memcache或者redis,请修改项目下的Config.php中的$cache中type参数!','error');
+    }
     $Queue=\utils\Queue::instance();
     $data['_type']=$type;
-    @$Queue->put(\Config::$app['name'],json_encode($data));
+    static $queue_key;
+    $queue_key=$queue_key?$queue_key:md5(json_encode(Config::$app));
+    //console('[queue]:'.$type.'|'.$queue_key);
+    @$Queue->put($queue_key,json_encode($data));
 }
 
 

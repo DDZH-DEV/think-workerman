@@ -2,9 +2,11 @@
 
 namespace utils;
 /**
- * Class Log
- * @package utils
- * @method static info|error|notice|info|debug
+ * 日志类
+ * @method static info($data)
+ * @method static error($data)
+ * @method static notice($data)
+ * @method static debug($data)
  * @Author: zaoyongvip@gmail.com
  */
 class Log{
@@ -25,7 +27,13 @@ class Log{
     }
 
 
-    public static function __callStatic($name, $arguments)
+    /**
+     * __callStatic
+     * @param $name
+     * @param string $arguments
+     * @Author: zaoyongvip@gmail.com
+     */
+    public static function __callStatic($name, $arguments='')
     {
         if(method_exists(self::instance(),$name)){
             self::$instance->$name($arguments);
