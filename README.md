@@ -4,11 +4,11 @@
 
 由于数据库层，日志，缓存用的都是TP官方的包，所以开发形式上是差不多的，TP用户可以快速过度，相关演示请查看Demo.php。
 
-#### 与传统TP开发的区别点
+## 与传统TP开发的区别点
  
 传统的TP从入口到控制器,到数据层每次都要初始化各种变量，加载各种文件，每次请求都要损耗部分性能，而基于workerman的webserver 所需要加载的文件在onWorkerStart前就已经注入命名空间， 所以文件在onMessage一般只会加载一次，属于常驻内存，性能更高，请自行进行压力测试。
 
-#### 初始化流程
+## 初始化流程
 
 
 
@@ -27,7 +27,7 @@ composer update
 如'UhaoA'  => ['app',['http','socket','queue']]会生成一个app开发目录和一个start_windows_UhaoA.cmd启动文件，点击start_windows_UhaoA.cmd即可启动进行运行演示
 ```
 
-#### 目录介绍
+## 目录介绍
 ```html
 ----core
     core/_app_  app默认模板文件，项目开发中不要修改这里面的文件，请修根据配置文件生成的目录中的文件
@@ -37,11 +37,11 @@ composer update
     core/WebServer.php  这里面交代了怎么样走入控制器的  
 ```
     
-#### 附录：nodemon（文件监控软件）安装方式 （用于开发模式下修改代码后自动重启服务）
+## 附录：nodemon（文件监控软件）安装方式 （用于开发模式下修改代码后自动重启服务）
 第一步：安装nodejs
 
 第二步：npm install nodemon -g 
-#### 附录：一些说明  
+## 附录：一些说明  
 1.静态文件（js,image,css）建议走传统的nginx 或者apache 80端口进行分发
 
 2.一个应用目录可以开发多个模块，core下面的代码是公用的，可以开发多个应用，多个应用目录时请记得修改各自应用下的Config.php文件，避免端口冲突
