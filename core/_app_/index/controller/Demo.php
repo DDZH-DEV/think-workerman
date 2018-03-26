@@ -3,6 +3,8 @@
 
 namespace app\index\controller;
 
+use GatewayClient\Gateway;
+use think\Cache;
 use think\Db;
 use utils\Log;
 
@@ -84,5 +86,29 @@ class Demo{
         Log::error('6666');
         Log::debug('6666');
         Log::error('6666');
+    }
+
+
+    /**
+     * 缓存演示
+     * @Author: zaoyongvip@gmail.com
+     */
+    function cache(){
+        p(Cache::get('time'));
+        Cache::set('time',time());
+        p(Cache::get('time'));
+    }
+
+
+
+    /**
+     * webscket_send_message
+     * http接口形式向所有用户发送消息
+     * @Author: zaoyongvip@gmail.com
+     */
+    function webscket_send_message(){
+        Gateway::$registerAddress=\Config::$register['address'];
+
+        Gateway::sendToAll(json_encode(['message'=>'test']));
     }
 }

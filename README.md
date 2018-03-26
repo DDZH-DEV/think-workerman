@@ -46,4 +46,6 @@ composer update
 
 2.一个应用目录可以开发多个模块，core下面的代码是公用的，可以开发多个应用，多个应用目录时请记得修改各自应用下的Config.php文件，避免端口冲突
 
-3.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
+3.强烈介意缓存配置请使用memcache 或者 redis ,因为队列依赖它们
+
+4.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
