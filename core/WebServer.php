@@ -48,6 +48,7 @@ class WebServer extends \Workerman\WebServer
 
             \Workerman\Protocols\Http::sessionStart();
 
+            //跨域问题
             if(isset($_SERVER['HTTP_ORIGIN'])) {
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:'.$_SERVER['HTTP_ORIGIN']);
@@ -64,12 +65,13 @@ class WebServer extends \Workerman\WebServer
             try {
                 call_user_func_array([new $controller, $_['action']], $params);
             } catch (\Exception $e) {
-
+                //如果是调试模式，直接输出
                 if (_G('DEBUG') && $e->getMessage()!=='jump_exit') {
                     p($e->getMessage());
                     p($e->getTraceAsString());
                 }else{
-                    
+                    //记录日志
+                    \utils\Log::error($e->getMessage());
                 }
             }
 

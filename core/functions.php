@@ -58,7 +58,6 @@ function json($data, $code = 200, $msg = null,$debug=[])
         $result['session_id'] = \Workerman\Protocols\HttpCache::$instance->sessionFile;
         $result['server'] = $_SERVER;
         $result['_G']=_G();
-        $result['register_address']=\GatewayClient\Gateway::$registerAddress;
         if($debug){
             $result['debug']=$debug;
         }
