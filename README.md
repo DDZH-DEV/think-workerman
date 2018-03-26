@@ -10,6 +10,8 @@
 
 #### 初始化流程
 
+
+
 1.拉取代码
 git clone https://github.com/Zsoner/think-workerman.git
 
@@ -20,6 +22,11 @@ composer update
 
 
 4.点击dev_init_app.cmd或者dev_init_app_with_nodemon.cmd ,会自动根据配置生成对应的项目目录和启动文件，两个文件的区别时 dev_init_app_with_nodemon.cmd 依赖于nodemon,在windows下如果你希望每次改完代码自动重启服务，请使用它。 
+
+```html
+如'UhaoA'  => ['app',['http','socket','queue']]会生成一个app开发目录和一个start_windows_UhaoA.cmd启动文件，点击start_windows_UhaoA.cmd即可启动进行运行演示
+```
+
 #### 目录介绍
 ```html
 ----core
@@ -30,11 +37,13 @@ composer update
     core/WebServer.php  这里面交代了怎么样走入控制器的  
 ```
     
-#### 附录：nodemon（文件监控软件）安装方式 
+#### 附录：nodemon（文件监控软件）安装方式 （用于开发模式下修改代码后自动重启服务）
 第一步：安装nodejs
-*****
+
 第二步：npm install nodemon -g 
 #### 附录：一些说明  
 1.静态文件（js,image,css）建议走传统的nginx 或者apache 80端口进行分发
 
-2.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
+2.一个应用目录可以开发多个模块，core下面的代码是公用的，可以开发多个应用，多个应用目录时请记得修改各自应用下的Config.php文件，避免端口冲突
+
+3.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
