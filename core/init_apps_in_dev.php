@@ -6,7 +6,7 @@ function get_bat_files($config){
 
     $files=[];
 
-    if(strpos($type,'ws')!==false){
+    if(strpos($type,'socket')!==false){
         $files[]='businessworker';
         $files[]='gateway';
         $files[]='register';

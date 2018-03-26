@@ -21,27 +21,9 @@ define('APP_PATH',$app_path.DIRECTORY_SEPARATOR);
 include_once APP_PATH.'Config.php';
 
 
-//根据配置注册命名空间
-$apps=include ROOT_PATH.DIRECTORY_SEPARATOR.'apps.config.php';
+//根据配置注册命名空间为app
+$Loader->setPsr4('app\\', APP_PATH);
 
-$app_dir=array_pop(explode(DIRECTORY_SEPARATOR,$app_path));
-
-$namespace='app\\';
-
-foreach ($apps as $app){
-    if($app[0]==$app_dir){
-
-        $namespace=$app[2].'\\';
-        break;
-    }
-}
-
-$Loader->setPsr4($namespace, APP_PATH);
-
-
-
-define('MEMQ_POOL', Config::$cache['host'].':'.Config::$cache['port']);
-define('MEMQ_TTL', 0);
 
 //TP项目对外路径
 if(!defined('PUBLIC_PATH')){

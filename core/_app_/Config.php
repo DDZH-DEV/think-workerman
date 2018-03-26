@@ -4,7 +4,7 @@
 
 class Config{
     
-
+    //微信开发配置
     static $wechat=[
         'token'           => '', // 填写你设定的key
         'appid'           => '', // 填写高级调用功能的app id, 请在微信开发模式后台查询
@@ -18,13 +18,14 @@ class Config{
     ];
 
 
+    //数据库配置
     static $database=[
         // 数据库类型
         'type'            => 'mysql',
         // 服务器地址
         'hostname'        => '127.0.0.1',
         // 数据库名
-        'database'        => 'lexi_app',
+        'database'        => 'app',
         // 用户名
         'username'        => 'root',
         // 密码
@@ -76,11 +77,13 @@ class Config{
 
     //一般不需要修改
     static $cache=[
-        'type'   => 'memcache',
+        //file/memcache/redis/xcache/wincache/sqlite
+        'type'   => 'file',
+        'path'   => ROOT_PATH.'/runtime/cache/',
         'host'       => '127.0.0.1',
         'port'       => 11211,
         // 缓存前缀
-        'prefix' => 'chat_',
+        'prefix' => 'app_',
         // 缓存有效期 0表示永久缓存
         'expire' => 0,
     ];
@@ -89,7 +92,7 @@ class Config{
     //可以不修改
     static $businessworker=[
         'name'=>'BusinessWorker',
-        'count'=>16
+        'count'=>4
     ];
 
 

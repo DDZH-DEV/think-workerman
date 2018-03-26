@@ -12,3 +12,5 @@ start*cmd
 composer\.lock
 
 public/
+
+*.log
