@@ -5,7 +5,7 @@
         "workerman/gatewayclient":"*",
         "topthink/think-orm":"*",
         "ahead4/captcha": "*",
-        "topthink/think-cache":"dev-master", 
+        "topthink/think-cache":"*", 
         "topthink/think-log":"*"
     },
     "autoload":{

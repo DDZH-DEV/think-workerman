@@ -14,3 +14,4 @@ composer\.lock
 public/
 
 *.log
+rax_chat/

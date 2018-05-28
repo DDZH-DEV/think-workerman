@@ -33,7 +33,7 @@ function build_bat_file($config,$name){
 
     global $argv;
 
-    $bat=dirname(__DIR__).DIRECTORY_SEPARATOR.'start_windows_'.$name.'.cmd';
+    $bat=dirname(__DIR__).DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'start_windows_'.$name.'.cmd';
 
     //if(!file_exists($bat) || strpos(implode('',$argv),'-f')!==false){
 

@@ -108,7 +108,7 @@ class Config{
     static $sms=[
         'class'=>'YunPian',
         'params'=>[
-            'apikey'=>'13898519a92d32e6844f36269ecb1c7e'
+            'apikey'=>''
         ],
         'day_limit'=>5
     ];
