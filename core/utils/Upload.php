@@ -7,6 +7,10 @@
 
 namespace utils;
 
+
+
+use Intervention\Image\ImageManagerStatic;
+
 class Upload{
 
 
@@ -184,7 +188,7 @@ class Upload{
 
         if (file_exists($file)) {
 
-            Image::open($file)->cropResize($width, $height)->save($file);
+            ImageManagerStatic::make($file)->resize($width, $height)->save($file);
 
         }
     }

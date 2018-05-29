@@ -39,6 +39,11 @@ if(!is_dir(UPLOAD_PATH)){
     @mkdir(UPLOAD_PATH,0777,true);
 }
 
+
+if(file_exists(APP_PATH.'functions.php')){
+    include_once APP_PATH.'functions.php';
+}
+
 //初始化数据库
 \think\Db::setConfig(Config::$database);
 //缓存设置

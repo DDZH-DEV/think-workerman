@@ -33,19 +33,21 @@ function build_bat_file($config,$name){
 
     global $argv;
 
-    $bat=dirname(__DIR__).DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'start_windows_'.$name.'.cmd';
+    $bat=dirname(__DIR__).DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'start_win_'.$name.'.cmd';
 
     //if(!file_exists($bat) || strpos(implode('',$argv),'-f')!==false){
 
-        $files=get_bat_files($config);
-
-        $str='';
+        $files=glob(dirname(__DIR__).DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'/client_service/start*.php');
 
         $SERVER_PATH =dirname(__DIR__).DIRECTORY_SEPARATOR.$config[0].DIRECTORY_SEPARATOR.'client_service';
 
+        $str ='';
 
         foreach ($files as $file){
-            $str .='   '.$SERVER_PATH.DIRECTORY_SEPARATOR.$file;
+            if(is_file($file)){
+                $str .='   '.$file;
+            }
+
         }
 
         $command="";
@@ -110,13 +112,13 @@ function init_app($config){
     copy_dir($from_dir,$to_dir);
 
 
-    //删除不需要的启动文件
+    //删除不需要的原装启动文件
     $files=glob(dirname(__DIR__).'/'.$config[0].'/client_service/start*.php');
 
     $start_files=get_bat_files($config);
 
     foreach ($files as $file){
-        if(!in_array(basename($file),$start_files)){
+        if(!in_array(basename($file),$start_files) && in_array(basename($file),['businessworker.php','gateway.php','register.php','web.php','queue.php',])){
             unlink($file);
         }
     }

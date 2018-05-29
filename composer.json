@@ -6,7 +6,8 @@
         "topthink/think-orm":"*",
         "ahead4/captcha": "*",
         "topthink/think-cache":"*", 
-        "topthink/think-log":"*"
+        "topthink/think-log":"*",
+        "intervention/image":"*"
     },
     "autoload":{
         "psr-4":{
