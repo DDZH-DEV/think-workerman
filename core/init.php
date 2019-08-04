@@ -1,6 +1,8 @@
 <?php
 
 date_default_timezone_set("PRC");
+ini_set("display_errors",1);
+
 //服务路径
 define('CORE_PATH',__DIR__);
 //根目录

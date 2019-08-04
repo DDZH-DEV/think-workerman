@@ -3,9 +3,9 @@
         "workerman/workerman-for-win": "*",
         "workerman/gateway-worker-for-win":"*",
         "workerman/gatewayclient":"*",
-        "topthink/think-orm":"*",
+        "topthink/think-orm":"^1.2",
         "ahead4/captcha": "*",
-        "topthink/think-cache":"*", 
+        "topthink/think-cache":"^1.1",
         "topthink/think-log":"*",
         "intervention/image":"*"
     },

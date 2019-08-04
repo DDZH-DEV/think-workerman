@@ -74,7 +74,7 @@ function build_bat_file($config,$name){
             $command='nodemon -w "*" -e "php" -x "';
         }
 
-        $command.='php '.$str;
+        $command.='php '.$str.' start';
 
         $command.=' '.($watch?'"':'').PHP_EOL;
 
