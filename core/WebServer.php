@@ -1,6 +1,6 @@
 <?php
 
-use \think\Cache;
+define('WEBSERVER',true);
 
 class WebServer extends \Workerman\WebServer
 {
@@ -8,7 +8,7 @@ class WebServer extends \Workerman\WebServer
     public function onMessage($connection)
     {
         //IP黑名单
-        $ips = Cache::get('deny_ips');
+        $ips = \think\facade\Cache::get('deny_ips');
 
         if ($ips && in_array($_SERVER['REMOTE_ADDR'], $ips)) {
             return $connection->close(json_encode(['code' => 0, 'msg' => 'waf deny ip hit !']));
@@ -75,7 +75,7 @@ class WebServer extends \Workerman\WebServer
                         p($e->getTraceAsString());
                     } else {
                         //记录日志
-                        \utils\Log::error($e->getMessage());
+                        \think\facade\Log::error($e->getMessage()."\r\n".$e->getTraceAsString());
                     }
 
                 }

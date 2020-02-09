@@ -1,6 +1,7 @@
 <?php
 
 date_default_timezone_set("PRC");
+
 ini_set("display_errors",1);
 
 //服务路径
@@ -20,8 +21,19 @@ $app_path=dirname(dirname(debug_backtrace()[0]['file']));
 
 define('APP_PATH',$app_path.DIRECTORY_SEPARATOR);
 
+
 //console('[APP_PATH] : '.APP_PATH);
 include_once APP_PATH.'Config.php';
+
+//设置日志
+$log_path=Config::$log['channels']['file']['path'];
+if(!is_dir($log_path)){
+    mkdir($log_path,0777,true);
+}
+
+ini_set('log_errors','On');
+ini_set('error_log ',$log_path);
+
 
 
 //根据配置注册命名空间为app
@@ -47,11 +59,8 @@ if(file_exists(APP_PATH.'functions.php')){
 }
 
 //初始化数据库
-\think\Db::setConfig(Config::$database);
+\think\facade\Db::setConfig(Config::$database);
 //缓存设置
-$Cache=\think\Cache::init(Config::$cache);
-
-\think\Db::setCacheHandler($Cache);
-
-
-
+\think\Facade\Cache::config(Config::$cache);
+//设置日志
+\think\facade\Log::init(Config::$log);

@@ -77,13 +77,13 @@ function json($data, $code = 200, $msg = null,$debug=[])
  * @return bool
  * @Author: zaoyongvip@gmail.com
  */
-function slog($message = '', $level = 'log', $listen = '')
+function slog($message = '', $level = 'log', $listen = '9rax')
 {
     if (!$message) {
         return true;
     }
 
-    $address = '/' . 'rnm' . $listen;
+    $address = '/' .   $listen;
 
     $console = false;
     if (strpos($level, '@') > 1) {
@@ -93,7 +93,7 @@ function slog($message = '', $level = 'log', $listen = '')
     }
 
     $content = array(
-        'client_id' => 'rnm',
+        'client_id' => $listen,
         'content' => $message,
         'level' => $level,
         'console' => $console
@@ -235,7 +235,7 @@ if (!function_exists('_G')) {
  * @return array|string|null
  * @Author: zaoyongvip@gmail.com
  */
-function getParams($keys = null)
+function input($keys = null)
 {
     return utils\Request::params($keys);
 }
@@ -280,14 +280,14 @@ function model($name = '', $layer = 'Model')
 /**
  * mongodb 直接连接
  * @param string $table
- * @return \think\db\Connection|\think\db\Query
+ * @return \think\facade\Db
  * @Author: zaoyongvip@gmail.com
  */
 function mongodb($table = '')
 {
     ini_set('mongo.native_long', 1);
     $connect = null;
-    $connect = \think\Db::connect(Config::$mongodb, 'mongo');
+    $connect = \think\facade\Db::connect(Config::$mongodb, 'mongo');
     return $table ? $connect->name($table) : $connect;
 }
 
@@ -325,6 +325,9 @@ function is_mobile(){
  * @Author: zaoyongvip@gmail.com
  */
 function console($message,$type='info'){
+    if(defined('WEBSERVER')){
+        return;
+    }
     $message=is_string($message)?$message:json_encode($message);
     echo \utils\Console::$type($message);
 }
@@ -349,15 +352,22 @@ function img_fix($url){
  */
 function addToQueue($type,$data){
 
-    if(!in_array(Config::$cache['type'],['memcache','redis'])){
-        return console('队列服务依赖memcache或者redis,请修改项目下的Config.php中的$cache中type参数!','error');
-    }
-    $Queue=\utils\Queue::instance();
-    $data['_type']=$type;
+    static $Queue;
     static $queue_key;
     $queue_key=$queue_key?$queue_key:md5(json_encode(Config::$app));
-    //console('[queue]:'.$type.'|'.$queue_key);
-    @$Queue->put($queue_key,json_encode($data));
+
+    if(!$Queue){
+        $_redis=new \Redis();
+        $_redis->connect('127.0.0.1');
+        $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
+        $Queue = new \Phive\Queue\RedisQueue($_redis);
+    }
+    $data['_type']=$type;
+
+    console('[add_queue]:'.$type.'|'.$queue_key);
+
+    $Queue->push(json_encode($data,JSON_UNESCAPED_UNICODE));
+
 }
 
 

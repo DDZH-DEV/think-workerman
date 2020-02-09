@@ -29,25 +29,32 @@ $worker->count = 1;
 
 $worker->onWorkerStart = function () {
 
-    if(!in_array(Config::$cache['type'],['memcache','redis'])){
-        return console('Queue service depends on memcache or redis,Please edit your Config.php!','error');
+    $queue_key=md5(json_encode(Config::$app));
+
+
+    static $Queue;
+
+    if(!$Queue){
+        $_redis=new \Redis();
+        $_redis->connect('127.0.0.1');
+        $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
+        $Queue = new \Phive\Queue\RedisQueue($_redis);
     }
 
-    $key=md5(json_encode(Config::$app));
 
     while (true) {
 
-        $Queue = Queue::instance();
+        while($Queue->count()>0){
 
-        while ($row = $Queue->get($key)) {
+            $row = $Queue->pop();
+
             $task = json_decode($row, true);
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
 
             switch ($task['_type']) {
-                case 'demo':
-                    //演示队列，不干活
-                    console($task);
+                case 'test':
+                    console('test');
                     break;
                 default:
                     break;
@@ -55,7 +62,8 @@ $worker->onWorkerStart = function () {
             flush();
         }
 
-        sleep(1);
+
+        sleep(3);
     }
 
 };

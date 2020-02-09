@@ -4,9 +4,9 @@
 namespace app\index\controller;
 
 use GatewayClient\Gateway;
-use think\Cache;
-use think\Db;
-use utils\Log;
+use \think\facade\Cache;
+use \think\facade\Db;
+use \think\facade\Log;
 
 class Demo{
 
@@ -17,9 +17,9 @@ class Demo{
      */
     function  params(){
 
-        $params=getParams('');
+        $params=input('');
 
-        $page=getParams('page');
+        $page=input('page');
 
     }
 
@@ -82,7 +82,7 @@ class Demo{
      * @Author: zaoyongvip@gmail.com
      */
     function log(){
-        Log::info('6666');
+        \think\facade\Log::info('6666');
         Log::error('6666');
         Log::debug('6666');
         Log::error('6666');
@@ -94,7 +94,7 @@ class Demo{
      * @Author: zaoyongvip@gmail.com
      */
     function cache(){
-        p(Cache::get('time'));
+        p(\think\facade\Cache::get('time'));
         Cache::set('time',time());
         p(Cache::get('time'));
     }
