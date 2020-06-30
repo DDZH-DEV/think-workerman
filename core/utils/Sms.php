@@ -3,7 +3,7 @@
 namespace utils;
 
 use \Exception;
-use think\Cache;
+use think\facade\Cache;
 use utils\sms\YunPian;
 
 class Sms{
@@ -92,7 +92,7 @@ class Sms{
 
          if($res===true){
 
-            Cache::inc($key,1);
+            Cache::set($key,Cache::get($key)+1);
             return true;
          }else{
              self::$error=self::getDriver()->getError();

@@ -46,7 +46,7 @@ if(!defined('PUBLIC_PATH')){
 }
 
 //项目上传文件夹,TP项目对外路径
-define('UPLOAD_PATH',PUBLIC_PATH.DS.Config::$app['upload_dir'].DS);
+define('UPLOAD_PATH',PUBLIC_PATH.DS.Config::$http['upload_dir'].DS);
 
 
 if(!is_dir(UPLOAD_PATH)){

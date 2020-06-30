@@ -241,55 +241,6 @@ function input($keys = null)
 }
 
 
-/**
- * 模型类
- * @param string $name
- * @param string $layer
- * @return \think\Model
- * @Author: zaoyongvip@gmail.com
- */
-function model($name = '', $layer = 'Model')
-{
-    static $_models;
-
-    $guid = md5($name . $layer);
-
-    if (isset($_models[$guid])) {
-        return $_models[$guid];
-    }
-
-    $mvc = _G('MVC');
-
-
-    if(strpos($name,'/')){
-        list($mvc['module'],$name)=explode('/',$name);
-    }
-
-    $class = '\app\\' . $mvc['module'] . '\model\\' . ucfirst($name);
-
-    if (class_exists($class)) {
-        $model = new $class();
-    } else {
-        throw new \Exception('class not exist :'.$class);
-    }
-    $_models[$guid] = $model;
-    return $model;
-}
-
-
-/**
- * mongodb 直接连接
- * @param string $table
- * @return \think\facade\Db
- * @Author: zaoyongvip@gmail.com
- */
-function mongodb($table = '')
-{
-    ini_set('mongo.native_long', 1);
-    $connect = null;
-    $connect = \think\facade\Db::connect(Config::$mongodb, 'mongo');
-    return $table ? $connect->name($table) : $connect;
-}
 
 
 /**
@@ -340,7 +291,7 @@ function console($message,$type='info'){
  * @Author: zaoyongvip@gmail.com
  */
 function img_fix($url){
-    return ($url && strpos($url,'http')===false)?Config::$app['static_url'].$url:$url;
+    return ($url && strpos($url,'http')===false)?Config::$http['static_url'].$url:$url;
 }
 
 
@@ -350,11 +301,11 @@ function img_fix($url){
  * @param $data
  * @Author: zaoyongvip@gmail.com
  */
-function addToQueue($type,$data){
+function addToQueue($type,$data,$callback=null){
 
     static $Queue;
     static $queue_key;
-    $queue_key=$queue_key?$queue_key:md5(json_encode(Config::$app));
+    $queue_key=$queue_key?$queue_key:md5(json_encode(Config::$http));
 
     if(!$Queue){
         $_redis=new \Redis();
@@ -363,6 +314,7 @@ function addToQueue($type,$data){
         $Queue = new \Phive\Queue\RedisQueue($_redis);
     }
     $data['_type']=$type;
+    $data['_callback']=$callback;
 
     console('[add_queue]:'.$type.'|'.$queue_key);
 
@@ -370,56 +322,4 @@ function addToQueue($type,$data){
 
 }
 
-
-
-
-
-/**
- * 快捷发送post
- * @param $url
- * @param $data
- * @return mixed
- * @Author: zaoyongvip@gmail.com
- */
-function _post($url,$data){
-
-    static $_ch;
-
-    if(!$_ch){
-        $_ch = curl_init();
-        curl_setopt($_ch, CURLOPT_URL, $url);
-        curl_setopt($_ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($_ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($_ch, CURLOPT_POST, 1);
-        curl_setopt($_ch, CURLOPT_HEADER, 0);
-        curl_setopt($_ch, CURLOPT_RETURNTRANSFER, 1);
-    }else{
-        curl_setopt($_ch, CURLOPT_URL, $url);
-    }
-
-    curl_setopt($_ch,CURLOPT_POSTFIELDS,$data);
-
-    if(false === $result=curl_exec($_ch)) {
-        return curl_error($_ch);
-    }
-
-    return $result;
-}
-
-
-/**
- * 获取微信操作对象（单例模式）
- * @staticvar array $wechat 静态对象缓存对象
- * @param string $type 接口名称 ( Card|Custom|Device|Extend|Media|Oauth|Pay|Receive|Script|User )
- * @return \Wechat\WechatReceive 返回接口对接
- */
-function & load_wechat($type = '') {
-    static $wechat = array();
-    $index = md5(strtolower($type));
-    if (!isset($wechat[$index])) {
-
-        \Wechat\Loader::config(Config::$wechat);
-        $wechat[$index] = \Wechat\Loader::get($type);
-    }
-    return $wechat[$index];
-}
+ 

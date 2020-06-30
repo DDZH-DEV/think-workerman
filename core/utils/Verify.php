@@ -59,7 +59,7 @@ class Verify{
      */
     public static function isUrl($str){
         if(!self::isEmpty($str)) return false;
-        return preg_match('/^(http|https|ftp):\/\/[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\’:+!]*([^<>\”])*$/i',$str) ? true : false;
+        return preg_match("/^(http|https):\/\/.*$/i",$str) ? true : false;
     }
     /**
      * 验证中文

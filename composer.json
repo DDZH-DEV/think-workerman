@@ -4,11 +4,11 @@
         "workerman/gateway-worker-for-win":"*",
         "workerman/gatewayclient":"*",
         "topthink/think-orm":"^2.0",
-        "ahead4/captcha": "*",
-        "topthink/think-cache":"^2.0",
-        "topthink/think-log":"^2.0",
         "rybakit/phive-queue":"*",
-        "intervention/image":"*"
+
+        "intervention/image":"*", 
+        "topthink/think-cache":"^2.0",
+        "topthink/think-log":"^2.0"
     },
     "autoload":{
         "psr-4":{
@@ -18,7 +18,7 @@
     "repositories": {
         "packagist": {
             "type": "composer",
-            "url": "https://packagist.phpcomposer.com"
+            "url": "https://mirrors.aliyun.com/composer/"
         }
     }
 }

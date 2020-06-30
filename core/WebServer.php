@@ -16,8 +16,8 @@ class WebServer extends \Workerman\WebServer
 
         _G('DEBUG', file_exists(APP_PATH . '/debug'));
 
+        //开始分发请求
         $params = str_replace(['.html', '.htm', '.shtml'], [''], preg_split('/(\/|\?)/', $_SERVER['REQUEST_URI']));
-
 
         $params = array_filter($params, function ($item) {
             //c($item);
@@ -30,15 +30,15 @@ class WebServer extends \Workerman\WebServer
         $total = count($params);
 
         $params = $total < 3 ? array_merge(array_fill(0, 3 - $total, 'index'), $params) : $params;
-
-
+        
+        
         @list($_['module'], $_['controller'], $_['action']) = $params;
 
         $controller = 'app\\' . $_['module'] . '\\controller\\' . ucfirst($_['controller']);
 
 
         //new $controller();
-
+        
         if (class_exists($controller) && method_exists($controller, $_['action'])) {
 
             //全局设置
@@ -56,7 +56,7 @@ class WebServer extends \Workerman\WebServer
                 //\Workerman\Protocols\Http::header('Access-Control-Allow-Origin:*');
             } else {
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
-                \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . Config::$app['api_url']);
+                \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . Config::$http['api_url']);
             }
 
             ob_start();

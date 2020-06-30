@@ -13,7 +13,6 @@
  */
 
 use \Workerman\Worker;
-use \utils\Queue;
 
 // 自动加载类
 require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'core/init.php';
@@ -29,8 +28,7 @@ $worker->count = 1;
 
 $worker->onWorkerStart = function () {
 
-    $queue_key=md5(json_encode(Config::$app));
-
+    $queue_key=md5(json_encode(Config::$http));
 
     static $Queue;
 
@@ -52,13 +50,19 @@ $worker->onWorkerStart = function () {
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
 
-            switch ($task['_type']) {
-                case 'test':
-                    console('test');
-                    break;
-                default:
-                    break;
+            //自定义的回调方法
+            if(isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])){
+                call_user_func($task['_callback'],$task);
+            }else{
+                switch ($task['_type']) {
+                    case 'test':
+                        console('test');
+                        break;
+                    default:
+                        break;
+                }
             }
+
             flush();
         }
 
