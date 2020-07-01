@@ -6,7 +6,7 @@ namespace utils;
 /**
  * 全局变量共享类
  * @package utils
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 class G
 {
@@ -55,7 +55,7 @@ class G
     /**
      * 获取所有全局数据
      * @return array
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public static function all()
     {

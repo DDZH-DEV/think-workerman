@@ -2,7 +2,7 @@
 /**
  * Upload.php
  *
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  * @Date  Time: 2018/1/10 0:24
  */
 
@@ -204,7 +204,7 @@ class Upload
      * @param string $rule
      *
      * @return mixed|string
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public function getSubdir($rule = '')
     {
@@ -275,7 +275,7 @@ class Upload
      * @param string $sub_dir_rule
      *
      * @return array|bool
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function upload($save_dir, $sub_dir_rule = '',$filter=false)
     {
@@ -330,7 +330,7 @@ class Upload
      * @param $sub_dir_rule
      *
      * @return array|bool
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public function image($save_dir, $sub_dir_rule = '')
     {
@@ -373,7 +373,7 @@ class Upload
      * @param $type
      *
      * @return bool
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     protected function filter($type = true)
     {
@@ -413,7 +413,7 @@ class Upload
      * @param int $width
      * @param int $height
      *
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public static function resizeImage($file, $width = null, $height = null)
     {
@@ -427,7 +427,7 @@ class Upload
      * 输出错误
      *
      * @return mixed
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public function getError()
     {

@@ -29,7 +29,7 @@ class Demo{
      * 数据库演示
      * 访问地址：http://127.0.0.1:909/demo/db.html
      * 请根据数据库修改演示
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function db(){
         $model=Db::table('user');
@@ -45,7 +45,7 @@ class Demo{
     /**
      * session 演示
      * 访问地址：http://127.0.0.1:909/demo/session.html
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function session(){
 
@@ -79,7 +79,7 @@ class Demo{
 
     /**
      * 日志演示
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function log(){
         \think\facade\Log::info('6666');
@@ -91,7 +91,7 @@ class Demo{
 
     /**
      * 缓存演示
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function cache(){
         p(\think\facade\Cache::get('time'));
@@ -104,7 +104,7 @@ class Demo{
     /**
      * webscket_send_message
      * http接口形式向所有用户发送消息
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function websocket_send_message(){
         Gateway::$registerAddress=\Config::$register['address'];

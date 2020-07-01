@@ -27,7 +27,7 @@ class YunPian {
      * @param $code
      * @param $content
      * @return bool
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public function send($mobile,$code,$content){
 

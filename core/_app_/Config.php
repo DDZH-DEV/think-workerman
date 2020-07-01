@@ -68,6 +68,14 @@ class Config{
     ];
 
 
+    static $queue=[
+        'name'=>'Queue',
+        'count'=>1,
+        'host'=>'127.0.0.1',
+        'port'=>6379
+
+    ];
+
     //可以不修改
     static $businessworker=[
         'name'=>'BusinessWorker',

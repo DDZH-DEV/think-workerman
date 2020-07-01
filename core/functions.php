@@ -4,7 +4,7 @@
 /**
  * 前端打印
  * @param $obj
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function p($obj)
 {
@@ -16,7 +16,7 @@ function p($obj)
  * 字节大小转换
  * @param $size
  * @return string
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function convert($size)
 {
@@ -30,7 +30,7 @@ function convert($size)
  * @param $data
  * @param $status
  * @return string json
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function json($data, $code = 200, $msg = null,$debug=[])
 {
@@ -75,7 +75,7 @@ function json($data, $code = 200, $msg = null,$debug=[])
  * @param string $listen
  * @param bool $write
  * @return bool
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function slog($message = '', $level = 'log', $listen = '9rax')
 {
@@ -134,7 +134,7 @@ function slog($message = '', $level = 'log', $listen = '9rax')
  * 文件夹复制
  * @param $src
  * @param $dst
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function copy_dir($src, $dst)
 {  // 原目录，复制到的目录
@@ -208,7 +208,7 @@ if (!function_exists('_G')) {
      * @param string $name
      * @param string $value
      * @return mixed|null
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     function _G($name = '', $value = '',$long=false)
     {
@@ -233,7 +233,7 @@ if (!function_exists('_G')) {
  * @param string $keys
  * @param string $type
  * @return array|string|null
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function input($keys = null)
 {
@@ -246,7 +246,7 @@ function input($keys = null)
 /**
  * 判断是否是手机
  * @return int
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function is_mobile(){
     // returns true if one of the specified mobile browsers is detected
@@ -273,7 +273,7 @@ function is_mobile(){
  * CLI端调试输出
  * @param $message
  * @param string $type
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function console($message,$type='info'){
     if(defined('WEBSERVER')){
@@ -288,7 +288,7 @@ function console($message,$type='info'){
  * 图片输出
  * @param $url
  * @return string
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function img_fix($url){
     return ($url && strpos($url,'http')===false)?Config::$http['static_url'].$url:$url;
@@ -299,7 +299,7 @@ function img_fix($url){
  * 加入处理队列
  * @param $type
  * @param $data
- * @Author: zaoyongvip@gmail.com
+ * @Author: 9rax.dev@gmail.com
  */
 function addToQueue($type,$data,$callback=null){
 

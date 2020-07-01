@@ -21,9 +21,9 @@ require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'core/init.php';
 //消息队列 进程
 $worker = new Worker();
 // worker名称
-$worker->name = 'Queue';
+$worker->name = Config::$queue['name'];
 
-$worker->count = 1;
+$worker->count = Config::$queue['count'];
 
 
 $worker->onWorkerStart = function () {
@@ -34,7 +34,7 @@ $worker->onWorkerStart = function () {
 
     if(!$Queue){
         $_redis=new \Redis();
-        $_redis->connect('127.0.0.1');
+        $_redis->connect(Config::$queue['host'],Config::$queue['port']);
         $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
         $Queue = new \Phive\Queue\RedisQueue($_redis);
     }

@@ -16,7 +16,7 @@ class Sms{
      * @param array $config
      * @return YunPian
      * @throws Exception
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
      static function getDriver($config=[]){
 
@@ -44,7 +44,7 @@ class Sms{
      * @param $content
      * @param string $type
      * @return bool
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
      static function send($mobile,$code,$content,$type='REGISTER'){
 

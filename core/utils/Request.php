@@ -39,7 +39,7 @@ class Request
      * params
      * @param null $key
      * @return array|null|string|integer
-     * @Author: zaoyongvip@gmail.com
+     * @Author: 9rax.dev@gmail.com
      */
     public static function params($key=null){
 
