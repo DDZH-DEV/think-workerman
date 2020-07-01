@@ -54,9 +54,9 @@ function build_start_file($config, $name)
     global $argv;
 
     $bat = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_win_' . $name . '.cmd';
-    $sh  = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_linux_' . $name . '.sh';
+    $sh = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_linux_' . $name . '.sh';
 
-    $files = glob(dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0]  . DIRECTORY_SEPARATOR.'client_service'.DIRECTORY_SEPARATOR.'start*.php');
+    $files = glob(dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service' . DIRECTORY_SEPARATOR . 'start*.php');
 
     $SERVER_PATH = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service';
 
@@ -82,7 +82,6 @@ function build_start_file($config, $name)
     $command .= 'php ' . $str . ' start';
 
 
-
     $command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
 
     $linux_command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
@@ -92,7 +91,6 @@ function build_start_file($config, $name)
     file_put_contents($bat, $command);
     file_put_contents($sh, $linux_command);
 }
-
 
 
 /**
