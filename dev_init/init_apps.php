@@ -76,8 +76,8 @@ function build_start_file($config, $name)
     if ($watch) {
         $command = 'nodemon -w "*" -e "php" -x "';
     }
-
-    $linux_command=$command.'php '.$SERVER_PATH.DIRECTORY_SEPARATOR.'linux_server.php start';
+    $linux_command = '#!/bin/bash '."\r\n";
+    $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start';
 
     $command .= 'php ' . $str . ' start';
 
