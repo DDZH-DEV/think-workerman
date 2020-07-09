@@ -35,7 +35,9 @@ class G
 
     public static function get($name,$long=false){
         $instance=self::instance();
-        return $long!=='_G'?@$instance->_global_release[$name]:@$instance->_global_no_release[$name];
+        return $long!=='_G'?
+            (isset($instance->_global_release[$name])?$instance->_global_release[$name]:null):
+            (isset($instance->_global_no_release[$name])?$instance->_global_no_release[$name]:null);
     }
 
 

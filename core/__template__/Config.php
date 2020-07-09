@@ -3,6 +3,18 @@
 
 class Config{
 
+    static $waf=[
+        //开启防火墙
+        'enable'=>true,
+        //开启记录
+        'log'=>true,
+        //日志目录
+        'log_path'=>APP_PATH.'runtime'.DIRECTORY_SEPARATOR.'waf',
+        //注入多少次后屏蔽
+        'deny_num'=>3,
+    ];
+
+    static $error_level= E_ALL & ~E_NOTICE;
     //数据库配置
     static $database=[
         // 默认数据连接标识
@@ -31,7 +43,7 @@ class Config{
             ],
         ],
     ];
- 
+
 
     //一般不需要修改
     static $cache=[
@@ -40,7 +52,7 @@ class Config{
             'file'	=>	[
                 'type'   => 'File',
                 // 缓存保存目录
-                'path'   => './runtime/cache/',
+                'path'   => APP_PATH.DS.'runtime'.DS.'cache',
                 // 缓存前缀
                 'prefix' => '',
                 // 缓存有效期 0表示永久缓存
@@ -62,11 +74,16 @@ class Config{
         'channels'	=>	[
             'file'	=>	[
                 'type'	=>	'file',
-                'path'	=>	ROOT_PATH.DS.'runtime/logs',
+                'path'	=>	APP_PATH.DS.'runtime/logs',
             ],
         ],
     ];
 
+
+    static $global_data=[
+        'name'=>'GlobalDataServer',
+        'port'=>2700
+    ];
 
     static $queue=[
         'name'=>'Queue',
@@ -79,18 +96,19 @@ class Config{
     //可以不修改
     static $businessworker=[
         'name'=>'BusinessWorker',
-        'count'=>4
+        'count'=>1
     ];
 
 
     //多个应用时需要修改
     static $http=[
+        'name'=>'WebServer',
         'upload_dir'=>'uploads',
         'http_port'=>'909',
         'ws_address'=>'127.0.0.1:8282',
         'api_url'=>'http://127.0.0.1:909',
-        'static_url'=>'http://127.0.0.1:909',
-        'count'=>2
+        'cdn_url'=>'http://127.0.0.1:909',
+        'count'=>3
     ];
 
     static $sms=[

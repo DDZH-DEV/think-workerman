@@ -2,13 +2,19 @@
 
 
 /**
- * 前端打印
- * @param $obj
- * @Author: 9rax.dev@gmail.com
+ * 打印数据
+ * @param mixed ...$data
+ *
+ * @Author  : 9rax.dev@gmail.com
+ * @DateTime: 2020/7/9 11:18
  */
-function p($obj)
+function p(...$data)
 {
-    echo '<pre>' . print_r($obj, true) . '</pre>';
+    $arg_list = func_get_args();
+
+    $arg_list = func_num_args()==1?$arg_list[0]:$arg_list;
+
+    echo '<pre>.' . print_r($arg_list, true) . '</pre>'."\r\n\r\n";
 }
 
 
@@ -49,22 +55,13 @@ function json($data, $code = 200, $msg = null,$debug=[])
             'msg' => $msg
         ];
     }
-
-    //开发模式
-    if (_G('DEBUG')) {
-        $result['memory'] = convert(memory_get_usage());
-        $result['files'] = count(get_included_files());
-        $result['session'] = session();
-        $result['session_id'] = \Workerman\Protocols\HttpCache::$instance->sessionFile;
-        $result['server'] = $_SERVER;
-        $result['_G']=_G();
-        if($debug){
-            $result['debug']=$debug;
-        }
+    if(version_compare(\Workerman\Worker::VERSION,'4.0.0','<')){
+        \Workerman\Protocols\Http::header('content-type: application/json');
+        \Workerman\Protocols\Http::end(json_encode($result, JSON_UNESCAPED_UNICODE));
+    }else{
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
-    \Workerman\Protocols\Http::header('content-type: application/json');
-    \Workerman\Protocols\Http::end(json_encode($result, JSON_UNESCAPED_UNICODE));
 }
 
 
@@ -153,54 +150,96 @@ function copy_dir($src, $dst)
 }
 
 
-if (!function_exists('session')) {
+if (!function_exists('data')) {
     /**
-     * Session管理
-     * @param string|array $name session名称，如果为数组表示进行session设置
-     * @param mixed $value session值
-     * @param string $prefix 前缀
-     * @return mixed
+     * 数据操作函数
+     * @param string $name
+     * @param string $value
+     * @param string $layer
+     *
+     * @return array|bool|mixed
+     * @Author  : 9rax.dev@gmail.com
+     * @DateTime: 2020/7/8 14:54
      */
-    function session($name = '', $value = '', $prefix = null)
+    function data($name = '', $value = '',$layer='_SESSION')
     {
+        $data=_G($layer);
 
         if (is_array($name)) {
             try {
-                foreach ($name as $sessionName => $sessionValue) {
-                    $_SESSION[$sessionName] = json_encode($sessionValue, true);
+                foreach ($name as $dataName => $dataValue) {
+                    $data[$dataName] = json_encode($dataValue, true);
                 }
+                _G($layer,$data);
                 return true;
             } catch (\Exception $exception) {
                 return false;
             }
         } elseif (is_null($name)) {
             // 清除,奇葩的workmanSession机制
-            $_SESSION=['destroy'=>date('YmdHis')];
+            $data=['destroy'=>date('YmdHis')];
+            _G($layer,$data);
+//            p('clear');
             return true;
-        } elseif ($name && !$value) {
+        } elseif ($name && !$value && !is_null($value)) {
             // 判断或获取
-            return (isset($_SESSION[$name]) && json_decode($_SESSION[$name], true)) ? json_decode($_SESSION[$name], true) : @$_SESSION[$name];
+            return (isset($data[$name]) && json_decode($data[$name], true)) ? json_decode($data[$name], true) : $data[$name];
         } elseif (is_null($value)) {
             // 删除
-            unset($_SESSION[$name]);
+            if (isset($data[$name]))  unset($data[$name]);
+            _G($layer,$data);
+//            p('delete item '.$name);
             return true;
 
         } elseif ($name ==='') {
             // 设置
             $tmp=[];
-            if(is_array($_SESSION)){
-                foreach ($_SESSION as $k=>$v){
+            if(is_array($data)){
+                foreach ($data as $k=>$v){
                     $tmp[$k]=json_decode($v, true)?json_decode($v, true):$v;
                 }
             }
+//            p('read all');
             return $tmp;
 
         } else {
-            $_SESSION[$name] = json_encode($value);
+            $data[$name] = $value;
+//            p('set item '.$name);
+            _G($layer,$data);
         }
     }
 }
 
+if (!function_exists('session')) {
+    /**
+     * session快捷操作
+     * @param string $name
+     * @param string $value
+     *
+     * @return array|bool|mixed
+     * @Author  : 9rax.dev@gmail.com
+     * @DateTime: 2020/7/8 14:55
+     */
+    function session($name = '', $value = ''){
+        return data($name, $value,'_SESSION');
+    }
+}
+
+
+if (!function_exists('cookie')) {
+    /**
+     * cookie快捷操作
+     * @param string $name
+     * @param string $value
+     *
+     * @return array|bool|mixed
+     * @Author  : 9rax.dev@gmail.com
+     * @DateTime: 2020/7/8 14:55
+     */
+    function cookie($name = '', $value = ''){
+        return data($name, $value,'_COOKIE');
+    }
+}
 
 if (!function_exists('_G')) {
     /**
@@ -229,15 +268,48 @@ if (!function_exists('_G')) {
 }
 
 /**
- * 快捷获取参数
- * @param string $keys
- * @param string $type
- * @return array|string|null
- * @Author: 9rax.dev@gmail.com
+ * 获取输入数据 支持默认值和过滤
+ * @param string    $key 获取的变量名
+ * @param mixed     $default 默认值
+ * @param string    $filter 过滤方法
+ * @return mixed
  */
-function input($keys = null)
+function input($key ='',$default_value=null,$filter='')
 {
-    return utils\Request::params($keys);
+    if (0 === strpos($key, '?')) {
+        $key = substr($key, 1);
+        $has = true;
+    }
+
+    if ($pos = strpos($key, '.')) {
+        // 指定参数来源
+        $method = substr($key, 0, $pos);
+        if (in_array($method, ['get', 'post', 'session', 'cookie', 'file'])) {
+            $key = substr($key, $pos + 1);
+            $key = $key==='file'?'files':$key;
+        } else {
+            $method = 'params';
+        }
+    } else {
+        // 默认为自动判断
+        $method = 'params';
+    }
+
+    $params=array_merge((array)_G('_GET'),(array)_G('_POST'),(array)_G('_SESSION'),(array)_G('_COOKIE'),(array)_G('_FILES'));
+
+    if(!$key) return $method==='params'?$params:(array)_G('_'.strtoupper($method));
+
+    if($method==='params'){
+        return  isset($params[$key]) && $params[$key]?
+            (is_callable($filter)?call_user_func($filter,$params[$key]):$params[$key]):
+            $default_value;
+    }else{
+        $find=_G('_'.strtoupper($key));
+        if($find && isset($find[$key]) && $find[$key]){
+            return is_callable($filter)?call_user_func($filter,$params[$key]):$params[$key];
+        }
+        return $default_value;
+    }
 }
 
 
@@ -248,7 +320,7 @@ function input($keys = null)
  * @return int
  * @Author: 9rax.dev@gmail.com
  */
-function is_mobile(){
+function is_mobile($agent){
     // returns true if one of the specified mobile browsers is detected
     // 如果监测到是指定的浏览器之一则返回true
 
@@ -265,7 +337,7 @@ function is_mobile(){
     $regex_match.=")/i";
 
     // preg_match()方法功能为匹配字符，既第二个参数所含字符是否包含第一个参数所含字符，包含则返回1既true
-    return preg_match($regex_match, strtolower($_SERVER['HTTP_USER_AGENT']));
+    return preg_match($regex_match, strtolower($agent));
 }
 
 
@@ -276,7 +348,7 @@ function is_mobile(){
  * @Author: 9rax.dev@gmail.com
  */
 function console($message,$type='info'){
-    if(defined('WEBSERVER')){
+    if(defined('WEB_SERVER')){
         return;
     }
     $message=is_string($message)?$message:json_encode($message);
@@ -285,13 +357,13 @@ function console($message,$type='info'){
 
 
 /**
- * 图片输出
+ * 静态资源输出
  * @param $url
  * @return string
  * @Author: 9rax.dev@gmail.com
  */
-function img_fix($url){
-    return ($url && strpos($url,'http')===false)?Config::$http['static_url'].$url:$url;
+function staticFix($url){
+    return ($url && strpos($url,'http')===false)?Config::$http['cdn_url'].$url:$url;
 }
 
 
@@ -322,4 +394,3 @@ function addToQueue($type,$data,$callback=null){
 
 }
 
- 

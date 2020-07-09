@@ -1,6 +1,28 @@
 # think-workerman
 
-此项目是个人的项目总结，只是为了能快速开发异步api接口和一些socket应用而整理,目前本人的项目一般是不注重后台与SEO(api+vue提供业务) 一套的形式，所以目前未接入模板引擎，有兴趣者自行接入第三方引擎。
+2020.07.09更新
+已经兼容了windows下workerman 3.* 和linux下 workerman 4.*的webserver,可以一套代码两端使用,同时加入了自己基于宝塔防火墙规则json写的简单的防注入防火墙。
+
+***特别留意,如果要兼容两个平台不同的WebServer,在控制器里面接受参数时需要用快捷函数***
+
+```php
+#session操作
+session('a','123');         //set session
+$session_a=session('a');    //read session
+session('a',null);          //delete session
+
+#cookie操作
+cookie('a','123');         //set cookie
+$cookie_a=cookie('a');     //read cookie
+cookie('a',null);          //delete cookie
+
+#参数接收
+$var_a=input('a');         //$_GET,$_POST,$_COOKIE中的某一项
+$get_a=input('get.a');     //从workerman3.*$_GET中或者workerman4.* $request->get() 中取值
+$post_a=input('post.a');   //获取post参数 
+ 
+```
+此项目是个人的项目总结，只是为了能快速开发异步api接口和一些socket应用而整理,只想用最少的包来开发自己想要的功能 , 所以没有多余的功能 ，想要完整的参考官方 https://github.com/walkor/webman 。
 
 由于数据库层，日志，缓存用的都是TP官方的包，所以开发形式上是差不多的，TP用户可以快速过度，相关演示请查看Demo.php。
 
@@ -17,12 +39,7 @@
 "topthink/think-log":"^2.0",
 
 #队列包，使用redis服务
-"rybakit/phive-queue":"*",
-
-#其余非必须依赖包,可以自行删除
-"ahead4/captcha": "*", 
-"intervention/image":"*"
-
+"rybakit/phive-queue":"*",  #配合快捷函数 addToQueue($type,$data,$callback=null);使用
 ```
 
 
@@ -36,26 +53,50 @@
 2.安装依赖(请确认你的环境,如果你是在linux下使用请将composer.json中workerman中的依赖包中的-for-win去掉)
 composer update
 
+linux下的composer.json
+```json 
+"workerman/workerman": "*",  //workerman 4.*版本
+"workerman/gateway-worker":"*",
+"workerman/gatewayclient":"*", 
+```
+
+windows下的composer.json
+```json 
+"workerman/workerman-for-win": "*",  //workerman 3.*版本
+"workerman/gateway-worker-for-win":"*",
+"workerman/gatewayclient":"*", 
+```
+
 3.根据你的项目修改配置文件 apps.config.php
 
 
-4.点击dev_init_app.cmd或者dev_init_app_with_nodemon.cmd ,会自动根据配置生成对应的项目目录和启动文件，两个文件的区别时 dev_init_app_with_nodemon.cmd 依赖于nodemon,在windows下如果你希望每次改完代码自动重启服务，请使用它。 
+4.点击dev_init_app.cmd或者执行```php init_app.php```  ,会自动根据配置生成对应的项目目录和windows与linux启动文件。 
 
 ```html
-如'UhaoA'  => ['app',['http','socket','queue']]会生成一个app开发目录和一个start_windows_UhaoA.cmd启动文件，
+如:
 
-在windows下点击start_windows_UhaoA.cmd即可启动进行运行演示
+'rax_im'  => ['app',['http','socket','queue']]  #会生成一个rax_im开发目录和四个启动文件
+
+start_linux_rax_im.sh
+start_linux_rax_im_with_nodemon.sh
+start_win_rax_im.cmd
+start_win_rax_im_with_nodemon.cmd
+
+其中with_nodemon 的启动文件基于nodejs以及nodemon,用于修改代码后自动重启
+
 ```
 5.linux下运行方式为 ```php 你的应用目录/client_service/linux_server.php start -d```
 
 ## 目录介绍
 ```html
 ----core
-    core/_app_  app默认模板文件，项目开发中不要修改这里面的文件，请修根据配置文件生成的目录中的文件
-    core/utils  一些个人常用的类，你也可以将你自己的类放入此目录下，命名空间是utils（用不上可以删）
-    core/wechat-php-sdk  微信sdk,基于https://github.com/zoujingli/wechat-php-sdk有修改做兼容处理 （用不上可以删）
-    core/functions.php  常用助手函数，强烈看一眼这里面的文件，看有哪些方法
-    core/WebServer.php  这里面交代了怎么样走入控制器的  
+    core/_template_      app默认模板文件，项目开发中不要修改这里面的文件，请修根据配置文件生成的目录中的文件
+    core/utils           常用的类，你也可以将你自己的类放入此目录下，命名空间是utils
+    core/GlobalData      workerman多进程共享数据
+    core/rax             自己写的,目前只放了防火墙,规则不定期更新,进QQ群 940586873
+    core/functions.php   常用助手函数，强烈看一眼这里面的文件，看有哪些方法
+    core/WebServer3.php  workerman 3.*的简单 WebServer
+    core/WebServer4.php  workerman 4.*的简单 WebServer
 ```
     
 ## 附录：nodemon（文件监控软件）安装方式 （用于windows下修改代码后自动重启服务）

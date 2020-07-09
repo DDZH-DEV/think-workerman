@@ -53,12 +53,14 @@ function build_start_file($config, $name)
 
     global $argv;
 
-    $bat = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_win_' . $name . '.cmd';
-    $sh = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_linux_' . $name . '.sh';
+    $watch = strpos(implode('', $argv), 'nodemon') !== false;
 
-    $files = glob(dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service' . DIRECTORY_SEPARATOR . 'start*.php');
+    $bat = __DIR__ . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_win_' . $name .($watch?'_with_nodemon':''). '.cmd';
+    $sh = __DIR__ . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'start_linux_' . $name .($watch?'_with_nodemon':''). '.sh';
 
-    $SERVER_PATH = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service';
+    $files = glob(__DIR__ . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service' . DIRECTORY_SEPARATOR . 'start*.php');
+
+    $SERVER_PATH = __DIR__ . DIRECTORY_SEPARATOR . $config[0] . DIRECTORY_SEPARATOR . 'client_service';
 
     $str = '';
 
@@ -71,21 +73,21 @@ function build_start_file($config, $name)
 
     $command = "";
 
-    $watch = strpos(implode('', $argv), 'nodemon') !== false;
+    
+    $linux_command = '#!/bin/bash '.PHP_EOL;
 
     if ($watch) {
-        $command = 'nodemon -w "*" -e "php" -x "';
+        $command = 'nodemon  -w "'.dirname(dirname($SERVER_PATH)).DIRECTORY_SEPARATOR.'*" -i "'.dirname($SERVER_PATH).DIRECTORY_SEPARATOR.'runtime'.DIRECTORY_SEPARATOR.'*" -e "php" -x "';
+        $linux_command .= $command . 'php '. $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php stop;'.'php '. $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start;';
+    }else{
+        $linux_command .= $command . 'php '. $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start';
     }
-    $linux_command = '#!/bin/bash '."\r\n";
-    $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start';
+
 
     $command .= 'php ' . $str . ' start';
 
-
+    $linux_command .= '' . ($watch ? '"' : '') . PHP_EOL;
     $command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
-
-    $linux_command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
-
     $command .= 'pause;';
 
     file_put_contents($bat, $command);
@@ -104,7 +106,7 @@ function build_start_file($config, $name)
  */
 function _mkdir($path, $real_path = false)
 {
-    $path = $real_path ? $path : dirname(__DIR__) . DIRECTORY_SEPARATOR . $path;
+    $path = $real_path ? $path : __DIR__ . DIRECTORY_SEPARATOR . $path;
     if (!is_dir($path)) {
         @mkdir($path, 0777, true);
     }
@@ -150,14 +152,14 @@ function init_app($config)
     //创建APP目录
     _mkdir($config[0]);
 
-    $from_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . '_app_';
+    $from_dir = __DIR__ . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . '__template__';
 
-    $to_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . $config[0];
+    $to_dir = __DIR__ . DIRECTORY_SEPARATOR . $config[0];
 
     copy_dir($from_dir, $to_dir);
 
     //删除不需要的原装启动文件
-    $files = glob(dirname(__DIR__) . '/' . $config[0] . '/client_service/start*.php');
+    $files = glob(__DIR__ . '/' . $config[0] . '/client_service/start*.php');
 
     $start_files = get_bat_files($config);
 
@@ -171,7 +173,7 @@ function init_app($config)
 }
 
 
-$apps = include dirname(__DIR__) . '/apps.config.php';
+$apps = include __DIR__ . '/apps.config.php';
 
 foreach ($apps as $name => $app) {
     init_app($app);
