@@ -4,12 +4,12 @@
         "workerman/gateway-worker":"*",
         "workerman/gatewayclient":"*",
 
-        "topthink/think-orm":"^2.0",
         "rybakit/phive-queue":"*",
 
-        "intervention/image":"*", 
+        "topthink/think-orm":"^2.0",
         "topthink/think-cache":"^2.0",
         "topthink/think-log":"^2.0",
+
         "ext-json": "*"
     },
     "autoload":{
