@@ -157,8 +157,16 @@ class RaxWaf
             $rules=self::$rules['post'];
             $values='';$type='DATA HIT';
             foreach ($data as $k=>$val){
-                $values.=is_array($val)?implode(" ",array_values($val)):$val;
+
+                $result = array_reduce($val, function ($result, $value) {
+                    return is_array($value)?array_merge($result, array_values($value)):array_push($result, $value);
+                }, array());
+
+                $values.=   is_array($result)?
+                            implode(" ",$result):
+                            $result;
             }
+
 
             foreach ($rules as $name=>$regex) {
                 if(preg_match("/{$regex}/i",$values) || preg_match("/{$regex}/i",htmlspecialchars_decode($values))){

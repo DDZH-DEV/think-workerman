@@ -51,7 +51,7 @@ class WebServer extends \Workerman\Worker
                     return $connection->send(RaxWaf::$config['deny_message']);
                 }
             }
-
+            _G('IP', $connection->getRemoteIp());
             _G('_POST', $request->header() && isset($request->header()['content-type']) && strpos($request->header()['content-type'], 'json') != false ? json_decode($request->rawBody(), true) : $request->post());
             _G('_GET', $request->get());
             _G('_FILES', $request->file());

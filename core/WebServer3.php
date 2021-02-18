@@ -41,7 +41,7 @@ class WebServer extends \Workerman\WebServer
                 return $connection->send(RaxWaf::$config['deny_message']);
             }
         }
-
+        _G('IP', $connection->getRemoteIp());
         _G('_POST', $_POST);
         _G('_GET', $_GET);
         _G('_FILES', $_FILES);
@@ -91,11 +91,13 @@ class WebServer extends \Workerman\WebServer
                 call_user_func_array([new $controller, $_['action']],[$connection]);
             } catch (\Exception $e) {
                 //如果是调试模式，直接输出
-                if (_G('DEBUG')) {
-                    p($e->getMessage());
-                    p($e->getTraceAsString());
+                if($e->getMessage()!=='jump_exit'){
+                    if (_G('DEBUG')) {
+                        p($e->getMessage());
+                        p($e->getTraceAsString());
+                    }
+                    log_exception($e);
                 }
-                log_exception($e);
 
             }catch (\Error $error){
                 log_exception($error);
