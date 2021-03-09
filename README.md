@@ -75,7 +75,7 @@ windows下的composer.json
 ```html
 如:
 
-'rax_im'  => ['app',['http','socket','queue']]  #会生成一个rax_im开发目录和四个启动文件
+'rax_im'  => ['app',['http','socket','queue','timer']]  #会生成一个rax_im开发目录和四个启动文件
 
 start_linux_rax_im.sh
 start_linux_rax_im_with_nodemon.sh
@@ -85,6 +85,8 @@ start_win_rax_im_with_nodemon.cmd
 其中with_nodemon 的启动文件基于nodejs以及nodemon,用于修改代码后自动重启
 
 ```
+其中['http','socket','queue','timer']代表四种功能,需要哪种就加哪种进去。 
+ 
 5.linux下运行方式为 ```php 你的应用目录/client_service/linux_server.php start -d```
 
 ## 目录介绍

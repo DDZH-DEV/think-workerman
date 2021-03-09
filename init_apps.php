@@ -30,6 +30,10 @@ function get_bat_files($config)
         $files[] = 'queue';
     }
 
+    if (strpos($type, 'timer') !== false) {
+        $files[] = 'timer';
+    }
+
 
     foreach ($files as &$file) {
         $file = "start_" . $file . ".php";
