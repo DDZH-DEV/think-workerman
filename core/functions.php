@@ -204,7 +204,7 @@ if (!function_exists('data')) {
 
         } else {
             $data[$name] = $value;
-//            p('set item '.$name);
+//            p('set item '.$name,$data);
             _G($layer,$data);
         }
     }
@@ -304,9 +304,9 @@ function input($key ='',$default_value=null,$filter='')
             (is_callable($filter)?call_user_func($filter,$params[$key]):$params[$key]):
             $default_value;
     }else{
-        $find=_G('_'.strtoupper($key));
+        $find=_G('_'.strtoupper($method));
         if($find && isset($find[$key]) && $find[$key]){
-            return is_callable($filter)?call_user_func($filter,$params[$key]):$params[$key];
+            return is_callable($filter)?call_user_func($filter,$find[$key]):$find[$key];
         }
         return $default_value;
     }

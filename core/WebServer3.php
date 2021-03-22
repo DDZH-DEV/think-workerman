@@ -41,6 +41,9 @@ class WebServer extends \Workerman\WebServer
                 return $connection->send(RaxWaf::$config['deny_message']);
             }
         }
+
+        \Workerman\Protocols\Http::sessionStart();
+
         _G('IP', $connection->getRemoteIp());
         _G('_POST', $_POST);
         _G('_GET', $_GET);
@@ -68,12 +71,12 @@ class WebServer extends \Workerman\WebServer
         @list( $_['controller'], $_['action']) = $params;
 
         $controller = 'app\\controller\\' . ucfirst($_['controller']);
-        
+
+
+
         if (class_exists($controller) && method_exists($controller, $_['action'])) {
             //全局设置
             _G('IS_MOBILE', is_mobile($_SERVER['HTTP_USER_AGENT']));
-
-            \Workerman\Protocols\Http::sessionStart();
 
             //跨域问题
             if (isset($_SERVER['HTTP_ORIGIN'])) {
