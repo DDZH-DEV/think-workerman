@@ -60,6 +60,7 @@ function json($data, $code = 200, $msg = null,$debug=[])
         \Workerman\Protocols\Http::end(json_encode($result, JSON_UNESCAPED_UNICODE));
     }else{
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        throw new Exception('jump_exit');
     }
 
 }
@@ -294,18 +295,17 @@ function input($key ='',$default_value=null,$filter='')
         // 默认为自动判断
         $method = 'params';
     }
-
-    $params=array_merge((array)_G('_GET'),(array)_G('_POST'),(array)_G('_SESSION'),(array)_G('_COOKIE'),(array)_G('_FILES'));
+    $params=array_merge((array)_G('_GET'),(array)_G('_POST'));
 
     if(!$key) return $method==='params'?$params:(array)_G('_'.strtoupper($method));
 
     if($method==='params'){
-        return  isset($params[$key]) && $params[$key]?
+        return  isset($params[$key])?
             (is_callable($filter)?call_user_func($filter,$params[$key]):$params[$key]):
             $default_value;
     }else{
         $find=_G('_'.strtoupper($method));
-        if($find && isset($find[$key]) && $find[$key]){
+        if($find && isset($find[$key])){
             return is_callable($filter)?call_user_func($filter,$find[$key]):$find[$key];
         }
         return $default_value;
@@ -394,3 +394,31 @@ function addToQueue($type,$data,$callback=null){
 
 }
 
+
+/**
+ * arrayRecursiveDiff
+ * @param $aArray1
+ * @param $aArray2
+ *
+ * @return array
+ * @Author  : 9rax.dev@gmail.com
+ * @DateTime: 2021/3/29 18:25
+ */
+function arrayRecursiveDiff($aArray1, $aArray2) {
+    $aReturn = array();
+    foreach ($aArray1 as $mKey => $mValue) {
+        if (array_key_exists($mKey, $aArray2)) {
+            if (is_array($mValue)) {
+                $aRecursiveDiff = arrayRecursiveDiff($mValue, $aArray2[$mKey]);
+                if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
+            } else {
+                if ($mValue != $aArray2[$mKey]) {
+                    $aReturn[$mKey] = $mValue;
+                }
+            }
+        } else {
+            $aReturn[$mKey] = $mValue;
+        }
+    }
+    return $aReturn;
+}

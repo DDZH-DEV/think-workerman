@@ -72,8 +72,6 @@ class WebServer extends \Workerman\WebServer
 
         $controller = 'app\\controller\\' . ucfirst($_['controller']);
 
-
-
         if (class_exists($controller) && method_exists($controller, $_['action'])) {
             //全局设置
             _G('IS_MOBILE', is_mobile($_SERVER['HTTP_USER_AGENT']));
@@ -109,8 +107,8 @@ class WebServer extends \Workerman\WebServer
 
             $_SESSION=_G('_SESSION');
 
-            $add_cookies=array_diff(_G('_COOKIE'),$_COOKIE);
-            $remove_cookies=array_diff($_COOKIE,_G('_COOKIE'));
+            $add_cookies=arrayRecursiveDiff(_G('_COOKIE'),$_COOKIE);
+            $remove_cookies=arrayRecursiveDiff($_COOKIE,_G('_COOKIE'));
 
             if($add_cookies){
                 foreach ($add_cookies as $name=>$val){

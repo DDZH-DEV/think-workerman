@@ -51,7 +51,7 @@ class WebServer extends \Workerman\Worker
                     return $connection->send(RaxWaf::$config['deny_message']);
                 }
             }
-            _G('IP', $connection->getRemoteIp());
+            _G('IP',isset($request->header()['x-real-ip'])?$request->header()['x-real-ip']: $connection->getRemoteIp());
             _G('_POST', $request->header() && isset($request->header()['content-type']) && strpos($request->header()['content-type'], 'json') != false ? json_decode($request->rawBody(), true) : $request->post());
             _G('_GET', $request->get());
             _G('_FILES', $request->file());
@@ -102,11 +102,14 @@ class WebServer extends \Workerman\Worker
                     call_user_func_array([new $controller, $_['action']], [$request,$connection]);
                 } catch (\Exception $e) {
                     //如果是调试模式，直接输出
-                    if (_G('DEBUG')) {
-                        p($e->getMessage());
-                        p($e->getTraceAsString());
+
+                    if($e->getMessage()!=='jump_exit'){
+                        if (_G('DEBUG')) {
+                            p($e->getMessage());
+                            p($e->getTraceAsString());
+                        }
+                        log_exception($e);
                     }
-                    log_exception($e);
 
                 }catch (\Error $error){
                     log_exception($error);
@@ -117,7 +120,8 @@ class WebServer extends \Workerman\Worker
                 //设置新的session
                 $request->session()->put($session);
                 //删除旧的session
-                if($diff_session=array_diff($all_session,$session)){
+
+                if($diff_session=arrayRecursiveDiff($all_session,$session)){
                     foreach ($diff_session as $k=>$v){
                         if(in_array($k,array_keys(_G('_SESSION')))){
                             unset($diff_session[$k]);
@@ -128,8 +132,8 @@ class WebServer extends \Workerman\Worker
 
                 $content = ob_get_clean();
                 $response = new \Workerman\Protocols\Http\Response(200, $headers, $content);
-                $add_cookies=array_diff(_G('_COOKIE'),$request->cookie());
-                $remove_cookies=array_diff($request->cookie(),_G('_COOKIE'));
+                $add_cookies=arrayRecursiveDiff(_G('_COOKIE'),$request->cookie());
+                $remove_cookies=arrayRecursiveDiff($request->cookie(),_G('_COOKIE'));
 
                 if($add_cookies){
                     foreach ($add_cookies as $name=>$val){

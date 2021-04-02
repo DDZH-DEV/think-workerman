@@ -6,7 +6,7 @@
  * @param $config
  *
  * @return array
- * @Author  : linge@9rax.com
+ * @Author  : 9rax.dev@gmail.com
  * @DateTime: 2018/7/29 13:27
  */
 function get_bat_files($config)
@@ -49,7 +49,7 @@ function get_bat_files($config)
  * @param $config
  * @param $name
  *
- * @Author  : linge@9rax.com
+ * @Author  : 9rax.dev@gmail.com
  * @DateTime: 2018/7/29 13:28
  */
 function build_start_file($config, $name)
@@ -148,7 +148,7 @@ function copy_dir($src, $dst)
  *
  * @param $config
  *
- * @Author  : linge@9rax.com
+ * @Author  : 9rax.dev@gmail.com
  * @DateTime: 2018/7/29 13:26
  */
 function init_app($config)
