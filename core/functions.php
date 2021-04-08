@@ -242,6 +242,23 @@ if (!function_exists('cookie')) {
     }
 }
 
+
+if (!function_exists('_header')) {
+    /**
+     * _header快捷操作
+     * @param string $name
+     * @param string $value
+     *
+     * @return array|bool|mixed
+     * @Author  : 9rax.dev@gmail.com
+     * @DateTime: 2020/7/8 14:55
+     */
+    function _header($name = '', $value = ''){
+        return data($name, $value,'_HEADER');
+    }
+}
+
+
 if (!function_exists('_G')) {
     /**
      * 全局变量共享,每次控制器请求结束后释放

@@ -104,6 +104,12 @@ class WebServer extends \Workerman\WebServer
                 log_exception($error);
             }
 
+            $add_headers=_G('_HEADER');
+            if($add_headers){
+                foreach ($add_headers as $k=>$v){
+                    \Workerman\Protocols\Http::header($k.':' . $v);
+                }
+            }
 
             $_SESSION=_G('_SESSION');
 

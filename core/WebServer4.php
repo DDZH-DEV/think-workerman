@@ -115,6 +115,13 @@ class WebServer extends \Workerman\Worker
                     log_exception($error);
                 }
 
+                $add_headers=_G('_HEADER');
+                if($add_headers){
+                    foreach ($add_headers as $k=>$v){
+                        $headers[$k]=$v;
+                    }
+                }
+
                 $session=_G('_SESSION');
                 $all_session=$request->session()->all();
                 //设置新的session

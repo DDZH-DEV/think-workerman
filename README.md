@@ -20,6 +20,10 @@ cookie('a',null);          //delete cookie
 $var_a=input('a');         //$_GET,$_POST,$_COOKIE中的某一项
 $get_a=input('get.a');     //从workerman3.*$_GET中或者workerman4.* $request->get() 中取值
 $post_a=input('post.a');   //获取post参数 
+
+
+#自定义header  2021.04.08更新
+_header("Content-type","text/html; charset=utf-8");
  
 ```
 此项目是个人的项目总结，只是为了能快速开发异步api接口和一些socket应用而整理,只想用最少的包来开发自己想要的功能 , 所以没有多余的功能 ，想要完整的参考官方 https://github.com/walkor/webman 。
