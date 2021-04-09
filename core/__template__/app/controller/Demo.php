@@ -109,7 +109,7 @@ class Demo{
         Gateway::$registerAddress=\Config::$register['address'];
 
         //打印所有客户端
-        p(Gateway::getAllClientInfo());
+        p(Gateway::getAllClientSessions());
 
 
         //请使用http://tool.hibbba.com/websocket/ 输入ws://127.0.0.1:8282 自行监控数据 在请求本控制器

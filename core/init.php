@@ -78,8 +78,10 @@ set_exception_handler( "log_exception" );
 $Loader->setPsr4('app\\', APP_PATH.'app');
 
 //TP项目对外路径
-if(!defined('PUBLIC_PATH')){
+if(!defined('PUBLIC_PATH') && !Config::$http['public_dir']){
     define('PUBLIC_PATH',ROOT_PATH.DS.'public');
+}elseif (Config::$http['public_dir']){
+    define('PUBLIC_PATH',Config::$http['public_dir']);
 }
 
 //项目上传文件夹,TP项目对外路径

@@ -184,7 +184,9 @@ if (!function_exists('data')) {
             return true;
         } elseif ($name && !$value && !is_null($value)) {
             // 判断或获取
-            return (isset($data[$name]) && json_decode($data[$name], true)) ? json_decode($data[$name], true) : $data[$name];
+            return (isset($data[$name]) && $data[$name])
+                ? (is_array($data[$name])?$data[$name]:json_decode($data[$name], true)) :
+                $data[$name];
         } elseif (is_null($value)) {
             // 删除
             if (isset($data[$name]))  unset($data[$name]);
@@ -423,19 +425,24 @@ function addToQueue($type,$data,$callback=null){
  */
 function arrayRecursiveDiff($aArray1, $aArray2) {
     $aReturn = array();
-    foreach ($aArray1 as $mKey => $mValue) {
-        if (array_key_exists($mKey, $aArray2)) {
-            if (is_array($mValue)) {
-                $aRecursiveDiff = arrayRecursiveDiff($mValue, $aArray2[$mKey]);
-                if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
-            } else {
-                if ($mValue != $aArray2[$mKey]) {
-                    $aReturn[$mKey] = $mValue;
+    if($aArray1){
+        foreach ($aArray1 as $mKey => $mValue) {
+            if (array_key_exists($mKey, $aArray2)) {
+                if (is_array($mValue)) {
+                    $aRecursiveDiff = arrayRecursiveDiff($mValue, $aArray2[$mKey]);
+                    if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
+                } else {
+                    if ($mValue != $aArray2[$mKey]) {
+                        $aReturn[$mKey] = $mValue;
+                    }
                 }
+            } else {
+                $aReturn[$mKey] = $mValue;
             }
-        } else {
-            $aReturn[$mKey] = $mValue;
         }
+    }else if($aArray2){
+        return  $aArray2;
     }
+
     return $aReturn;
 }

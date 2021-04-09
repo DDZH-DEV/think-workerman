@@ -7,6 +7,21 @@
  * @Notice  : 这是(九锐团队)旗下的软件之一，如果您未经授权从其他途径获得它，使用它并带来了利益，请记得支持我们。如果不能为您带来利益，请您不要扩散它，因为每个软件从0到1都经历了一个漫长的过程，并且需要经费继续维护它。
  */
 use rax\RaxWaf;
+use \Workerman\Connection\TcpConnection;
+use \Workerman\Protocols\Http\Request;
+use Workerman\Protocols\Http\Response;
+
+function exec_php_file($file) {
+    \ob_start();
+    // Try to include php file.
+    try {
+        include $file;
+    } catch (\Exception $e) {
+        echo $e;
+    }
+    return \ob_get_clean();
+}
+
 
 class WebServer extends \Workerman\Worker
 {
@@ -14,7 +29,10 @@ class WebServer extends \Workerman\Worker
     {
         parent::__construct($socket_name , $context_option);
 
-
+        /**
+         * @Author  : 9rax.dev@gmail.com
+         * @DateTime: 2021/4/9 18:32
+         */
         $this->onWorkerStart=function (){
             $global = new \GlobalData\Client('127.0.0.1:'.\Config::$global_data['port']);
             if(\Config::$waf['enable']) {
@@ -23,7 +41,15 @@ class WebServer extends \Workerman\Worker
             }
         };
 
-        $this->onMessage = function (\Workerman\Connection\TcpConnection $connection, \Workerman\Protocols\Http\Request $request) {
+        /**
+         * @param \Workerman\Connection\TcpConnection $connection
+         * @param \Workerman\Protocols\Http\Request   $request
+         *
+         * @return bool|void|null
+         * @Author  : 9rax.dev@gmail.com
+         * @DateTime: 2021/4/9 18:32
+         */
+        $this->onMessage = function (TcpConnection $connection,  Request $request) {
 
             global $global;
 
@@ -159,7 +185,41 @@ class WebServer extends \Workerman\Worker
 
                 return $connection->send($response);
             }else{
-                return $connection->send('404');
+
+
+                $_GET = $request->get();
+                $path = $request->path();
+                if ($path === '/') {
+                    $connection->send(exec_php_file(PUBLIC_PATH.'/index.php'));
+                    return;
+                }
+                $file = realpath(PUBLIC_PATH. $path);
+                if (false === $file) {
+                    $connection->send(new Response(404, array(), '<h3>404 Not Found</h3>'));
+                    return;
+                }
+                // Security check! Very important!!!
+                if (strpos($file, PUBLIC_PATH) !== 0) {
+                    $connection->send(new Response(400));
+                    return;
+                }
+                if (\pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                    $connection->send(exec_php_file($file));
+                    return;
+                }
+
+                $if_modified_since = $request->header('if-modified-since');
+                if (!empty($if_modified_since)) {
+                    // Check 304.
+                    $info = \stat($file);
+                    $modified_time = $info ? \date('D, d M Y H:i:s', $info['mtime']) . ' ' . \date_default_timezone_get() : '';
+                    if ($modified_time === $if_modified_since) {
+                        $connection->send(new Response(304));
+                        return;
+                    }
+                }
+                $connection->send((new Response())->withFile($file));
+
             }
 
         };

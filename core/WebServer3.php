@@ -75,12 +75,13 @@ class WebServer extends \Workerman\WebServer
         if (class_exists($controller) && method_exists($controller, $_['action'])) {
             //全局设置
             _G('IS_MOBILE', is_mobile($_SERVER['HTTP_USER_AGENT']));
-
+//            p($_SERVER['HTTP_ORIGIN']);
             //跨域问题
             if (isset($_SERVER['HTTP_ORIGIN'])) {
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . $_SERVER['HTTP_ORIGIN']);
                 //\Workerman\Protocols\Http::header('Access-Control-Allow-Origin:*');
+
             } else {
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
                 \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . \Config::$http['api_url']);
@@ -140,8 +141,8 @@ class WebServer extends \Workerman\WebServer
             }
 
         } else {
-
-            parent::onMessage($connection);
+            $this->addRoot('127.0.0.1',PUBLIC_PATH);
+            return parent::onMessage($connection);
         }
 
 
