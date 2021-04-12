@@ -186,8 +186,7 @@ if (!function_exists('data')) {
             // 判断或获取
             //p($data);
             return (isset($data[$name]) && $data[$name])
-                ? (is_array($data[$name])?json_decode($data[$name], true):$data[$name]) :
-                (isset($data[$name]) ?$data[$name]:'');
+                ? (json_decode($data[$name], true)?json_decode($data[$name], true):$data[$name]):'';
         } elseif (is_null($value)) {
             // 删除
             if (isset($data[$name]))  unset($data[$name]);
