@@ -182,11 +182,12 @@ if (!function_exists('data')) {
             _G($layer,$data);
 //            p('clear');
             return true;
-        } elseif ($name && !$value && !is_null($value)) {
+        } elseif ($name && !$value && !is_null($value)) { 
             // 判断或获取
+            //p($data);
             return (isset($data[$name]) && $data[$name])
-                ? (is_array($data[$name])?$data[$name]:json_decode($data[$name], true)) :
-                $data[$name];
+                ? (is_array($data[$name])?json_decode($data[$name], true):$data[$name]) :
+                (isset($data[$name]) ?$data[$name]:'');
         } elseif (is_null($value)) {
             // 删除
             if (isset($data[$name]))  unset($data[$name]);
