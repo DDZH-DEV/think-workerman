@@ -18,7 +18,9 @@ class Demo{
 
         $params=input('');
 
-        $page=input('page');
+        p($params);
+        
+        p(_G());
 
     }
 

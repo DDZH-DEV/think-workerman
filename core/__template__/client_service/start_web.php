@@ -10,13 +10,13 @@ if(Config::$waf['enable']){
 }
 
 if (version_compare(Worker::VERSION, '4.0.0', '<')) {
-    include_once CORE_PATH . '/WebServer3.php';
+    include_once CORE_PATH . '/WebServer3.php'; //windows版本
 } else {
-    include_once CORE_PATH . '/WebServer4.php';
+    include_once CORE_PATH . '/WebServer4.php'; //linux最新版
 }
 
-$web = new WebServer('http://0.0.0.0:' . Config::$http['http_port']); 
-$web->name  =  Config::$http['name']?Config::$http['name']:'Web';
+$web = new WebServer(Config::$http['http_server']);
+$web->name  =  Config::$http['name']?Config::$http['name']:'WebServer';
 $web->count = Config::$http['count'];
 
 

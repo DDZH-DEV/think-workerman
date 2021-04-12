@@ -1,7 +1,6 @@
 # think-workerman
 
-2020.07.09更新
-已经兼容了windows下workerman 3.* 和linux下 workerman 4.*的webserver,可以一套代码两端使用,同时加入了自己基于宝塔防火墙规则json写的简单的防注入防火墙。
+ 已经兼容了windows下workerman 3.* 和linux下 workerman 4.*的webserver,可以一套代码两端使用,同时加入了自己基于宝塔防火墙规则json写的简单的防注入防火墙。
 
 ***特别留意,如果要兼容两个平台不同的WebServer,在控制器里面接受参数时需要用快捷函数***
 
@@ -120,3 +119,8 @@ start_win_rax_im_with_nodemon.cmd
 4.composer.json里面的包有些未必用得上,可自行删除精简某些不需要的依赖包
 
 5.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
+
+## 项目demo
+1. [RaxChat](http://chat.wsxhr.com)     think-workerman的前身,先做了这个项目，后面慢慢总结才有了think-workerman
+
+2. [Uhao帐号免密共享插件服务端](http://9rax.wsxhr.com/works/uhao.html) 一款可以进行帐号共享的谷歌插件，以前有TP做的后端，后面独立出来，用此作为后端
