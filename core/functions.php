@@ -382,7 +382,7 @@ function console($message,$type='info'){
  * @Author: 9rax.dev@gmail.com
  */
 function staticFix($url){
-    return ($url && strpos($url,'http')===false)?Config::$http['cdn_url'].$url:$url;
+    return ($url && strpos($url,'http')===false)?Config::$http['cdn_url'].$url:($url?$url:Config::$http['cdn_url'].'/default-avatar.png');
 }
 
 

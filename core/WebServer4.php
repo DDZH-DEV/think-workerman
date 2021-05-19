@@ -110,18 +110,13 @@ class WebServer extends \Workerman\Worker
                 _G('IS_MOBILE', is_mobile($request->header()['user-agent']));
 
                 //跨域问题
-                if (isset($request->header()['origin'])) {
-                    $headers=[
-                        'Access-Control-Allow-Credentials'=>'true',
-                        'Access-Control-Allow-Origin'=>$request->header()['origin']
-                    ];
+                $headers=[
+                    'Access-Control-Allow-Credentials'=>'true',
+                    'Access-Control-Allow-Methods'=>'GET, POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Headers'=>'Origin, X-Requested-With, Content-Type, Accept',
+                    'Access-Control-Allow-Origin'=>\Config::$http['cross_url']
+                ];
 
-                } else {
-                    $headers=[
-                        'Access-Control-Allow-Credentials'=>'true',
-                        'Access-Control-Allow-Origin'=>\Config::$http['api_url']
-                    ];
-                }
 
                 ob_start();
                 try {

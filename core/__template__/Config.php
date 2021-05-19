@@ -104,6 +104,7 @@ class Config{
     static $http=[
         'name'=>'WebServer',
         'upload_dir'=>'uploads',
+        'cross_url'=>'http://127.0.0.1:909',
         'http_server'=>'http://0.0.0.0:909',
         'api_url'=>'http://127.0.0.1:909', //用于处理跨域的默认地址\Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . \Config::$http['api_url']);
         'cdn_url'=>'http://cdn.test.com',  //静态文件分发地址 参考函数 staticFix()

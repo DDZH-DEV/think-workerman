@@ -4,7 +4,7 @@
         "workerman/gateway-worker":"*",
         "workerman/gatewayclient":"*",
 
-        "rybakit/phive-queue":"*",
+        "bardoqi/php-hive-queue":"*",
 
         "topthink/think-orm":"^2.0",
         "topthink/think-cache":"^2.0",

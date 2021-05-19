@@ -77,15 +77,10 @@ class WebServer extends \Workerman\WebServer
             _G('IS_MOBILE', is_mobile($_SERVER['HTTP_USER_AGENT']));
 //            p($_SERVER['HTTP_ORIGIN']);
             //跨域问题
-            if (isset($_SERVER['HTTP_ORIGIN'])) {
-                \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
-                \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . $_SERVER['HTTP_ORIGIN']);
-                //\Workerman\Protocols\Http::header('Access-Control-Allow-Origin:*');
-
-            } else {
-                \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
-                \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . \Config::$http['api_url']);
-            }
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:'.\Config::$http['cross_url']);
 
             ob_start();
 

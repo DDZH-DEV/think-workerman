@@ -41,6 +41,7 @@ class Upload{
     public function __construct()
     {
         $files=_G('_FILES');
+
         $key = array_keys($files)[0];
         $this->file = $files[$key];
 
@@ -52,9 +53,7 @@ class Upload{
 
         $this->file_size=isset($this->file['file_size'])?$this->file['file_size']:$this->file['size'];
 
-        $this->file_md5 = md5_file($this->tmp_file);
-
-
+        $this->file_md5 = md5($this->tmp_file);
         //后缀获取
         $this->ext = $ext =substr(strrchr($this->file_name, '.'), 1);
         $this->original_name = str_replace("." . $ext,'',$this->file_name);
@@ -128,7 +127,9 @@ class Upload{
 
         $this->save_full=$save_path.DS.$this->file_md5.'.'.$this->ext;
 
-        $res=file_put_contents( $this->save_full, file_get_contents($this->tmp_file));
+        $content=is_file($this->tmp_file)?file_get_contents($this->tmp_file):$this->tmp_file;
+
+        $res=file_put_contents( $this->save_full, $content);
 
         if ($res) {
             return [
