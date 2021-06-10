@@ -4,8 +4,8 @@ use rax\RaxWaf;
 class WebServer extends \Workerman\WebServer
 {
     public function onWorkerStart (){
-
-        $global = new \GlobalData\Client('127.0.0.1:'.\Config::$global_data['port']);
+        global $global;
+        $global = new \GlobalData\Client(\Config::$global_data['client']);
         if(\Config::$waf['enable']) {
             RaxWaf::init(\Config::$waf);
             $global->deny_ips=$global->deny_ips?:RaxWaf::getDenyIps();
@@ -51,6 +51,7 @@ class WebServer extends \Workerman\WebServer
         _G('_SESSION', $_SESSION);
         _G('_COOKIE', $_COOKIE);
         _G('DEBUG', file_exists(APP_PATH . '/debug'));
+        _G('_SERVER',$_SERVER);
 
         //开始分发请求
         $params = str_replace(['.html', '.htm', '.shtml'], [''], preg_split('/(\/|\?)/', $_SERVER['REQUEST_URI']));

@@ -378,11 +378,17 @@ function console($message,$type='info'){
 /**
  * 静态资源输出
  * @param $url
+ * @param string $default_url
+ *
  * @return string
+ * @throws \Psr\SimpleCache\InvalidArgumentException
  * @Author: 9rax.dev@gmail.com
+ * @DateTime: 2021/6/8 17:49
  */
-function staticFix($url){
-    return ($url && strpos($url,'http')===false)?Config::$http['cdn_url'].$url:($url?$url:Config::$http['cdn_url'].'/default-avatar.png');
+function staticFix($url,$default_url=''){
+    $url=$url?$url:$default_url;
+    $cdn_url=\think\facade\Cache::get('db_cdn_url')?\think\facade\Cache::get('db_cdn_url'):Config::$http['cdn_url'];
+    return ($url && strpos($url,'http')===false)?$cdn_url.$url:($url?$url:$cdn_url.'/default-image.jpg');
 }
 
 
@@ -427,7 +433,7 @@ function arrayRecursiveDiff($aArray1, $aArray2) {
     $aReturn = array();
     if($aArray1){
         foreach ($aArray1 as $mKey => $mValue) {
-            if (array_key_exists($mKey, $aArray2)) {
+            if (is_array($aArray2) && array_key_exists($mKey, $aArray2)) {
                 if (is_array($mValue)) {
                     $aRecursiveDiff = arrayRecursiveDiff($mValue, $aArray2[$mKey]);
                     if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
