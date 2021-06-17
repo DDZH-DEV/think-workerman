@@ -79,9 +79,9 @@ class WebServer extends \Workerman\WebServer
 //            p($_SERVER['HTTP_ORIGIN']);
             //跨域问题
             \Workerman\Protocols\Http::header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Methods: *');
             \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:'.\Config::$http['cross_url']);
+            \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:'.(isset($_SERVER['HTTP_ORIGIN'])? $_SERVER['HTTP_ORIGIN']: \Config::$http['cross_url']));
 
             ob_start();
 

@@ -388,7 +388,7 @@ function console($message,$type='info'){
 function staticFix($url,$default_url=''){
     $url=$url?$url:$default_url;
     $cdn_url=\think\facade\Cache::get('db_cdn_url')?\think\facade\Cache::get('db_cdn_url'):Config::$http['cdn_url'];
-    return ($url && strpos($url,'http')===false)?$cdn_url.$url:($url?$url:$cdn_url.'/default-image.jpg');
+    return ($url && strpos($url,'http')===false)?$cdn_url.$url:$url;
 }
 
 

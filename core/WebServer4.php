@@ -184,7 +184,7 @@ class WebServer extends \Workerman\Worker
                     'Access-Control-Allow-Credentials'=>'true',
                     'Access-Control-Allow-Methods'=>'GET, POST, PUT, OPTIONS',
                     'Access-Control-Allow-Headers'=>'*',
-                    'Access-Control-Allow-Origin'=>\Config::$http['cross_url']
+                    'Access-Control-Allow-Origin'=>(isset($_SERVER['HTTP_ORIGIN'])? $_SERVER['HTTP_ORIGIN']: \Config::$http['cross_url'])
                 ];
 
 
