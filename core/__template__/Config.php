@@ -52,7 +52,7 @@ class Config{
             'file'	=>	[
                 'type'   => 'File',
                 // 缓存保存目录
-                'path'   => APP_PATH.DS.'runtime'.DS.'cache',
+                'path'   => APP_PATH.'runtime'.DS.'cache',
                 // 缓存前缀
                 'prefix' => '',
                 // 缓存有效期 0表示永久缓存
@@ -74,7 +74,7 @@ class Config{
         'channels'	=>	[
             'file'	=>	[
                 'type'	=>	'file',
-                'path'	=>	APP_PATH.DS.'runtime/logs',
+                'path'	=>	APP_PATH.'runtime'.DS.'logs',
             ],
         ],
     ];
@@ -82,7 +82,8 @@ class Config{
 
     static $global_data=[
         'name'=>'GlobalDataServer',
-        'port'=>2700
+        'client'=>'127.0.0.1:2700',
+        'server_port'=>'2700' //可以填false 关闭当前应用不单独再开启一个server
     ];
 
     static $queue=[

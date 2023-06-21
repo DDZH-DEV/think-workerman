@@ -5,11 +5,11 @@ date_default_timezone_set("PRC");
 ini_set("display_errors",1);
 
 //服务路径
-define('CORE_PATH',__DIR__);
+const CORE_PATH = __DIR__;
 //根目录
 define('ROOT_PATH',(dirname(CORE_PATH)));
 
-define('DS',DIRECTORY_SEPARATOR);
+const DS = DIRECTORY_SEPARATOR;
 
 $Loader=require_once (ROOT_PATH.DS.'vendor'.DS.'autoload.php');
 
@@ -20,7 +20,6 @@ require_once (CORE_PATH.DS.'functions.php');
 $app_path=dirname(dirname(debug_backtrace()[0]['file']));
 
 define('APP_PATH',$app_path.DIRECTORY_SEPARATOR);
-
 
 //console('[APP_PATH] : '.APP_PATH);
 include_once APP_PATH.'Config.php';

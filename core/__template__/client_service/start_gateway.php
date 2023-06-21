@@ -37,7 +37,7 @@ $gateway->pingInterval = 25;
 $gateway->pingNotResponseLimit = 1;
 
 $gateway->onWorkerStart=function(){
-    $global = new \GlobalData\Client('127.0.0.1:'.Config::$global_data['port']);
+    $global = new \GlobalData\Client(\Config::$global_data['client']);
     //开启防火墙
     if(Config::$waf['enable']) {
         \rax\RaxWaf::init(Config::$waf);

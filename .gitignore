@@ -2,8 +2,7 @@
 vendor/
 start*cmd
 *Cache*
-composer\.lock
-public/
+composer\.lock 
 *.log
 rax_chat/
 rax_im/

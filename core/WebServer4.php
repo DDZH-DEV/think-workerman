@@ -34,7 +34,7 @@ class WebServer extends \Workerman\Worker
          * @DateTime: 2021/4/9 18:32
          */
         $this->onWorkerStart=function (){
-            $global = new \GlobalData\Client('127.0.0.1:'.\Config::$global_data['port']);
+            $global = new \GlobalData\Client(\Config::$global_data['client']);
             if(\Config::$waf['enable']) {
                 RaxWaf::init(\Config::$waf);
                 $global->deny_ips=$global->deny_ips?:RaxWaf::getDenyIps();

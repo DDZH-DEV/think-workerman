@@ -160,7 +160,7 @@ class RaxWaf
                 }
             }
         }
-        //var_dump($data);
+
         if ($data) {
             $remark = is_string($data) ? $data : $remark;
             $rules = self::$rules['post'];
@@ -180,8 +180,8 @@ class RaxWaf
                 }
             }
         }
-
-        if (!self::$handle && !self::$is_cli) {
+        //var_dump($deny,self::$handle , self::$is_cli);
+        if (!self::$handle && !self::$is_cli && $deny) {
             die(self::$config['deny_message']);
         } else if (is_callable(self::$handle)) {
             call_user_func(self::$handle, $ip);

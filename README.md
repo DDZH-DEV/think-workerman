@@ -120,7 +120,5 @@ start_win_rax_im_with_nodemon.cmd
 
 5.如有问题可以加群 [点击链接加入群聊【workerman第三方交流群】](https://jq.qq.com/?_wv=1027&k=5r3f8q0)
 
-## 项目demo
-1. [RaxChat](http://chat.wsxhr.com)     think-workerman的前身,先做了这个项目，后面慢慢总结才有了think-workerman
-
-2. [Uhao帐号免密共享插件服务端](http://9rax.wsxhr.com/works/uhao.html) 一款可以进行帐号共享的谷歌插件，以前有TP做的后端，后面独立出来，用此作为后端
+## 项目demo 
+ 

@@ -55,6 +55,10 @@ function json($data, $code = 200, $msg = null,$debug=[])
             'msg' => $msg
         ];
     }
+    if(defined('CGI_MODE')){
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        throw new Exception('jump_exit');
+    }
     if(version_compare(\Workerman\Worker::VERSION,'4.0.0','<')){
         \Workerman\Protocols\Http::header('content-type: application/json');
         \Workerman\Protocols\Http::end(json_encode($result, JSON_UNESCAPED_UNICODE));
@@ -331,6 +335,31 @@ function input($key ='',$default_value=null,$filter='')
     }
 }
 
+/**
+ * @return array|false|mixed|string
+ */
+function getIP()
+{
+    static $realip;
+    if (isset($_SERVER)){
+        if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])){
+            $realip = $_SERVER["HTTP_X_FORWARDED_FOR"];
+        } else if (isset($_SERVER["HTTP_CLIENT_IP"])) {
+            $realip = $_SERVER["HTTP_CLIENT_IP"];
+        } else {
+            $realip = $_SERVER["REMOTE_ADDR"];
+        }
+    } else {
+        if (getenv("HTTP_X_FORWARDED_FOR")){
+            $realip = getenv("HTTP_X_FORWARDED_FOR");
+        } else if (getenv("HTTP_CLIENT_IP")) {
+            $realip = getenv("HTTP_CLIENT_IP");
+        } else {
+            $realip = getenv("REMOTE_ADDR");
+        }
+    }
+    return $realip;
+}
 
 
 
