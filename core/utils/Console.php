@@ -116,29 +116,18 @@ final class Console
         self::AT_STRIKE => '9',
     );
 
-    /**
-     * Identify if console supports colors
-     *
-     * @return boolean
-     */
-    public static function isSupportedShell()
+    public static function head($msg)
     {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI') || 'xterm' === getenv('TERM');
-        }
-
-        return defined('STDOUT') && function_exists('posix_isatty') && posix_isatty(STDOUT);
+        return static::colorize($msg, self::FG_BROWN);
     }
 
     /**
      * Colorizes the string using provided colors.
-     *
      * @static
      * @param              $string
      * @param null|integer $fg
      * @param null|integer $at
      * @param null|integer $bg
-     *
      * @return string
      */
     public static function colorize($string, $fg = null, $at = null, $bg = null)
@@ -171,14 +160,21 @@ final class Console
         return $colored;
     }
 
-    public static function head($msg)
+    /**
+     * Identify if console supports colors
+     * @return boolean
+     */
+    public static function isSupportedShell()
     {
-        return static::colorize($msg, self::FG_BROWN);
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI') || 'xterm' === getenv('TERM');
+        }
+
+        return defined('STDOUT') && function_exists('posix_isatty') && posix_isatty(STDOUT);
     }
 
     /**
      * Color style for error messages.
-     *
      * @static
      * @param $msg
      * @return string
@@ -195,8 +191,19 @@ final class Console
     }
 
     /**
+     * @desc   计算中英文混写的字符长度
+     * @author limx
+     */
+    private static function strlen($msg)
+    {
+        if (function_exists("mb_strlen")) {
+            return (mb_strlen($msg) + strlen($msg)) / 2;
+        }
+        return strlen($msg);
+    }
+
+    /**
      * Color style for success messages.
-     *
      * @static
      * @param $msg
      * @return string
@@ -214,7 +221,6 @@ final class Console
 
     /**
      * Color style for info messages.
-     *
      * @static
      * @param $msg
      * @return string
@@ -228,17 +234,5 @@ final class Console
         $out .= static::colorize(str_pad(' ', $space), self::FG_WHITE, self::AT_BOLD, self::BG_BLUE) . PHP_EOL;
 
         return $out;
-    }
-
-    /**
-     * @desc   计算中英文混写的字符长度
-     * @author limx
-     */
-    private static function strlen($msg)
-    {
-        if (function_exists("mb_strlen")) {
-            return (mb_strlen($msg) + strlen($msg)) / 2;
-        }
-        return strlen($msg);
     }
 }

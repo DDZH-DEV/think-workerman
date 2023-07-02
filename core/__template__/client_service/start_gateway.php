@@ -15,21 +15,21 @@ use \Workerman\Worker;
 use \GatewayWorker\Gateway;
 
 // 自动加载类
-require_once dirname(dirname(__DIR__)).DIRECTORY_SEPARATOR.'core/init.php';
+require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/init.php';
 
 // gateway 进程，这里使用Text协议，可以用telnet测试
-$gateway = new Gateway('websocket://'.Config::$gateway['address']);
+$gateway = new Gateway('websocket://'.config('gateway.address'));
 // gateway名称，status方便查看
-$gateway->name = Config::$gateway['name'];
+$gateway->name = config('gateway.name');
 // gateway进程数
-$gateway->count = Config::$gateway['count'];
+$gateway->count = config('gateway.count');
 // 本机ip，分布式部署时使用内网ip
-$gateway->lanIp = Config::$gateway['lan_ip'];
+$gateway->lanIp = config('gateway.lan_ip');
 // 内部通讯起始端口，假如$gateway->count=4，起始端口为4000
 // 则一般会使用4000 4001 4002 4003 4个端口作为内部通讯端口 
-$gateway->startPort = Config::$gateway['start_port'];
+$gateway->startPort = config('gateway.start_port');
 // 服务注册地址
-$gateway->registerAddress = Config::$register['address'];
+$gateway->registerAddress = config('register.address');
 
 // 心跳间隔
 $gateway->pingInterval = 25;
@@ -37,10 +37,10 @@ $gateway->pingInterval = 25;
 $gateway->pingNotResponseLimit = 1;
 
 $gateway->onWorkerStart=function(){
-    $global = new \GlobalData\Client(\Config::$global_data['client']);
+    $global = new \GlobalData\Client(config('global_data.client'));
     //开启防火墙
-    if(Config::$waf['enable']) {
-        \rax\RaxWaf::init(Config::$waf);
+    if(config('waf.enable')) {
+        \rax\RaxWaf::init(config('waf'));
         $global->deny_ips=$global->deny_ips?:\rax\RaxWaf::getDenyIps();
     }
 };

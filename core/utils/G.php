@@ -6,49 +6,41 @@ namespace utils;
 /**
  * 全局变量共享类
  * @package utils
- * @Author: 9rax.dev@gmail.com
  */
 class G
 {
 
     //mvc会释放的全局变量
-    protected $_global_release = [];
-
-
-    //mvc后不会释放的数据
-    protected $_global_no_release=[];
-
-
-
     static $instance;
 
 
+    //mvc后不会释放的数据
+    protected $_global_release = [];
+    protected $_global_no_release = [];
+
+    public static function get($name, $long = false)
+    {
+        $instance = self::instance();
+        return $long !== 'G' ?
+            (isset($instance->_global_release[$name]) ? $instance->_global_release[$name] : null) :
+            (isset($instance->_global_no_release[$name]) ? $instance->_global_no_release[$name] : null);
+    }
+
     public static function instance()
     {
-        if(!self::$instance){
-            self::$instance=new self();
+        if (!self::$instance) {
+            self::$instance = new self();
         }
         return self::$instance;
     }
 
+    public static function set($name, $value, $long = false)
+    {
 
-
-    public static function get($name,$long=false){
-        $instance=self::instance();
-        return $long!=='_G'?
-            (isset($instance->_global_release[$name])?$instance->_global_release[$name]:null):
-            (isset($instance->_global_no_release[$name])?$instance->_global_no_release[$name]:null);
-    }
-
-
-
-
-    public static function set($name,$value,$long=false){
-
-        if($long){
-            self::instance()->_global_no_release[$name]=$value;
-        }else{
-            self::instance()->_global_release[$name]=$value;
+        if ($long) {
+            self::instance()->_global_no_release[$name] = $value;
+        } else {
+            self::instance()->_global_release[$name] = $value;
         }
 
     }
@@ -57,11 +49,10 @@ class G
     /**
      * 获取所有全局数据
      * @return array
-     * @Author: 9rax.dev@gmail.com
      */
     public static function all()
     {
-        return array_merge(self::instance()->_global_release,self::instance()->_global_no_release);
+        return array_merge(self::instance()->_global_release, self::instance()->_global_no_release);
     }
 
 

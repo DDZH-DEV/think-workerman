@@ -15,9 +15,9 @@ use \Workerman\Worker;
 use \GatewayWorker\Register;
 
 // 自动加载类
-require_once dirname(dirname(__DIR__)).DIRECTORY_SEPARATOR.'core/init.php';
+require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/init.php';
 
-$register = new Register('text://'.Config::$register['address']);
+$register = new Register('text://'.config('register.address'));
 
 // 如果不是在根目录启动，则运行runAll方法
 if(!defined('GLOBAL_START')) {

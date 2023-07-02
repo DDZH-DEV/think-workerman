@@ -2,7 +2,7 @@
 
 use Workerman\Worker;
 
-require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'core/init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/init.php';
 
 $worker = new Worker();
 $worker->name = 'Timer';

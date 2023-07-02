@@ -15,26 +15,26 @@
 use \Workerman\Worker;
 
 // 自动加载类
-require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'core/init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/init.php';
 
 
 //消息队列 进程
 $worker = new Worker();
 // worker名称
-$worker->name = Config::$queue['name'];
+$worker->name = config('queue.name');
 
-$worker->count = Config::$queue['count'];
+$worker->count = config('queue.count');
 
 
 $worker->onWorkerStart = function () {
 
-    $queue_key=md5(json_encode(Config::$http));
+    $queue_key=md5(json_encode(config('http')));
 
     static $Queue;
 
     if(!$Queue){
         $_redis=new \Redis();
-        $_redis->connect(Config::$queue['host'],Config::$queue['port']);
+        $_redis->connect(config('queue.host'),config('queue.port'));
         $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
         $Queue = new \Phive\Queue\RedisQueue($_redis);
     }

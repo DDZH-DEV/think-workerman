@@ -3,10 +3,7 @@
 namespace rax;
 /**
  * 根据宝塔规则改写的php防火墙,后期更新规则请进群940586873
- *
- * @Author  : 9rax.dev@gmail.com
- * @DateTime: 2020/7/2 15:26
- * @Notice  : 九锐网(9rax.com)旗下的开源作品。
+ * * @Notice  : 九锐网(9rax.com)旗下的开源作品。
  */
 class RaxWaf
 {
@@ -39,31 +36,6 @@ class RaxWaf
 
     private static $deny_ips = [];
 
-    static function init($config = [])
-    {
-        if (!self::$instance) {
-            $config && self::$config = array_merge(self::$config, $config);
-            if (!is_dir(self::$config['log_path'])) mkdir(self::$config['log_path'], 755, true);
-            self::$instance = new self();
-            self::$is_cli = PHP_SAPI === 'cli' ? true : false;
-            if (!is_file(self::$config['rule_path'] . 'deny_ips.json')) {
-                touch(self::$config['rule_path'] . 'deny_ips.json');
-            }
-            self::$deny_ips = json_decode(self::$config['rule_path'] . 'deny_ips.json', true) ? json_decode(self::$config['rule_path'] . 'deny_ips.json', true) : [];
-        }
-    }
-
-    static function getDenyIps()
-    {
-        if (!self::$instance) self::init();
-        return self::$deny_ips;
-    }
-
-    static function setDenyIps($ips = [])
-    {
-        self::$deny_ips = $ips;
-    }
-
     function __construct()
     {
         self::$rules['args'] = self::parserRule('args.json');
@@ -73,13 +45,10 @@ class RaxWaf
 
     /**
      * 解析规则
-     *
      * @param $json
-     *
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/5 10:34
+     * @return array
      */
-    private static function parserRule($json, $mutil = true)
+    private static function parserRule($json): array
     {
 
         $res = [];
@@ -99,12 +68,46 @@ class RaxWaf
     }
 
     /**
+     * 修正正则表达式
+     * @param $regex
+     * @return array|string|string[]|null
+     */
+    private static function fixRegex($regex)
+    {
+
+        return preg_replace_callback('/([\\\\]?\/)/', function ($item) {
+            return $item[1] === '/' ? '\/' : '\/';
+        }, $regex);
+    }
+
+    static function getDenyIps(): array
+    {
+        if (!self::$instance) self::init();
+        return self::$deny_ips;
+    }
+
+    static function setDenyIps($ips = [])
+    {
+        self::$deny_ips = $ips;
+    }
+
+    static function init($config = [])
+    {
+        if (!self::$instance) {
+            $config && self::$config = array_merge(self::$config, $config);
+            if (!is_dir(self::$config['log_path'])) mkdir(self::$config['log_path'], 755, true);
+            self::$instance = new self();
+            self::$is_cli = PHP_SAPI === 'cli';
+            if (!is_file(self::$config['rule_path'] . 'deny_ips.json')) {
+                touch(self::$config['rule_path'] . 'deny_ips.json');
+            }
+            self::$deny_ips = json_decode(self::$config['rule_path'] . 'deny_ips.json', true) ? json_decode(self::$config['rule_path'] . 'deny_ips.json', true) : [];
+        }
+    }
+
+    /**
      * saveDenyIps
-     *
      * @param $ips
-     *
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/7 19:22
      */
     static function saveDenyIps($ips)
     {
@@ -112,19 +115,15 @@ class RaxWaf
         $ips && is_array($ips) && file_put_contents(self::$config['rule_path'] . 'deny_ips.json', json_encode($ips, JSON_UNESCAPED_UNICODE));
     }
 
-
     /**
      * 监听请求
-     *
-     * @param mixed  $urlOrData
-     * @param array  $data
+     * @param $ip
+     * @param mixed $urlOrData
+     * @param array $data
      * @param string $remark
-     *
      * @return bool
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/5 13:29
      */
-    static function check($ip, $urlOrData, $data = [], $remark = '')
+    static function check($ip, $urlOrData, array $data = [], string $remark = ''): bool
     {
 
         if (!self::$instance) {
@@ -153,7 +152,7 @@ class RaxWaf
             $rules = array_merge(self::$rules['url'], self::$rules['args']);
             foreach ($rules as $name => $regex) {
                 //var_dump($name,"/{$regex}/i",$url,preg_match("/{$regex}/i",$url));
-                if (preg_match("/{$regex}/i", $url) || preg_match("/{$regex}/i", urldecode($url))) {
+                if (preg_match("/$regex/i", $url) || preg_match("/$regex/i", urldecode($url))) {
                     self::log($url, $ip, 'URL&GET HIT', $regex, $name, $data, $remark);
                     $deny = true;
                     break;
@@ -164,15 +163,14 @@ class RaxWaf
         if ($data) {
             $remark = is_string($data) ? $data : $remark;
             $rules = self::$rules['post'];
-            $values = '';
             $type = 'DATA HIT';
 
             if (is_array($data)) {
 
-                $values=self::arr2str($data);
+                $values = self::arr2str($data);
 
                 foreach ($rules as $name => $regex) {
-                    if (preg_match("/{$regex}/i", $values) || preg_match("/{$regex}/i", htmlspecialchars_decode($values))) {
+                    if (preg_match("/$regex/i", $values) || preg_match("/$regex/i", htmlspecialchars_decode($values))) {
                         self::log($url, $ip, $type, $regex, $name, $data, $remark);
                         $deny = true;
                         break;
@@ -191,39 +189,30 @@ class RaxWaf
 
     }
 
-
     /**
      * log
-     *
      * @param        $url
+     * @param $ip
      * @param        $type
      * @param        $rule
      * @param string $name
-     * @param array  $data
+     * @param array $data
      * @param string $remark
-     *
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/5 13:33
      */
-    private static function log($url, $ip, $type, $rule, $name = '', $data = [], $remark = '')
+    private static function log($url, $ip, $type, $rule, string $name = '', array $data = [], string $remark = '')
     {
-        $log = "TIME:" . date('Y-m-d H:i:s', time()) . ";TYPE:{$type};RULE:{$rule};IP:{$ip};";
-        $url && $log .= "URL:{$url};";
-        $name && $log .= "NAME:{$name};";
-        $remark && $log .= "REMARK:{$remark};";
+        $log = "TIME:" . date('Y-m-d H:i:s', time()) . ";TYPE:$type;RULE:$rule;IP:$ip;";
+        $url && $log .= "URL:$url;";
+        $name && $log .= "NAME:$name;";
+        $remark && $log .= "REMARK:$remark;";
         $data && $log = $log . PHP_EOL . 'CHECK_DATA:' . json_encode($data, JSON_UNESCAPED_UNICODE);
         $log .= PHP_EOL . PHP_EOL;
         self::logOutput($log);
     }
 
-
     /**
      * 日志记录到文件
-     *
      * @param $str
-     *
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/5 13:33
      */
     private static function logOutput($str)
     {
@@ -232,38 +221,19 @@ class RaxWaf
         file_put_contents($filename, $str, FILE_APPEND);
     }
 
-    /**
-     * 修正正则表达式
-     *
-     * @param $regex
-     *
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2020/7/5 15:18
-     */
-    private static function fixRegex($regex)
+    private static function arr2str($data): string
     {
-
-        $regex = preg_replace_callback('/([\\\\]?\/)/', function ($item) {
-            return $item[1] === '/' ? '\/' : '\/';
-        }, $regex);
-
-        return $regex;
-    }
-
-
-
-    private static function arr2str($data){
-        $result='';
-        if(is_array($data)){
-            foreach ($data as $k=>$v){
-                if(is_array($v)){
-                    $result.=self::arr2str($v);
-                }else{
-                    $result.=$k.'='.$v.' ';
+        $result = '';
+        if (is_array($data)) {
+            foreach ($data as $k => $v) {
+                if (is_array($v)) {
+                    $result .= self::arr2str($v);
+                } else {
+                    $result .= $k . '=' . $v . ' ';
                 }
             }
-        }else{
-            $result.=$data;
+        } else {
+            $result .= $data;
         }
         return $result;
     }

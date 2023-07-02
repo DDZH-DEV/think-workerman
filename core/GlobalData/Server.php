@@ -31,9 +31,9 @@ class Server
         $worker->name = 'globalDataServer';
         $worker->onMessage = array($this, 'onMessage');
         $worker->reloadable = false;
-        $this->_worker = $worker; 
+        $this->_worker = $worker;
     }
-    
+
     /**
      * onMessage.
      * @param TcpConnection $connection
@@ -52,7 +52,7 @@ class Server
         }
         $cmd = $data['cmd'];
         $key = $data['key'];
-        switch($cmd) 
+        switch($cmd)
         {
             case 'get':
                 if(!isset($this->_dataArray[$key]))

@@ -1,2 +1,2 @@
-php ./init_apps.php
-php ./init_apps.php nodemon
+php ./core/rax/Dev.php
+php ./core/rax/Dev.php nodemon

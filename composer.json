@@ -1,7 +1,7 @@
 {
     "require": {
-        "workerman/workerman": "*",
-        "workerman/gateway-worker":"*",
+        "workerman/workerman-for-win": "*",
+        "workerman/gateway-worker-for-win":"*",
         "workerman/gatewayclient":"*",
 
         "bardoqi/php-hive-queue":"*",

@@ -12,9 +12,9 @@ namespace utils;
 class Random
 {
     private static $lastTimestamp = 0;
-    private static $lastSequence  = 0;
-    private static $sequenceMask  = 4095;
-    private static $twepoch       = 1508945092000;
+    private static $lastSequence = 0;
+    private static $sequenceMask = 4095;
+    private static $twepoch = 1508945092000;
 
     static function randStr($length)
     {
@@ -36,10 +36,10 @@ class Random
 
     /**
      * 生成基于雪花算法的随机编号
-     * @author : evalor <master@evalor.cn>
      * @param int $dataCenterID 数据中心ID 0-31
      * @param int $workerID 任务进程ID 0-31
      * @return int 分布式ID
+     * @author : evalor <master@evalor.cn>
      */
     static function snowFlake($dataCenterID = 0, $workerID = 0)
     {
@@ -60,27 +60,20 @@ class Random
     }
 
     /**
-     * 反向解析雪花算法生成的编号
+     * 获取毫秒级时间戳
+     * @return float
      * @author : evalor <master@evalor.cn>
-     * @param int|float $snowFlakeId
-     * @return array
      */
-    static function unSnowFlake($snowFlakeId)
+    private static function timeGen()
     {
-        $Binary = str_pad(decbin($snowFlakeId), 64, '0', STR_PAD_LEFT);
-        return [
-            'timestamp'    => bindec(substr($Binary, 0, 41)) + self::$twepoch,
-            'dataCenterID' => bindec(substr($Binary, 42, 5)),
-            'workerID'     => bindec(substr($Binary, 47, 5)),
-            'sequence'     => bindec(substr($Binary, -12)),
-        ];
+        return (float)sprintf('%.0f', microtime(true) * 1000);
     }
 
     /**
      * 等待下一毫秒的时间戳
-     * @author : evalor <master@evalor.cn>
      * @param $lastTimestamp
      * @return float
+     * @author : evalor <master@evalor.cn>
      */
     private static function tilNextMillis($lastTimestamp)
     {
@@ -92,30 +85,36 @@ class Random
     }
 
     /**
-     * 获取毫秒级时间戳
+     * 反向解析雪花算法生成的编号
+     * @param int|float $snowFlakeId
+     * @return array
      * @author : evalor <master@evalor.cn>
-     * @return float
      */
-    private static function timeGen()
+    static function unSnowFlake($snowFlakeId)
     {
-        return (float)sprintf('%.0f', microtime(true) * 1000);
+        $Binary = str_pad(decbin($snowFlakeId), 64, '0', STR_PAD_LEFT);
+        return [
+            'timestamp' => bindec(substr($Binary, 0, 41)) + self::$twepoch,
+            'dataCenterID' => bindec(substr($Binary, 42, 5)),
+            'workerID' => bindec(substr($Binary, 47, 5)),
+            'sequence' => bindec(substr($Binary, -12)),
+        ];
     }
 
-
-
     /**
-    +----------------------------------------------------------
+     * +----------------------------------------------------------
      * 产生随机字串，可用来自动生成密码 默认长度6位 字母和数字混合
-    +----------------------------------------------------------
+     * +----------------------------------------------------------
      * @param string $len 长度
      * @param string $type 字串类型
      * 0 字母 1 数字 其它 混合
      * @param string $addChars 额外字符
-    +----------------------------------------------------------
+     * +----------------------------------------------------------
      * @return string
-    +----------------------------------------------------------
+     * +----------------------------------------------------------
      */
-        static function rand_string($len = 6, $type = '', $addChars = '') {
+    static function rand_string($len = 6, $type = '', $addChars = '')
+    {
         $str = '';
         switch ($type) {
             case 0:
@@ -144,7 +143,7 @@ class Random
         }
         if ($type != 4) {
             $chars = str_shuffle($chars);
-            $str   = substr($chars, 0, $len);
+            $str = substr($chars, 0, $len);
         } else {
             // 中文随机字
             for ($i = 0; $i < $len; $i++) {
@@ -153,7 +152,6 @@ class Random
         }
         return $str;
     }
-
 
 
 }
