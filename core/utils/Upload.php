@@ -40,7 +40,7 @@ class Upload
 
     public function __construct()
     {
-        $files = _G('FILES');
+        $files = g('FILES');
 
         $key = array_keys($files)[0];
         $this->file = $files[$key];

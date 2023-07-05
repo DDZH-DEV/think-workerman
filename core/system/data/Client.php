@@ -1,6 +1,6 @@
 <?php
 
-namespace GlobalData;
+namespace data;
 /**
  *  Global data client.
  * @version 1.0.3
@@ -144,7 +144,7 @@ class Client
     protected function writeToRemote($data, $connection)
     {
         $buffer = serialize($data);
-        $buffer = pack('N', 4 + strlen($buffer)) . $buffer;
+        $buffer = Client . phppack('N', 4 + strlen($buffer)) . $buffer;
         $len = fwrite($connection, $buffer);
         if ($len !== strlen($buffer)) {
             throw new \Exception('writeToRemote fail');

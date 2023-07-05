@@ -2,16 +2,16 @@
 
 use Workerman\Worker;
 
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core'.DIRECTORY_SEPARATOR.'init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'init.php';
 
 
-if(!config('global_data.server_port')){
+if (!config('global_data.server_port')) {
     return false;
 }
 // 监听端口
-$worker = new GlobalData\Server('0.0.0.0', config('global_data.server_port'));
+$worker = new data\Server('0.0.0.0', config('global_data.server_port'));
 
-$worker->name  =  config('global_data.name')?config('global_data.name'):'GlobalDataServer';
+$worker->name = config('global_data.name') ? config('global_data.name') : 'GlobalDataServer';
 
 
 if (!defined('GLOBAL_START')) {

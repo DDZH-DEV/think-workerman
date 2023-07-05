@@ -1,10 +1,10 @@
 <?php
 
-namespace rax;
+namespace system;
 
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(__DIR__, 2) . DIRECTORY_SEPARATOR);
 !defined('APP_PATH') && define('APP_PATH', ROOT_PATH . 'apps' . DIRECTORY_SEPARATOR);
-
+!defined('IS_WIN') && define('IS_WIN',strtoupper(substr(PHP_OS,0,3))==='WIN');
 
 /**
  * 打印数据
@@ -27,6 +27,8 @@ class Dev
 
     static function init()
     {
+        define('INIT_APP',1);
+
         $apps = include ROOT_PATH . '/apps.config.php';
         //项目需要多少启动文件
         self::initCliFiles($apps);
@@ -37,6 +39,7 @@ class Dev
         }
     }
 
+
     protected static function initCliFiles($apps)
     {
 
@@ -44,6 +47,7 @@ class Dev
 
         $to_dir = ROOT_PATH . 'server';
         self::copy_dir($from_dir, $to_dir);
+
         $funs = [];
         if ($apps) {
             array_map(function ($item) use (&$funs) {
@@ -53,13 +57,24 @@ class Dev
             $funs = array_filter($funs);
         }
 
+
         $start_files = self::get_bat_files($funs);
 
         //删除不需要的原装启动文件
         $files = glob(ROOT_PATH . '/server/start*.php');
 
         foreach ($files as $file) {
-            if (!in_array(basename($file), $start_files) && in_array(basename($file), ['start_businessworker.php', 'start_gateway.php', 'start_register.php', 'start_web.php', 'start_queue.php'])) {
+            if (!in_array(basename($file), $start_files) && in_array(basename($file),
+                    [
+                        'start_businessworker.php',
+                        'start_gateway.php',
+                        'start_register.php',
+                        'start_web.php',
+                        'start_queue.php',
+                        'start_timer.php',
+                        'start_cron.php',
+                        'start_global_data.php'
+                    ])) {
                 unlink($file);
             }
         }
@@ -119,8 +134,14 @@ class Dev
             $files[] = 'queue';
         }
 
-        if (strpos($type, 'timer') !== false) {
-            $files[] = 'timer';
+
+        if (strpos($type, 'cron') !== false || strpos($type, 'timer') !== false) {
+            $files[] = 'cron';
+        }
+
+
+        if (strpos($type, 'data') !== false) {
+            $files[] = 'global_data';
         }
 
 
@@ -159,13 +180,12 @@ class Dev
         }
 
         $command = "";
-
-
         $linux_command = '#!/bin/bash ' . PHP_EOL;
 
         if ($watch) {
-            $command = 'nodemon  -w "' . dirname($SERVER_PATH, 2) . DIRECTORY_SEPARATOR . '*" -i "' . dirname($SERVER_PATH) . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . '*" -e "php" -x "';
-            $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php restart;';# . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start;';
+            //$command = 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start > run.log  '. PHP_EOL;
+            $command .= 'nodemon  -w "' . dirname($SERVER_PATH, 2) . DIRECTORY_SEPARATOR . '*" -i "' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . '**'.DIRECTORY_SEPARATOR.'*" -e "php" -x "';
+            $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php restart;';
         } else {
             $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start';
         }
@@ -177,8 +197,12 @@ class Dev
         $command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
         $command .= 'pause;';
 
-        file_put_contents($bat, $command);
-        file_put_contents($sh, $linux_command);
+        if(IS_WIN){
+            file_put_contents($bat, $command);
+        }else{
+            file_put_contents($sh, $linux_command);
+        }
+
     }
 
     /**
@@ -196,8 +220,29 @@ class Dev
 
         self::copy_dir($from_dir, $to_dir);
 
+        self::replaceTemplateStr($to_dir,$dir);
+
     }
 
+    /**
+     * 处理命名空间替换
+     * @param $path
+     * @param $app
+     * @return void
+     */
+    protected static function replaceTemplateStr($path,$app){
+        $files=array_merge(
+            glob($path.DIRECTORY_SEPARATOR.'*.php'),
+            glob($path.DIRECTORY_SEPARATOR.'*'.DIRECTORY_SEPARATOR.'*.php')
+        );
+        if($files){
+            array_map(function ($file) use ($app){
+                if(is_file($file) && file_exists($file)){
+                    file_put_contents($file,str_replace('__TEMPLATE__',$app,file_get_contents($file)));
+                }
+            },$files);
+        }
+    }
 
     /**
      * 创建文件夹
@@ -239,8 +284,4 @@ class Dev
             is_dir($path) && @rmdir($path);
         }
     }
-}
-
-if (php_sapi_name() === 'cli') {
-    Dev::init();
 }

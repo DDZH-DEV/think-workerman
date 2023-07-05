@@ -14,24 +14,19 @@ ini_set("display_errors", 1);
 !defined('IS_CLI') && define('IS_CLI',php_sapi_name()==='cli');
 
 
+require_once ROOT_PATH.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 //加载系统函数文件
 require_once(CORE_PATH . DIRECTORY_SEPARATOR . 'functions.php');
 
-$Loader = require(ROOT_PATH . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
-
-bind('loader', $Loader);
-//根据配置注册命名空间为app
-$Loader->setPsr4('app\\', APP_PATH);
-
 
 //加载默认配置文件
-is_file($file = APP_PATH . 'config.php') && \rax\Config::load($file);
+is_file($file = APP_PATH . 'config.php') && system\Config::load($file);
 //加载各应用下的文件
 foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
     if (is_dir($dir) && file_exists($config_file = $dir . '/config.php')) {
-        \rax\Config::load($config_file);
+        system\Config::load($config_file);
     }
     is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }
 //初始化一些配置
-\rax\App::init();
+system\App::init();

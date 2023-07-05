@@ -1,19 +1,20 @@
 <?php
 
-use rax\Config;
+use system\Config;
 
 if (!function_exists('app')) {
     /**
      * 快速获取容器中的实例 支持依赖注入
-     * @template T
-     * @param string|class-string<T> $name 类名或标识 默认获取当前应用实例
+     * @param config|db|cache|log|router|string $name 类名或标识 默认获取当前应用实例
      * @param array $args 参数
      * @param bool $newInstance 是否每次创建新的实例
-     * @return T|object
+     * @return \think\DbManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager
      */
     function app(string $name = '', array $args = [], bool $newInstance = false)
     {
-        return \think\Container::getInstance()->make($name, $args, $newInstance);
+        return $name?
+            \think\Container::getInstance()->make($name, $args, $newInstance):
+            \think\Container::getInstance();
     }
 }
 if (!function_exists('bind')) {
@@ -22,7 +23,7 @@ if (!function_exists('bind')) {
      * @param $concrete
      * @return void
      */
-    function bind($name, $concrete)
+    function bind($name, $concrete=null)
     {
         return \think\Container::getInstance()->bind($name, $concrete);
     }
@@ -45,10 +46,10 @@ if (!function_exists('cache')) {
         }
         if ('' === $value) {
             // 获取缓存
-            return 0 === strpos($name, '?') ? \think\facade\Cache::has(substr($name, 1)) : \think\facade\Cache::get($name);
+            return 0 === strpos($name, '?') ? app('cache')::has(substr($name, 1)) : app('cache')::get($name);
         } elseif (is_null($value)) {
             // 删除缓存
-            return \think\facade\Cache::delete($name);
+            return app('cache')::delete($name);
         }
         // 缓存数据
         if (is_array($options)) {
@@ -57,9 +58,9 @@ if (!function_exists('cache')) {
             $expire = $options;
         }
         if (is_null($tag)) {
-            return \think\facade\Cache::set($name, $value, $expire);
+            return app('cache')::set($name, $value, $expire);
         } else {
-            return \think\facade\Cache::tag($tag)->set($name, $value, $expire);
+            return app('cache')::tag($tag)->set($name, $value, $expire);
         }
     }
 }
@@ -78,6 +79,35 @@ if (!function_exists('p')) {
         echo '<pre>' . print_r($arg_list, true) . '</pre>' . "\r\n\r\n";
     }
 }
+
+
+if (!function_exists('g')) {
+    /**
+     * 全局变量共享,每次控制器请求结束后释放
+     * @param string $name
+     * @param string $value
+     * @return mixed|null
+     */
+    function g($name = '', $value = '', $long = false)
+    {
+        if (is_null($name)) {
+            // 清除
+            utils\G::clear();
+        } elseif ($name && $value) {
+            // 设置
+            utils\G::set($name, $value, $long);
+        } elseif ($name == '') {
+            return utils\G::all();
+        } else {
+            //echo \utils\Console::info('GET');
+            $long = $value == 'G' ? true : $long;
+            return utils\G::get($name, $long);
+        }
+    }
+}
+
+
+
 
 if (!function_exists('convert')) {
     /**
@@ -135,15 +165,15 @@ if (!function_exists('json')) {
 if (!function_exists('slog')) {
     /**
      * 发送日志
-     * @param string $message
+     * @param string|array $message
      * @param string $level
      * @param string $listen
      * @param bool $write
      * @return bool
      */
-    function slog($message = '', $level = 'log', $listen = 'chat')
+    function slog($message , $level = 'log', $listen = '')
     {
-        \rax\Helper::slog($message = '', $level = 'log', $listen = 'slog');
+        return \system\Helper::slog($message, $level , $listen);
     }
 }
 
@@ -158,14 +188,14 @@ if (!function_exists('data')) {
      */
     function data($name = '', $value = '', $layer = 'SESSION')
     {
-        $data = _G($layer);
+        $data = g($layer);
 
         if (is_array($name)) {
             try {
                 foreach ($name as $dataName => $dataValue) {
                     $data[$dataName] = json_encode($dataValue, true);
                 }
-                _G($layer, $data);
+                g($layer, $data);
                 return true;
             } catch (\Exception $exception) {
                 return false;
@@ -173,7 +203,7 @@ if (!function_exists('data')) {
         } elseif (is_null($name)) {
             // 清除,奇葩的workmanSession机制
             $data = ['destroy' => date('YmdHis')];
-            _G($layer, $data);
+            g($layer, $data);
 //            p('clear');
             return true;
         } elseif ($name && !$value && !is_null($value)) {
@@ -184,7 +214,7 @@ if (!function_exists('data')) {
         } elseif (is_null($value)) {
             // 删除
             if (isset($data[$name])) unset($data[$name]);
-            _G($layer, $data);
+            g($layer, $data);
 //            p('delete item '.$name);
             return true;
 
@@ -202,7 +232,7 @@ if (!function_exists('data')) {
         } else {
             $data[$name] = $value;
 //            p('set item '.$name,$data);
-            _G($layer, $data);
+            g($layer, $data);
         }
     }
 }
@@ -237,7 +267,7 @@ if (!function_exists('cookie')) {
 
 if (!function_exists('_header')) {
     /**
-     * _header快捷操作
+     * header快捷操作
      * @param string $name
      * @param string $value
      * @return array|bool|mixed
@@ -249,30 +279,7 @@ if (!function_exists('_header')) {
 }
 
 
-if (!function_exists('G')) {
-    /**
-     * 全局变量共享,每次控制器请求结束后释放
-     * @param string $name
-     * @param string $value
-     * @return mixed|null
-     */
-    function _G($name = '', $value = '', $long = false)
-    {
-        if (is_null($name)) {
-            // 清除
-            utils\G::clear();
-        } elseif ($name && $value) {
-            // 设置
-            utils\G::set($name, $value, $long);
-        } elseif ($name == '') {
-            return utils\G::all();
-        } else {
-            //echo \utils\Console::info('GET');
-            $long = $value == 'G' ? true : $long;
-            return utils\G::get($name, $long);
-        }
-    }
-}
+
 if (!function_exists('input')) {
     /**
      * 获取输入数据 支持默认值和过滤
@@ -301,16 +308,16 @@ if (!function_exists('input')) {
             // 默认为自动判断
             $method = 'params';
         }
-        $params = array_merge((array)_G('GET'), (array)_G('POST'));
+        $params = array_merge((array)g('GET'), (array)g('POST'));
 
-        if (!$key) return $method === 'params' ? $params : (array)_G('_' . strtoupper($method));
+        if (!$key) return $method === 'params' ? $params : (array)g('_' . strtoupper($method));
 
         if ($method === 'params') {
             return isset($params[$key]) ?
                 (is_callable($filter) ? call_user_func($filter, $params[$key]) : $params[$key]) :
                 $default_value;
         } else {
-            $find = _G('_' . strtoupper($method));
+            $find = g('_' . strtoupper($method));
             if ($find && isset($find[$key])) {
                 return is_callable($filter) ? call_user_func($filter, $find[$key]) : $find[$key];
             }
@@ -318,11 +325,11 @@ if (!function_exists('input')) {
         }
     }
 }
-if (!function_exists('getIP')) {
+if (!function_exists('get_ip')) {
     /**
      * @return array|false|mixed|string
      */
-    function getIP()
+    function get_ip()
     {
         static $realip;
         if (isset($_SERVER)) {
@@ -476,7 +483,7 @@ if (!function_exists('exec_php_file')) {
      */
     function exec_php_file($file)
     {
-        if (!$file) {
+        if (!$file || !file_exists($file)) {
             return false;
         }
         \ob_start();
@@ -500,11 +507,24 @@ if (!function_exists('config')) {
      */
     function config($name = '', $value = null)
     {
-
         if (is_array($name)) {
             return Config::set($name, $value);
         }
         return 0 === strpos($name, '?') ? Config::has(substr($name, 1)) : Config::get($name, $value);
+    }
+}
+
+
+
+if (!function_exists('url')) {
+    /**
+     * @param $name
+     * @param $params
+     * @return void
+     */
+    function url($name = '', $params = [])
+    {
+        return app('router')->generate($name,$params);
     }
 }
 

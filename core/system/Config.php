@@ -10,7 +10,7 @@
 // +----------------------------------------------------------------------
 declare (strict_types=1);
 
-namespace rax;
+namespace system;
 
 use think\Facade;
 
@@ -43,7 +43,7 @@ class Config extends Facade
      */
     public static function getFacadeClass()
     {
-        return 'rax\Config';
+        return 'system\Config';
     }
 
     /**
@@ -190,12 +190,30 @@ class Config extends Facade
      * 获取一级配置
      * @access protected
      * @param string $name 一级配置名
-     * @return array
+     * @return mixed
      */
-    protected function pull(string $name): array
+    protected function pull(string $name)
     {
         $name = strtolower($name);
-
         return $this->config[$name] ?? [];
+    }
+
+
+    protected function map($name,$map=''){
+
+        if(isset($this->config[$name])){
+            return $this->config[$name];
+        }
+        $map=isset($this->config['map_rule'][$name]) && $map==='' ?$this->config['map_rule'][$name]:$map;
+        $files = glob($map);
+
+        $configs=[];
+        if($files){
+            array_map(function ($file)use ( & $configs) {
+                is_file($file) && $configs = array_merge($configs, include $file);
+            },$files);
+        }
+        $this->config[$name]=$configs;
+        return $configs;
     }
 }

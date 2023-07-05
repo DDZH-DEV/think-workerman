@@ -22,11 +22,11 @@ class G
     {
         $instance = self::instance();
         return $long !== 'G' ?
-            (isset($instance->_global_release[$name]) ? $instance->_global_release[$name] : null) :
-            (isset($instance->_global_no_release[$name]) ? $instance->_global_no_release[$name] : null);
+            ($instance->_global_release[$name] ?? null) :
+            ($instance->_global_no_release[$name] ?? null);
     }
 
-    public static function instance()
+    public static function instance(): G
     {
         if (!self::$instance) {
             self::$instance = new self();

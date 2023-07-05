@@ -48,8 +48,6 @@ _header("Content-type","text/html; charset=utf-8");
 
 ## 初始化流程
 
-
-
 1.拉取代码
 ``` git clone https://github.com/9raxdev/think-workerman.git ```
 
@@ -92,18 +90,7 @@ start_win_rax_im_with_nodemon.cmd
  
 5.linux下运行方式为 ```php 你的应用目录/client_service/linux_server.php start -d```
 
-## 目录介绍
-```html
-----core
-    core/_template_      app默认模板文件，项目开发中不要修改这里面的文件，请修根据配置文件生成的目录中的文件
-    core/utils           常用的类，你也可以将你自己的类放入此目录下，命名空间是utils
-    core/GlobalData      workerman多进程共享数据
-    core/rax             自己写的,目前只放了防火墙,规则不定期更新,进QQ群 940586873
-    core/functions.php   常用助手函数，强烈看一眼这里面的文件，看有哪些方法
-    core/WebServer3.php  workerman 3.*的简单 WebServer
-    core/WebServer4.php  workerman 4.*的简单 WebServer
-```
-    
+
 ## 附录：nodemon（文件监控软件）安装方式 （用于windows下修改代码后自动重启服务）
 第一步：```安装nodejs```
 

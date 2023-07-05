@@ -2,7 +2,8 @@
 vendor/
 start*cmd
 *Cache*
-composer\.lock 
+composer\.lock
+public/
 *.log
 rax_chat/
 rax_im/
@@ -10,3 +11,4 @@ server/
 apps/
 public/test.php
 start_*.sh
+public/

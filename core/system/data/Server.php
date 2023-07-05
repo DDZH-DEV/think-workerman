@@ -1,5 +1,5 @@
 <?php
-namespace GlobalData;
+namespace data;
 use Workerman\Worker;
 
 /**

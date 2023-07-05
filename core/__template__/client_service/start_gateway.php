@@ -37,12 +37,7 @@ $gateway->pingInterval = 25;
 $gateway->pingNotResponseLimit = 1;
 
 $gateway->onWorkerStart=function(){
-    $global = new \GlobalData\Client(config('global_data.client'));
-    //开启防火墙
-    if(config('waf.enable')) {
-        \rax\RaxWaf::init(config('waf'));
-        $global->deny_ips=$global->deny_ips?:\rax\RaxWaf::getDenyIps();
-    }
+
 };
 
 // 如果不是在根目录启动，则运行runAll方法

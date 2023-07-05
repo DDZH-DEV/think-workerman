@@ -1,9 +1,8 @@
 <?php
 
-namespace rax;
+namespace system;
 /**
  * 根据宝塔规则改写的php防火墙,后期更新规则请进群940586873
- * * @Notice  : 九锐网(9rax.com)旗下的开源作品。
  */
 class RaxWaf
 {

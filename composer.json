@@ -1,7 +1,7 @@
 {
     "require": {
-        "workerman/workerman-for-win": "*",
-        "workerman/gateway-worker-for-win":"*",
+        "workerman/workerman": "*",
+        "workerman/gateway-worker":"*",
         "workerman/gatewayclient":"*",
 
         "bardoqi/php-hive-queue":"*",
@@ -10,13 +10,15 @@
         "topthink/think-cache":"^2.0",
         "topthink/think-log":"^2.0",
 
-        "ext-json": "*"
+        "ext-json": "*",
+        "workerman/crontab": "^1.0"
     },
     "autoload":{
         "psr-4":{
+            "app\\" : "apps",
             "utils\\":"core/utils/",
-            "rax\\":"core/rax/",
-            "GlobalData\\":"core/GlobalData/"
+            "system\\": "core/system/",
+            "data\\": "core/system/data/"
         }
     },
     "repositories": {

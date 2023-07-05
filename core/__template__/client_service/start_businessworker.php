@@ -26,6 +26,9 @@ $worker->count = config('businessworker.count');
 // 服务注册地址
 $worker->registerAddress = config('register.address');
 
+//自定义设置处理业务的类。
+$worker->eventHandler='app\SocketEvent';
+
 // 如果不是在根目录启动，则运行runAll方法
 if(!defined('GLOBAL_START')) {
     Worker::runAll();

@@ -4,5 +4,5 @@ RewriteEngine on
  
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ default.php?/$1 [QSA,PT,L]
+RewriteRule ^(.*)$ default.php [QSA,PT,L]
 </IfModule>
