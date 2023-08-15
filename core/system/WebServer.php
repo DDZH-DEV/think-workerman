@@ -9,8 +9,10 @@ use Workerman\Worker;
 
 define("IS_LOW_WORKERMAN", version_compare(Worker::VERSION, '3.5.3', '<'));
 
-if (IS_LOW_WORKERMAN) {
+if (defined('FPM_MODE')) {
+
     include __DIR__ . '/webserver/Web3.php';
+
 } else {
     include __DIR__ . '/webserver/Web4.php';
 }
@@ -61,8 +63,10 @@ class WebServer extends Web
             return;
         }
         $class=$match['target'];
+
         IS_CLI && ob_start();
         if (class_exists($class) && method_exists($class,$match['action'])) {
+
             //全局设置
             g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']));
             //跨域问题
@@ -80,7 +84,7 @@ class WebServer extends Web
                 }
             }
 
-            IS_CLI && self::response($connection, $request);
+            self::response($connection, $request);
 
         } else {
             $message = strpos($server['REQUEST_URI'], '.php') !== false ?

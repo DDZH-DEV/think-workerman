@@ -3,7 +3,7 @@
 
 use Workerman\Protocols\Http;
 
-class Web extends \Workerman\WebServer
+class Web
 {
 
     public function onWorkerStart()
@@ -45,6 +45,7 @@ class Web extends \Workerman\WebServer
             }
         }
         $_SESSION = g('SESSION');
+
         $add_cookies = arrayRecursiveDiff(g('COOKIE'), $_COOKIE);
         $remove_cookies = arrayRecursiveDiff($_COOKIE, g('COOKIE'));
         if ($add_cookies) {
@@ -59,11 +60,12 @@ class Web extends \Workerman\WebServer
                 if (!in_array($name, array_keys(g('COOKIE')))) self::setCookie($name, '', 1);
             }
         }
-        $content = ob_get_clean();
+
         //释放变量
         g(null);
 
         if (IS_CLI) {
+            $content = ob_get_clean();
             if (strtolower($_SERVER['HTTP_CONNECTION']) === "keep-alive") {
                 return $connection->send($content);
 
@@ -119,7 +121,7 @@ class Web extends \Workerman\WebServer
      */
     protected static function setCookie($name, $value)
     {
-        if (IS_CLI && IS_LOW_WORKERMAN) {
+        if (IS_CLI) {
             \Workerman\Protocols\Http::setcookie($name, $value);
         } else {
             setcookie($name, $value);
@@ -134,7 +136,7 @@ class Web extends \Workerman\WebServer
      */
     protected static function header($str = '')
     {
-        if (IS_CLI && IS_LOW_WORKERMAN) {
+        if (IS_CLI) {
             \Workerman\Protocols\Http::header($str);
         } else {
             header($str);
