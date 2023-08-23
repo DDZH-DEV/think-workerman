@@ -23,8 +23,9 @@ require_once(CORE_PATH . DIRECTORY_SEPARATOR . 'functions.php');
 is_file($file = APP_PATH . 'config.php') && system\Config::load($file);
 //加载各应用下的文件
 foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
+    $dir_name=basename($dir);
     if (is_dir($dir) && file_exists($config_file = $dir . '/config.php')) {
-        system\Config::load($config_file);
+        system\Config::load($config_file,$dir_name);
     }
     is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }

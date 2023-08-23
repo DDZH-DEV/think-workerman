@@ -8,7 +8,6 @@ public/
 rax_chat/
 rax_im/
 server/
-apps/
 public/test.php
 start_*.sh
 public/
