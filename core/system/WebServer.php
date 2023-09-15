@@ -3,6 +3,7 @@
 namespace system;
 
 use Exception;
+use GatewayWorker\Lib\Gateway;
 use Web;
 
 use Workerman\Worker;
@@ -37,6 +38,7 @@ class WebServer extends Web
         $map=true;
 
         \GatewayClient\Gateway::$registerAddress=config('register.address');
+        \GatewayWorker\Lib\Gateway::$registerAddress=config('register.address');
     }
 
 
@@ -70,7 +72,7 @@ class WebServer extends Web
             //全局设置
             g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']));
             //跨域问题
-            (!defined('IS_CLI') || IS_LOW_WORKERMAN) && self::fixHttpCrossDomain($server);
+            self::fixHttpCrossDomain($server);
             try {
                 call_user_func_array([new $class,$match['action']], [$match['params'],$connection,$request]);
             } catch (Exception $e) {
@@ -116,7 +118,7 @@ class WebServer extends Web
     protected static function fixHttpCrossDomain($server)
     {
 
-        if (IS_CLI && IS_LOW_WORKERMAN) {
+        if (IS_CLI) {
             \Workerman\Protocols\Http::header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
             \Workerman\Protocols\Http::header('Access-Control-Allow-Methods: *');
             \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');

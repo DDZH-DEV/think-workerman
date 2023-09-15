@@ -430,7 +430,7 @@ if (!function_exists('addToQueue')) {
             $Queue = new \Phive\Queue\RedisQueue($_redis);
         }
         $data['_type'] = $type;
-        $data['_callback'] = $callback;
+        $callback && $data['_callback'] = $callback;
 
         //console('[add_queue]:'.$type.'|'.$queue_key);
 
