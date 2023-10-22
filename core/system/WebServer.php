@@ -58,7 +58,7 @@ class WebServer extends Web
 
         //文件直接输出
         $file = PUBLIC_PATH . basename($server['REQUEST_URI']);
-        if (file_exists($file) && is_file($file)) {
+        if (IS_CLI && file_exists($file) && is_file($file)) {
             $object = $object ?: new self();
             $object->handleFileRequest($connection, $file, $request);
             unset($object);

@@ -8,7 +8,7 @@ if (!function_exists('app')) {
      * @param config|db|cache|log|router|string $name 类名或标识 默认获取当前应用实例
      * @param array $args 参数
      * @param bool $newInstance 是否每次创建新的实例
-     * @return \think\DbManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager
+     * @return \think\DbManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template
      */
     function app(string $name = '', array $args = [], bool $newInstance = false)
     {
@@ -528,6 +528,42 @@ if (!function_exists('url')) {
     }
 }
 
+
+
+/**
+ * 组件快捷操作(添加或者输出静态文件)
+ *
+ * @param mixed|array|string $type
+ * @param string             $act_type
+ */
+function assets($type, $act_type = 'add')
+{
+    //全部输出
+    if ($type === TRUE) {
+        echo app('assets')->css();
+        echo app('assets')->js();
+        app('assets')->reset();
+    }
+
+    //单次载入输出
+    if ($type && $act_type === true) {
+        app('assets')->add($type);
+        echo app('assets')->css();
+        echo app('assets')->js();
+        return app('assets')->reset();
+
+    }
+
+    //载入
+    if ($act_type === 'add') {
+        app('assets')->add($type);
+    } else {
+        //重置类型
+        echo app('assets')->$type();
+        $act = 'reset' . ucfirst($type);
+        app('assets')->$act();
+    }
+}
 
 function waf_check()
 {
