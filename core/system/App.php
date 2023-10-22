@@ -24,7 +24,7 @@ class App extends Facade
         //设置日志
         app('log')::init(config('log'));
 
-
+        app('assets')->config(config('assets'));
 
         self::init_dir();
         self::init_error_log();

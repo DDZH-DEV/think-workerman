@@ -69,7 +69,7 @@ class Qstyle{
             $this->templates_postfix = '.'.ltrim($this->templates_postfix, '.');
             
             if(!$this->templates_cache || is_dir($this->templates_cache) == false){
-                exit('缓存目录一定要存在: '.var_export($this->templates_cache, true));
+                @mkdir($this->templates_cache, true);
             }
             
             if($this->templates_isdebug){

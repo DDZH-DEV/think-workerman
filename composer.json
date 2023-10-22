@@ -11,7 +11,12 @@
         "topthink/think-log":"^2.0",
 
         "ext-json": "*",
-        "workerman/crontab": "^1.0"
+        "workerman/crontab": "^1.0",
+        "topthink/think-validate": "^2.0",
+        "gregwar/captcha": "*",
+        "matomo/device-detector": "^6.1",
+        "zoujingli/wechat-developer": "^1.2",
+        "mrclay/minify": "^2.3"
     },
     "autoload":{
         "psr-4":{
