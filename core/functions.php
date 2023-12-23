@@ -93,7 +93,7 @@ if (!function_exists('g')) {
         if (is_null($name)) {
             // 清除
             utils\G::clear();
-        } elseif ($name && $value) {
+        } elseif ($name && (!is_null($value) && $value!=='')) {
             // 设置
             utils\G::set($name, $value, $long);
         } elseif ($name == '') {
@@ -260,6 +260,9 @@ if (!function_exists('cookie')) {
      */
     function cookie($name = '', $value = '')
     {
+        if(!IS_CLI && $name && $value){
+            setcookie($name,$value);
+        }
         return data($name, $value, 'COOKIE');
     }
 }
@@ -389,7 +392,7 @@ if (!function_exists('console')) {
      */
     function console($message, $type = 'info')
     {
-        if (defined('WEB_SERVER')) {
+        if (defined('WEB_SERVER') || !IS_CLI) {
             return;
         }
         $message = is_string($message) ? $message : json_encode($message);
@@ -590,4 +593,15 @@ function waf_check()
                return Gateway::sendToClient($client_id, RaxWaf::$config['deny_message']);
            }
        }*/
+}
+
+
+/**
+ * 钩子机制
+ * @param $name
+ * @param $params
+ * @return void
+ */
+function hook($name='',$params){
+
 }

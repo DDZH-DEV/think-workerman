@@ -56,6 +56,9 @@ class WebServer extends Web
 
         $server = g('SERVER');
 
+        define('IS_POST',$server['REQUEST_METHOD']==='POST');
+        define('IS_GET',$server['REQUEST_METHOD']==='GET');
+
         //文件直接输出
         $file = PUBLIC_PATH . basename($server['REQUEST_URI']);
         if (IS_CLI && file_exists($file) && is_file($file)) {

@@ -48,12 +48,11 @@ class Web
 
         $add_cookies = arrayRecursiveDiff(g('COOKIE'), $_COOKIE);
         $remove_cookies = arrayRecursiveDiff($_COOKIE, g('COOKIE'));
-        if ($add_cookies) {
+        if ($add_cookies && IS_CLI) {
             foreach ($add_cookies as $name => $val) {
                 self::setcookie($name, $val);
             }
         }
-
 
         if ($remove_cookies) {
             foreach ($remove_cookies as $name => $val) {

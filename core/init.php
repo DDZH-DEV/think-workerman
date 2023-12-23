@@ -29,5 +29,7 @@ foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
     }
     is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }
+
+error_reporting(E_ALL & ~E_NOTICE);
 //初始化一些配置
 system\App::init();
