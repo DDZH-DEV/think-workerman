@@ -63,7 +63,7 @@ class App extends Facade
         }
 
         //项目上传文件夹,项目对外路径
-        !defined('UPLOAD_PATH') && define('UPLOAD_PATH', PUBLIC_PATH . DIRECTORY_SEPARATOR . config('http.upload_dir') . DIRECTORY_SEPARATOR);
+        !defined('UPLOAD_PATH') && define('UPLOAD_PATH', PUBLIC_PATH  . config('http.upload_dir') . DIRECTORY_SEPARATOR);
         if (!is_dir(UPLOAD_PATH)) {
             @mkdir(UPLOAD_PATH, 0777, true);
         }

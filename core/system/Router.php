@@ -137,7 +137,7 @@ class Router
 
         // Check if named route exists
         if (!isset($this->namedRoutes[$routeName])) {
-            throw new \RuntimeException("Route '{$routeName}' does not exist.");
+            return $routeName;
         }
 
         // Replace named parameters

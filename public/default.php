@@ -21,7 +21,7 @@ if (!defined('IS_CLI')) {
     g('SESSION', $_SESSION);
     g('SERVER', $_SERVER);
     g('COOKIE', $_COOKIE);
-    g('DEBUG', file_exists(APP_PATH . '/debug'));
+
     \system\App::run();
 }
 

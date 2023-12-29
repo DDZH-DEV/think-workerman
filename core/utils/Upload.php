@@ -29,7 +29,7 @@ class Upload
 
     protected $file_size;
 
-    protected $rule;
+    protected $rule = '_FILE_';
 
 
     protected $subdir_rules = [
@@ -38,8 +38,11 @@ class Upload
         '_FILE_' => 'getFileDirs',
     ];
 
-    public function __construct()
+    public function __construct($raw = false)
     {
+
+        if ($raw) return $this;
+
         $files = g('FILES');
 
         $key = array_keys($files)[0];
@@ -57,6 +60,41 @@ class Upload
         //后缀获取
         $this->ext = $ext = substr(strrchr($this->file_name, '.'), 1);
         $this->original_name = str_replace("." . $ext, '', $this->file_name);
+    }
+
+
+    /**
+     * @param $rawString
+     * @param $save_dir
+     * @param $sub_dir_rule
+     * @param $ext
+     * @return false|void
+     */
+    public function saveRawFile($rawString, $save_dir = '', $sub_dir_rule = '', $ext = 'jpg')
+    {
+
+        if (!$rawString) {
+            return false;
+        }
+
+        $this->file_md5 = md5($rawString);
+
+        $dir = $this->getSubdir($sub_dir_rule);
+
+        $save_path = str_replace(['\\\\', '\\'], ['\\', '/'], UPLOAD_PATH . $save_dir . DIRECTORY_SEPARATOR . $dir);
+
+        if (!is_dir($save_path)) {
+            @mkdir($save_path, 0777, true);
+        }
+        $file_name=$sub_dir_rule && is_numeric($sub_dir_rule)?md5($sub_dir_rule):$this->file_md5;
+
+        $save_path = $save_path . '/' . $file_name . '.' . $ext;
+
+        file_put_contents($save_path, $rawString);
+
+
+        return '/'.str_replace(str_replace('\\', '/', PUBLIC_PATH), '', $save_path);
+
     }
 
     /**
@@ -93,6 +131,7 @@ class Upload
         return in_array($this->ext, $exts) && in_array($this->file_type, $mimes);
 
     }
+
 
     /**
      * 上传文件
@@ -139,20 +178,23 @@ class Upload
      */
     public function getSubdir($rule = '')
     {
+        if (is_numeric($rule)) {
+            $hash = md5($rule);
+        } else {
+            $rule = $rule ? $rule : $this->rule;
 
-        $rule = $rule ? $rule : $this->rule;
+            if (in_array($rule, array_keys($this->subdir_rules))) {
+                $call = $this->subdir_rules[$rule];
+                return $this->$call();
+            }
 
-        if (in_array($rule, array_keys($this->subdir_rules))) {
-            $call = $this->subdir_rules[$rule];
-            return $this->$call();
+            if (is_callable($rule)) {
+                return call_user_func($rule);
+            }
+
+
+            $hash = md5($rule);
         }
-
-        if (is_callable($rule)) {
-            return call_user_func($rule);
-        }
-
-
-        $hash = md5($rule);
 
         //此处是有参数的文件夹创建方式
         return implode('/', array_slice(str_split($hash, 2), 0, 3));

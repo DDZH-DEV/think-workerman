@@ -277,6 +277,9 @@ if (!function_exists('_header')) {
      */
     function _header($name = '', $value = '')
     {
+        if(!IS_CLI && $name && $value){
+            return header($name.":".$value);
+        }
         return data($name, $value, 'HEADER');
     }
 }
@@ -524,6 +527,14 @@ if (!function_exists('url')) {
      * @param $name
      * @param $params
      * @return void
+     * '/users/[i:id]/'
+     * 'i' => '[0-9]++',
+        'a' => '[0-9A-Za-z]++',
+        'h' => '[0-9A-Fa-f]++',
+        '*' => '.+?',
+        '**' => '.++',
+        '' => '[^/\.]++'
+     *
      */
     function url($name = '', $params = [])
     {
@@ -602,6 +613,5 @@ function waf_check()
  * @param $params
  * @return void
  */
-function hook($name='',$params){
-
+function hook($name='',$params=[]){
 }

@@ -81,7 +81,7 @@ class WebServer extends Web
             } catch (Exception $e) {
                 //如果是调试模式，直接输出
                 if ($e->getMessage() !== 'jump_exit') {
-                    if (g('DEBUG')) {
+                    if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
                         !IS_CLI && die();
                     }

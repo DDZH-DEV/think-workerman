@@ -11,3 +11,4 @@ public/test.php
 start_*.sh
 public/min/
 public/static/webpack/node_modules/
+public/uploads/

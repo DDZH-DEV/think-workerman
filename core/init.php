@@ -12,7 +12,7 @@ ini_set("display_errors", 1);
 !defined('PUBLIC_PATH') && define('PUBLIC_PATH', ROOT_PATH . 'public' . DIRECTORY_SEPARATOR);
 !defined('RUNTIME_PATH') && define('RUNTIME_PATH', ROOT_PATH . 'server' . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR);
 !defined('IS_CLI') && define('IS_CLI',php_sapi_name()==='cli');
-
+!defined('APP_DEBUG') && define('APP_DEBUG',file_exists(APP_PATH . '/debug'));
 
 require_once ROOT_PATH.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 //加载系统函数文件

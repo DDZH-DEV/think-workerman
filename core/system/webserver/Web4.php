@@ -104,7 +104,6 @@ class Web extends Worker
         g('FILES', $request->file());
         g('SESSION', array_filter($request->session()->all()));
         g('COOKIE', array_filter($request->cookie()));
-        g('DEBUG', file_exists(APP_PATH . '/debug'));
     }
 
 
