@@ -84,8 +84,8 @@ if (!function_exists('p')) {
 if (!function_exists('g')) {
     /**
      * 全局变量共享,每次控制器请求结束后释放
-     * @param string $name
-     * @param string $value
+     * @param MODULE|CONTROLLER|ACTION|IS_MOBILE|IP|POST|GET|FILES|SESSION|SERVER|COOKIE $name
+     * @param mixed $value
      * @return mixed|null
      */
     function g($name = '', $value = '', $long = false)
@@ -614,4 +614,6 @@ function waf_check()
  * @return void
  */
 function hook($name='',$params=[]){
+
+    return app('hook')->trigger($name,$params);
 }

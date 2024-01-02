@@ -865,7 +865,7 @@ class Qstyle{
         $const_regexp = "([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)";
 	    $template = preg_replace("/\{(\\\$[a-zA-Z0-9_\[\]\'\"\$\.\x7f-\xff]+)\}/s", '<?=$1?>', $template);
 	    $template = preg_replace_callback("/$varRegexp2/s", array($this,'preg__var'), $template);
-  	    $template = preg_replace_callback("/$varRegexp/s", array($this,'preg__var'), $template);
+//  	    $template = preg_replace_callback("/$varRegexp/s", array($this,'preg__var'), $template);
 	    $template = preg_replace_callback("/\<\?\=\<\?\=$varRegexp\?\>\?\>/s",array($this,'preg__var'), $template,-1,$regint);
         $this->preg__debug('解析模板细节: {$var} 变量,数组代码解析次数:'.($regint));
         

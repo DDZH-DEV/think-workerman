@@ -346,10 +346,12 @@ class Assets
 
         $attributes = $this->buildTagAttributes($attributes);
 
+        $debug=!APP_DEBUG?'':'?t='.time();
+
         // Build tags
         $output = '';
         foreach($assets as $asset)
-            $output .= '<link href="' . $asset . '"' . $attributes . " />\n";
+            $output .= '<link href="' . $asset .$debug. '"' . $attributes . " />\n";
 
         return $output;
     }
@@ -383,10 +385,11 @@ class Assets
 
         $attributes = $this->buildTagAttributes($attributes);
 
+        $debug=!APP_DEBUG?'':'?t='.time();
         // Build tags
         $output = '';
         foreach($assets as $asset)
-            $output .= '<script src="' . $asset . '"' . $attributes . "></script>\n";
+            $output .= '<script src="' . $asset .$debug. '"' . $attributes . "></script>\n";
 
         return $output;
     }

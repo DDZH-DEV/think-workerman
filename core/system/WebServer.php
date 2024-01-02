@@ -71,7 +71,9 @@ class WebServer extends Web
 
         IS_CLI && ob_start();
         if (class_exists($class) && method_exists($class,$match['action'])) {
-
+            g('MODULE',$match['module']);
+            g('CONTROLLER',$match['controller']);
+            g('ACTION',$match['action']);
             //全局设置
             g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']));
             //跨域问题
