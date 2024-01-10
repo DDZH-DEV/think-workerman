@@ -316,7 +316,7 @@ if (!function_exists('input')) {
         }
         $params = array_merge((array)g('GET'), (array)g('POST'));
 
-        if (!$key) return $method === 'params' ? $params : (array)g('_' . strtoupper($method));
+        if (!$key) return $method === 'params' ? $params : (array)g(strtoupper($method));
 
         if ($method === 'params') {
             return isset($params[$key]) ?
