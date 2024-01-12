@@ -18,7 +18,7 @@ require_once ROOT_PATH.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 //加载系统函数文件
 require_once(CORE_PATH . DIRECTORY_SEPARATOR . 'functions.php');
 
-
+is_file(APP_PATH . 'provider.php') && bind(include APP_PATH . 'provider.php');
 //加载默认配置文件
 is_file($file = APP_PATH . 'config.php') && system\Config::load($file);
 //加载各应用下的文件
@@ -27,6 +27,25 @@ foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
     if (is_dir($dir) && file_exists($config_file = $dir . '/config.php')) {
         system\Config::load($config_file,$dir_name);
     }
+    //钩子机制
+    if((file_exists($hook_file=$dir.'/hook.php'))){
+
+        $hooks=require_once $hook_file;
+
+        foreach ($hooks as $hook_name=>$hook){
+            if($hook['status']){
+                app('hook')->on($hook['hook'], function ()use ($hook) {
+                    $params=$hook['params']??[];
+                    if(is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0],$hook['event'][1])){
+                        return call_user_func_array($hook['event'],[$params]);
+                    }else if(is_callable($hook['event'])){
+                        return call_user_func($hook['event'],$params);
+                    }
+                });
+            }
+        }
+    }
+
     is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }
 

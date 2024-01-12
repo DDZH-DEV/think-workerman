@@ -15,7 +15,6 @@ class App extends Facade
 
     protected static function init()
     {
-        is_file(APP_PATH . 'provider.php') && bind(include APP_PATH . 'provider.php');
 
         //初始化数据库
         app('db')::setConfig(config('database'));
@@ -76,8 +75,4 @@ class App extends Facade
             WebServer::dispatchHttp();
         }
     }
-
-
-
-
 }

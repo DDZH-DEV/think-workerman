@@ -579,34 +579,6 @@ function assets($type, $act_type = 'add')
     }
 }
 
-function waf_check()
-{
-    //判断防火墙是否开启
-    /*
-       if(config('waf.enable')){
-           $ip=ip2long($_SERVER['REMOTE_ADDR']);
-           //判断是否在防火墙中
-           if(isset($global->deny_ips[$ip])){
-               return Gateway::sendToClient($client_id, RaxWaf::$config['deny_message'].' deny ip !');
-           }
-           $deny=RaxWaf::check($_SERVER['REMOTE_ADDR'],$message?:$data,'websocket');
-           if($deny){
-               $waf_ip_key='rax_waf_ip_'.$ip;
-               $hit_num = $global->$waf_ip_key?:0;
-               $hit_num++;
-               $global->$waf_ip_key=$hit_num;
-               if($hit_num>config('waf.deny_num')){
-                   $deny_ips=$global->deny_ips?:[];
-                   $deny_ips[$ip]=$hit_num;
-                   $global->deny_ips=$deny_ips;
-                   RaxWaf::saveDenyIps($deny_ips);
-               }
-               return Gateway::sendToClient($client_id, RaxWaf::$config['deny_message']);
-           }
-       }*/
-}
-
-
 /**
  * 钩子机制
  * @param $name
