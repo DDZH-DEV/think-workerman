@@ -6,6 +6,9 @@
   */
 namespace system;
 
+use Wikimedia\Minify\JavaScriptMinifier;
+use Wikimedia\Minify\CSSMin;
+
 use Closure;
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
@@ -445,13 +448,8 @@ class Assets
      */
     protected function cssPipeline()
     {
-        // If a custom minifier has been set use it, otherwise fallback to default
-        $minifier = (isset($this->css_minifier)) ? $this->css_minifier : function ($buffer) {
-            $min = new \CSSmin();
-            return $min->run($buffer);
-        };
 
-        return $this->pipeline($this->css, '.css', $this->css_dir, $minifier);
+        return $this->pipeline($this->css, '.css', $this->css_dir);
     }
 
     /**
@@ -461,12 +459,7 @@ class Assets
      */
     protected function jsPipeline()
     {
-        // If a custom minifier has been set use it, otherwise fallback to default
-        $minifier = (isset($this->js_minifier)) ? $this->js_minifier : function ($buffer) {
-            return \JSMin::minify($buffer);
-        };
-
-        return $this->pipeline($this->js, '.js', $this->js_dir, $minifier);
+        return $this->pipeline($this->js, '.js', $this->js_dir);
     }
 
     /**
@@ -478,7 +471,7 @@ class Assets
      * @param Closure $minifier
      * @return string
      */
-    protected function pipeline(array $assets, $extension, $subdirectory, Closure $minifier)
+    protected function pipeline(array $assets, $extension, $subdirectory)
     {
         // Create destination dir if it doesn't exist.
         $pipeline_dir = $this->pipeline_dir;
@@ -495,7 +488,9 @@ class Assets
             return $relative_path;
 
         // Download, concatenate and minifiy files
-        $buffer = $this->packLinks($assets, $minifier);
+
+        $buffer = $this->packLinks($assets, $extension);
+
 
         // Write minified file
         file_put_contents($absolute_path, $buffer);
@@ -557,9 +552,10 @@ class Assets
      * @param  Closure $minifier
      * @return string
      */
-    protected function packLinks(array $links, Closure $minifier)
+    protected function packLinks(array $links, $extension)
     {
         $buffer = '';
+
         foreach($links as $link)
         {
             $originalLink = $link;
@@ -582,16 +578,20 @@ class Assets
             }
 
             // Fetch link content
-            $content = ($this->fetch_command instanceof Closure) ? $this->fetch_command->__invoke($link) : file_get_contents($link);
+            $buffer .= ($this->fetch_command instanceof Closure) ? $this->fetch_command->__invoke($link) : file_get_contents($link);
 
-            // Minify
-            $buffer .= (preg_match($this->no_minification_regex, $originalLink)) ? $content : $minifier->__invoke($content);
 
-            // Avoid JavaScript minification problems
-            $buffer .= PHP_EOL;
         }
 
-        return $buffer;
+        if($extension=='.css'){
+            $content=CSSMin::minify($buffer);
+        }else{
+            $content=JavaScriptMinifier::minify($buffer);
+        }
+
+
+        return $content;
+
     }
 
     /**

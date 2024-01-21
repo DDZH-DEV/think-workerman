@@ -16,7 +16,7 @@
         "gregwar/captcha": "*",
         "matomo/device-detector": "^6.1",
         "zoujingli/wechat-developer": "^1.2",
-        "mrclay/minify": "^2.3",
+        "wikimedia/minify": "*",
         "jbzoo/event": "^4.0.1"
     },
     "autoload":{

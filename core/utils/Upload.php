@@ -1,10 +1,8 @@
 <?php
-/**
- * Upload.php
- * @Date Time: 2018/1/10 0:24
- */
 
 namespace utils;
+
+use think\facade\Db;
 
 class Upload
 {
@@ -14,6 +12,7 @@ class Upload
         'image' => ['mime' => ['image/jpeg', 'image/gif', 'image/png'], 'ext' => 'jpg,png,gif,jpeg']
     ];
 
+    protected $deny_ext = ['php', 'ext'];
 
     protected $error;
 
@@ -43,9 +42,12 @@ class Upload
 
         if ($raw) return $this;
 
-        $files = g('FILES');
+        $files = function_exists('g') ? g('FILES') : $_FILES;
+
+        if (!$files) return false;
 
         $key = array_keys($files)[0];
+
         $this->file = $files[$key];
 
         $this->file_name = isset($this->file['file_name']) ? $this->file['file_name'] : $this->file['name'];
@@ -56,7 +58,7 @@ class Upload
 
         $this->file_size = isset($this->file['file_size']) ? $this->file['file_size'] : $this->file['size'];
 
-        $this->file_md5 = md5($this->tmp_file);
+        $this->file_md5 = md5_file($this->tmp_file);
         //后缀获取
         $this->ext = $ext = substr(strrchr($this->file_name, '.'), 1);
         $this->original_name = str_replace("." . $ext, '', $this->file_name);
@@ -68,9 +70,8 @@ class Upload
      * @param $save_dir
      * @param $sub_dir_rule
      * @param $ext
-     * @return false|void
      */
-    public function saveRawFile($rawString, $save_dir = '', $sub_dir_rule = '', $ext = 'jpg')
+    public function saveRawFile($rawString, $save_dir = '', $sub_dir_rule = '', $ext = 'jpg', $org_name = '')
     {
 
         if (!$rawString) {
@@ -79,6 +80,8 @@ class Upload
 
         $this->file_md5 = md5($rawString);
 
+        $rawString = base64_decode(preg_replace("/data:.*?,/", '', $rawString));
+
         $dir = $this->getSubdir($sub_dir_rule);
 
         $save_path = str_replace(['\\\\', '\\'], ['\\', '/'], UPLOAD_PATH . $save_dir . DIRECTORY_SEPARATOR . $dir);
@@ -86,15 +89,50 @@ class Upload
         if (!is_dir($save_path)) {
             @mkdir($save_path, 0777, true);
         }
-        $file_name=$sub_dir_rule && is_numeric($sub_dir_rule)?md5($sub_dir_rule):$this->file_md5;
+        $file_name = $sub_dir_rule && is_numeric($sub_dir_rule) ? md5($sub_dir_rule) : md5($this->file_md5);
 
         $save_path = $save_path . '/' . $file_name . '.' . $ext;
 
         file_put_contents($save_path, $rawString);
 
 
-        return '/'.str_replace(str_replace('\\', '/', PUBLIC_PATH), '', $save_path);
+        $path =  '/'.str_replace(str_replace('\\', '/', PUBLIC_PATH), '', $save_path);
 
+        $res = [
+            'ext' => $ext,
+            'name' => $org_name ?: $file_name . '.' . $ext,
+            'path' => $path,
+            'md5' => $this->file_md5,
+            'size' => filesize($save_path)
+        ];
+
+        $this->record($res);
+
+         $server = function_exists('g') ? g('SERVER') : $_SERVER;
+         $url = defined('CDN_URL') ?CDN_URL: $server['HTTP_ORIGIN'] ;
+
+         $res['path']=$url.$path;
+
+         return $res;
+    }
+
+    public $user_id=0;
+    /**
+     * 记录
+     * @auth false
+     */
+    protected function record($insert)
+    {
+
+
+        $insert['user_id'] = $this->user_id;
+        $insert['upload_time'] = time();
+
+        $insert['ip'] = get_ip();
+
+        if (!Db::name('qe_files')->where('md5', $insert['md5'])->find()) {
+            Db::name('qe_files')->insert( $insert);
+        }
     }
 
     /**
@@ -150,6 +188,12 @@ class Upload
             @mkdir($save_path, 0777, true);
         }
 
+        if (in_array($this->ext, ['php', 'exe'])) {
+            // 上传失败获取错误信息
+            $this->error = '不允许的文件格式';
+            return false;
+        }
+
         $this->save_full = $save_path . DIRECTORY_SEPARATOR . $this->file_md5 . '.' . $this->ext;
 
         $content = is_file($this->tmp_file) ? file_get_contents($this->tmp_file) : $this->tmp_file;
@@ -157,13 +201,26 @@ class Upload
         $res = file_put_contents($this->save_full, $content);
 
         if ($res) {
-            return [
+
+
+            $path = str_replace([PUBLIC_PATH, '\\'], ['', '/'], $this->save_full);
+            $server = function_exists('g') ? g('SERVER') : $_SERVER;
+            $url = defined('CDN_URL') ?CDN_URL: $server['HTTP_ORIGIN'] . '/';
+
+            $res = [
                 'ext' => $this->ext,
-                'org_name' => $this->original_name,
-                'url' => str_replace([PUBLIC_PATH, '\\'], ['', '/'], $this->save_full),
+                'name' => $this->original_name,
+                'path' => $path,
                 'md5' => $this->file_md5,
                 'size' => $this->file_size
             ];
+
+            $this->record($res);
+
+            $res['path'] = $url . $res['path'];
+
+            return $res;
+
         } else {
             // 上传失败获取错误信息
             $this->error = '保存文件失败';
@@ -212,7 +269,7 @@ class Upload
 
     protected function getUserDirs()
     {
-        $hash = md5(session('user')['id']);
+        $hash = md5( $this->user_id);
         $this->file_md5 = $hash;
         return implode('/', array_slice(str_split($hash, 2), 0, 3));
     }

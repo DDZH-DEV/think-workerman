@@ -8,7 +8,7 @@ if (!function_exists('app')) {
      * @param config|db|cache|log|router|string $name 类名或标识 默认获取当前应用实例
      * @param array $args 参数
      * @param bool $newInstance 是否每次创建新的实例
-     * @return \think\DbManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template
+     * @return \think\DbManager|\JBZoo\Event\EventManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template
      */
     function app(string $name = '', array $args = [], bool $newInstance = false)
     {

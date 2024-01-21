@@ -15,3 +15,5 @@ public/uploads/
 apps/user/webpack/
 apps/
 public/static/
+public/sync/
+package-lock.json
