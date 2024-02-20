@@ -11,10 +11,10 @@ ini_set("display_errors", 1);
 !defined('APP_PATH') && define('APP_PATH', ROOT_PATH . 'apps' . DIRECTORY_SEPARATOR);
 !defined('PUBLIC_PATH') && define('PUBLIC_PATH', ROOT_PATH . 'public' . DIRECTORY_SEPARATOR);
 !defined('RUNTIME_PATH') && define('RUNTIME_PATH', ROOT_PATH . 'server' . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR);
-!defined('IS_CLI') && define('IS_CLI',php_sapi_name()==='cli');
-!defined('APP_DEBUG') && define('APP_DEBUG',file_exists(APP_PATH . '/debug'));
+!defined('IS_CLI') && define('IS_CLI', php_sapi_name() === 'cli');
+!defined('APP_DEBUG') && define('APP_DEBUG', file_exists(APP_PATH . '/debug'));
 
-require_once ROOT_PATH.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+require_once ROOT_PATH . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 //加载系统函数文件
 require_once(CORE_PATH . DIRECTORY_SEPARATOR . 'functions.php');
 
@@ -23,25 +23,39 @@ is_file(APP_PATH . 'provider.php') && bind(include APP_PATH . 'provider.php');
 is_file($file = APP_PATH . 'config.php') && system\Config::load($file);
 //加载各应用下的文件
 foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
-    $dir_name=basename($dir);
+    $dir_name = basename($dir);
     if (is_dir($dir) && file_exists($config_file = $dir . '/config.php')) {
-        system\Config::load($config_file,$dir_name);
+        system\Config::load($config_file, $dir_name);
     }
     //钩子机制
-    if((file_exists($hook_file=$dir.'/hook.php'))){
+    if ((file_exists($hook_file = $dir . '/hook.php'))) {
 
-        $hooks=require_once $hook_file;
+        $hooks = require_once $hook_file;
 
-        foreach ($hooks as $hook_name=>$hook){
-            if($hook['status']){
-                app('hook')->on($hook['hook'], function ()use ($hook) {
-                    $params=$hook['params']??[];
-                    if(is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0],$hook['event'][1])){
-                        return call_user_func_array($hook['event'],[$params]);
-                    }else if(is_callable($hook['event'])){
-                        return call_user_func($hook['event'],$params);
+        foreach ($hooks as $hook_name => $hook) {
+
+            if ($hook['status']) {
+                app('hook')->on($hook['hook'], function ($hook_params = [], &$return, $single) use ($hook) {
+
+                    //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
+                    //$config 是配置的参数
+                    $config = $hook['config'] ?? [];
+                    if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
+                        $res = call_user_func_array($hook['event'], [$hook_params,$config]);
+                    } else if (is_callable($hook['event'])) {
+                        $res = call_user_func($hook['event'], $hook_params,$config);
+                    }else{
+                        $res = null;
                     }
-                });
+
+                    $return[]=$res;
+
+                    if($res===false || $single){
+                        throw new \JBZoo\Event\ExceptionStop($hook['name'].'运行结束');
+                        return false;
+                    }
+
+                },$hook['sort']);
             }
         }
     }

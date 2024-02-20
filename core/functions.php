@@ -12,8 +12,8 @@ if (!function_exists('app')) {
      */
     function app(string $name = '', array $args = [], bool $newInstance = false)
     {
-        return $name?
-            \think\Container::getInstance()->make($name, $args, $newInstance):
+        return $name ?
+            \think\Container::getInstance()->make($name, $args, $newInstance) :
             \think\Container::getInstance();
     }
 }
@@ -23,7 +23,7 @@ if (!function_exists('bind')) {
      * @param $concrete
      * @return void
      */
-    function bind($name, $concrete=null)
+    function bind($name, $concrete = null)
     {
         return \think\Container::getInstance()->bind($name, $concrete);
     }
@@ -93,7 +93,7 @@ if (!function_exists('g')) {
         if (is_null($name)) {
             // 清除
             utils\G::clear();
-        } elseif ($name && (!is_null($value) && $value!=='')) {
+        } elseif ($name && (!is_null($value) && $value !== '')) {
             // 设置
             utils\G::set($name, $value, $long);
         } elseif ($name == '') {
@@ -105,8 +105,6 @@ if (!function_exists('g')) {
         }
     }
 }
-
-
 
 
 if (!function_exists('convert')) {
@@ -171,9 +169,9 @@ if (!function_exists('slog')) {
      * @param bool $write
      * @return bool
      */
-    function slog($message , $level = 'log', $listen = '')
+    function slog($message, $level = 'log', $listen = '')
     {
-        return \system\Helper::slog($message, $level , $listen);
+        return \system\Helper::slog($message, $level, $listen);
     }
 }
 
@@ -260,8 +258,8 @@ if (!function_exists('cookie')) {
      */
     function cookie($name = '', $value = '')
     {
-        if(!IS_CLI && $name && $value){
-            setcookie($name,$value);
+        if (!IS_CLI && $name && $value) {
+            setcookie($name, $value,0,'/');
         }
         return data($name, $value, 'COOKIE');
     }
@@ -277,13 +275,12 @@ if (!function_exists('_header')) {
      */
     function _header($name = '', $value = '')
     {
-        if(!IS_CLI && $name && $value){
-            return header($name.":".$value);
+        if (!IS_CLI && $name && $value) {
+            return header($name . ":" . $value);
         }
         return data($name, $value, 'HEADER');
     }
 }
-
 
 
 if (!function_exists('input')) {
@@ -331,11 +328,11 @@ if (!function_exists('input')) {
         }
     }
 }
-if (!function_exists('get_ip')) {
+if (!function_exists('ip')) {
     /**
      * @return array|false|mixed|string
      */
-    function get_ip()
+    function ip()
     {
         static $realip;
         if (isset($_SERVER)) {
@@ -521,7 +518,6 @@ if (!function_exists('config')) {
 }
 
 
-
 if (!function_exists('url')) {
     /**
      * @param $name
@@ -529,26 +525,25 @@ if (!function_exists('url')) {
      * @return void
      * '/users/[i:id]/'
      * 'i' => '[0-9]++',
-        'a' => '[0-9A-Za-z]++',
-        'h' => '[0-9A-Fa-f]++',
-        '*' => '.+?',
-        '**' => '.++',
-        '' => '[^/\.]++'
+     * 'a' => '[0-9A-Za-z]++',
+     * 'h' => '[0-9A-Fa-f]++',
+     * '*' => '.+?',
+     * '**' => '.++',
+     * '' => '[^/\.]++'
      *
      */
     function url($name = '', $params = [])
     {
-        return app('router')->generate($name,$params);
+        return app('router')->generate($name, $params);
     }
 }
-
 
 
 /**
  * 组件快捷操作(添加或者输出静态文件)
  *
  * @param mixed|array|string $type
- * @param string             $act_type
+ * @param string $act_type
  */
 function assets($type, $act_type = 'add')
 {
@@ -556,7 +551,7 @@ function assets($type, $act_type = 'add')
     if ($type === TRUE) {
         echo app('assets')->css();
         echo app('assets')->js();
-        app('assets')->reset();
+        return app('assets')->reset();
     }
 
     //单次载入输出
@@ -583,9 +578,12 @@ function assets($type, $act_type = 'add')
  * 钩子机制
  * @param $name
  * @param $params
+ * @param $single
  * @return void
  */
-function hook($name='',$params=[]){
-
-    return app('hook')->trigger($name,$params);
+function hook($name = '', $params = [], $single=false)
+{
+    $return = [];
+    app('hook')->trigger($name, [$params, &$return,$single]);
+    return $single && $return?$return[0]:$return;
 }

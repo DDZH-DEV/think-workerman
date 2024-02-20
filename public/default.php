@@ -14,7 +14,7 @@ if (!defined('IS_CLI')) {
     !session_id() && session_start();
     include dirname(__DIR__) . "/core/init.php";
 
-    g('IP', get_ip());
+    g('IP', ip());
     g('POST', $_POST);
     g('GET', $_GET);
     g('FILES', $_FILES);

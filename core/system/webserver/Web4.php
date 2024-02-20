@@ -140,6 +140,7 @@ class Web extends Worker
         }
 
         $content = ob_get_clean();
+
         $response = new \Workerman\Protocols\Http\Response(200, $headers, $content);
         $add_cookies = arrayRecursiveDiff(g('COOKIE'), $request->cookie());
         $remove_cookies = arrayRecursiveDiff($request->cookie(), g('COOKIE'));

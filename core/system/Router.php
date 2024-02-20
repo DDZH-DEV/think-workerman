@@ -187,7 +187,7 @@ class Router
 
         // strip base path from request url
         $requestUrl = str_replace(
-            ['.html', '.htm', '.shtml'],
+            ['.html', '.htm', '.js', '.css', '.jpg', '.png', '.gif', '.shtml'],
             [''],
             substr($requestUrl, strlen($this->basePath))
         );

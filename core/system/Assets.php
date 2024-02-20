@@ -179,6 +179,8 @@ class Assets
      */
     protected $js = array();
 
+
+    protected $cdn_url='';
     /**
      * Class constructor.
      *
@@ -190,6 +192,8 @@ class Assets
         // Forward config options
         if($options)
             $this->config($options);
+
+        $this->cdn_url=$options['cdn_url']??config('http')['cdn_url'];
     }
 
     /**
@@ -354,7 +358,7 @@ class Assets
         // Build tags
         $output = '';
         foreach($assets as $asset)
-            $output .= '<link href="' . $asset .$debug. '"' . $attributes . " />\n";
+            $output .= '<link href="' . $this->cdn_url.$asset .$debug. '"' . $attributes . " />\n";
 
         return $output;
     }
@@ -392,7 +396,7 @@ class Assets
         // Build tags
         $output = '';
         foreach($assets as $asset)
-            $output .= '<script src="' . $asset .$debug. '"' . $attributes . "></script>\n";
+            $output .= '<script src="' . $this->cdn_url.$asset .$debug. '"' . $attributes . "></script>\n";
 
         return $output;
     }
@@ -474,15 +478,16 @@ class Assets
     protected function pipeline(array $assets, $extension, $subdirectory)
     {
         // Create destination dir if it doesn't exist.
-        $pipeline_dir = $this->pipeline_dir;
+        $pipeline_dir = $this->pipeline_dir.DIRECTORY_SEPARATOR.($extension=='.js'?'js':'css');
         if( ! is_dir($pipeline_dir))
             @mkdir($pipeline_dir, 0777, true);
 
 
         // Generate paths
         $filename = $this->calculatePipelineHash($assets) . $extension;
-        $relative_path = "/{$this->pipeline_dir}/$filename";
-        $absolute_path = realpath($pipeline_dir) . DIRECTORY_SEPARATOR . $filename;
+        $relative_path = "/{$this->pipeline_dir}/".($extension=='.js'?'js':'css')."/$filename";
+        $absolute_path = realpath($pipeline_dir) .DIRECTORY_SEPARATOR.$filename;
+
         // If pipeline already exists return it
         if(file_exists($absolute_path))
             return $relative_path;
@@ -490,7 +495,6 @@ class Assets
         // Download, concatenate and minifiy files
 
         $buffer = $this->packLinks($assets, $extension);
-
 
         // Write minified file
         file_put_contents($absolute_path, $buffer);

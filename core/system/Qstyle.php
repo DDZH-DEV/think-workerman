@@ -63,6 +63,7 @@ class Qstyle{
         
 	//公共方法: 文件名, 是否返回缓存文件.
 	public function display($PHPnew_file_name, $returnpath = false){
+
 	    static $once = 0;
 
         if($once === 0){
@@ -80,7 +81,7 @@ class Qstyle{
             }
             $once = 1;
         }
-        
+
         $this->templates_viewcount += 1;
         $this->preg__debug("\n");
         $this->preg__debug($this->templates_viewcount.' 次模板调用开始.....', E_NOTICE);
@@ -88,13 +89,14 @@ class Qstyle{
             $this->preg__debug('参数为空 或者 重复模板调用:'. var_export($PHPnew_file_name, true).' 函数停止前进',E_WARNING);
             return false;
         }
-        
+
         // 支持字符串解析
         if (strpos($PHPnew_file_name,"\n") !== false || strpos($PHPnew_file_name,"{") !== false || strpos($PHPnew_file_name,"<?php") !== false){
             $this->templates_name =  str_shuffle(md5($PHPnew_file_name).microtime(true));
             $this->templates_message = $PHPnew_file_name;
             $phpnew_phpcode_log_phpcode = $this->__parse_html($this->templates_message);
             // 一直在释放变量.
+
             if ($returnpath === false){
                 unset($this->templates_message);
                 $this->__parse_var(true);
@@ -105,22 +107,23 @@ class Qstyle{
             }
             return true;
         }else{
+
             strpos($PHPnew_file_name,$this->templates_postfix) === false && $PHPnew_file_name .= $this->templates_postfix;
             $this->templates_name = $PHPnew_file_name;
             $tplcache = $this->__get_path($PHPnew_file_name);
             $true_check = $this->__check_update($tplcache);
         }
-          
+
         $this->templates_cache_file[$PHPnew_file_name] = $tplcache['cache']??'';
         $this->templates_file[$PHPnew_file_name] = $tplcache['tpl']??'';
         $this->templates_debug[$PHPnew_file_name] = array();
-        
+
         // 支持对模板block独立调用
         if (!is_bool($returnpath)){
             $this->parse_tpl_block($this->templates_file[$PHPnew_file_name], $returnpath);
-            exit();
+            throw new \Exception('jump_exit');
         }
-        
+
         $htmlname = basename($PHPnew_file_name);
         $PHPnew_path = false;
         if($true_check === true){
@@ -137,7 +140,8 @@ class Qstyle{
                 
                 if(stripos($this->templates_message,'[qstyle debug]') !== false || stripos($this->templates_message,'{qstyle debug}') !== false){
                    echo highlight_string($this->templates_message);
-                   exit();
+
+                   throw new \Exception('jump_exit');
                 }
                 
                 if($this->templates_message && !$this->preg__file($PHPnew_path,$this->templates_message,true)){
@@ -147,12 +151,12 @@ class Qstyle{
                 $this->templates_update += 1;
             }
         }
-        
+
         unset($tplcache , $PHPnew_file_name);
-        if($this->templates_viewcount === 1 && $returnpath === false && $PHPnew_path){
+        if(IS_CLI || ( $this->templates_viewcount === 1 && $returnpath === false && $PHPnew_path)){
             $this->__parse_var();
             $this->preg__debug("第".$this->templates_viewcount."次输出: ".$htmlname.' & '. $PHPnew_path);
-            include_once $PHPnew_path;
+            include $PHPnew_path;
         }else{
             if($returnpath !== false){
                 $this->preg__debug("第".$this->templates_viewcount."次强制返回路径: ".$htmlname.' & ' .$PHPnew_path);
@@ -162,7 +166,7 @@ class Qstyle{
                 $this->preg__debug("第".$this->templates_viewcount."次返回路径: ".$htmlname.' & ' .$PHPnew_path);
             }
         }
-        
+
         return $PHPnew_path;
 	}
     
@@ -194,9 +198,8 @@ class Qstyle{
     }
     
     public function load(){
-        if($args = func_get_args()){
-            return call_user_func_array(array($this, 'display'), $args);
-        }
+        $args = func_get_args();
+        return call_user_func_array(array($this, 'display'), $args);
     }
     
 	//公共方法: 用户用强制性变量赋值;
@@ -353,8 +356,10 @@ class Qstyle{
     
     //私有方法: 定位域名, 以此来影响部分文件.
     protected function preg__urlhost(){
-        return $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].'::'.$_SERVER['SERVER_PORT'].dirname($_SERVER['PHP_SELF']);
+        $server=g('SERVER');
+        return '//'.$server['HTTP_HOST'].dirname($server['REQUEST_URI']);
     }
+
     
     protected function __exp_path($path){
         $path = trim($path);
@@ -833,7 +838,7 @@ class Qstyle{
         //处理自动搜索文件路径
         $template = preg_replace_callback("/\{__(.*)\}/sU", array($this, 'preg__autofile'), $template,-1,$regint);
         $this->preg__debug('解析模板细节: {__name} 自动匹配路径解析次数:'.($regint));
-        
+        /*
         // 处理掉所有的路径问题.
         $template = preg_replace_callback("/\<link[^>]*?href=\"([^\s]*)\".*?\/\>/is",array($this,'preg__css'), $template,-1,$regint);
         $template = preg_replace_callback("/\<style[^>]*?\>([^\s]+?\.*?)\<\/style\>/is",array($this,'preg__css'), $template,-1,$regints);
@@ -841,7 +846,7 @@ class Qstyle{
         $template = preg_replace_callback("/\<script[^>]*?src=\"([^\s]*)\".*?\>\<\/script\>/is",array($this,'preg__js'), $template,-1,$regint);
         $template = preg_replace_callback("/\<script[^>]*?\>([^\s]*\.*?)\<\/script\>/is",array($this,'preg__js'), $template,-1,$regints);
         $this->preg__debug('解析模板细节: <script> JS路径自动匹配路径解析次数:'.($regint+$regints));
-        
+        */
         //替换语言包/静态变量/php代码.
         $template = preg_replace_callback("/\{eval\s+(.+?)\}([\n\r\t]*)/is",array($this,'preg__evaltags'), $template,-1,$regint);
         $this->preg__debug('解析模板细节: {eval phpcode} eval运行php代码解析次数:'.($regint));
@@ -897,7 +902,7 @@ class Qstyle{
 		$template = strtr($template, array('<style>' => '<style type="text/css">', '<script>' => '<script type="text/javascript">'));
         
         $filename = isset($this->templates_file[$this->templates_name])?$this->templates_file[$this->templates_name]:'';
-        $template = '<?php /* '.$filename.' */ if(is_object($this) === false){exit(\'Hacking!\');}else if(!isset($_SERVER[\'Qextract\'])){$_SERVER[\'Qextract\']=1;extract($this->templates_assign);}?>'.$template;
+        $template = '<?php /* '.$filename.' */ if(is_object($this) === false){echo(\'Hacking!\');throw new \Exception("jump_exit");}else if(!isset($_SERVER[\'Qextract\'])){$_SERVER[\'Qextract\']=1;extract($this->templates_assign);}?>'.$template;
         
 		$template = strtr($template, array('<?php' => '<?', '<?php echo' => '<?=','?><?php'=>' '));
 		$template = strtr($template, array('<?' => '<?php', '<?=' => '<?php echo '));

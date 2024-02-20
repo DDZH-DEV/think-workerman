@@ -56,8 +56,9 @@ class WebServer extends Web
 
         $server = g('SERVER');
 
-        define('IS_POST',$server['REQUEST_METHOD']==='POST');
-        define('IS_GET',$server['REQUEST_METHOD']==='GET');
+        g('IS_POST',$server['REQUEST_METHOD']==='POST');
+        g('IS_GET',$server['REQUEST_METHOD']==='GET');
+        g('IS_AJAX',isset($server['HTTP_X_REQUESTED_WITH']) && strtolower($server['HTTP_X_REQUESTED_WITH'])==='xmlhttprequest');
 
         //文件直接输出
         $file = PUBLIC_PATH . basename($server['REQUEST_URI']);
@@ -67,9 +68,9 @@ class WebServer extends Web
             unset($object);
             return;
         }
-        $class=$match['target'];
+        $class=$match['target']; 
 
-        IS_CLI && ob_start();
+        ob_start();
         if (class_exists($class) && method_exists($class,$match['action'])) {
             g('MODULE',$match['module']);
             g('CONTROLLER',$match['controller']);
@@ -77,7 +78,7 @@ class WebServer extends Web
             //全局设置
             g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']));
             //跨域问题
-            self::fixHttpCrossDomain($server);
+//            self::fixHttpCrossDomain($server);
             try {
                 call_user_func_array([new $class,$match['action']], [$match['params'],$connection,$request]);
             } catch (Exception $e) {
@@ -123,18 +124,13 @@ class WebServer extends Web
     protected static function fixHttpCrossDomain($server)
     {
 
-        if (IS_CLI) {
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Methods: *');
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Credentials:true');
-            \Workerman\Protocols\Http::header('Access-Control-Allow-Origin:' . (isset($server['HTTP_ORIGIN']) ? $server['HTTP_ORIGIN'] : config('http.cross_url')));
+
+
+        _header('Access-Control-Allow-Credentials','true');
+        if (isset($server['HTTP_ORIGIN'])) {
+            _header('Access-Control-Allow-Origin', $server['HTTP_ORIGIN']??config('http.cross_url'));
         } else {
-            header('Access-Control-Allow-Credentials:true');
-            if (isset($server['HTTP_ORIGIN'])) {
-                header('Access-Control-Allow-Origin:' . $server['HTTP_ORIGIN']);
-            } else {
-                header('Access-Control-Allow-Origin:*');
-            }
+            _header('Access-Control-Allow-Origin','*');
         }
     }
 

@@ -128,7 +128,7 @@ class Upload
         $insert['user_id'] = $this->user_id;
         $insert['upload_time'] = time();
 
-        $insert['ip'] = get_ip();
+        $insert['ip'] = ip();
 
         if (!Db::name('qe_files')->where('md5', $insert['md5'])->find()) {
             Db::name('qe_files')->insert( $insert);
