@@ -92,16 +92,16 @@ if (!function_exists('g')) {
     {
         if (is_null($name)) {
             // 清除
-            utils\G::clear();
+            system\G::clear();
         } elseif ($name && (!is_null($value) && $value !== '')) {
             // 设置
-            utils\G::set($name, $value, $long);
+            system\G::set($name, $value, $long);
         } elseif ($name == '') {
-            return utils\G::all();
+            return system\G::all();
         } else {
-            //echo \utils\Console::info('GET');
+            //echo \system\Console::info('GET');
             $long = $value == 'G' ? true : $long;
-            return utils\G::get($name, $long);
+            return system\G::get($name, $long);
         }
     }
 }
@@ -396,7 +396,7 @@ if (!function_exists('console')) {
             return;
         }
         $message = is_string($message) ? $message : json_encode($message);
-        echo \utils\Console::$type($message);
+        echo system\Console::$type($message);
     }
 }
 
