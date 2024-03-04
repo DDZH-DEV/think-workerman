@@ -5,9 +5,9 @@ namespace system;
 use think\Facade;
 
 /**
- * @method static assign($phpnew_var, $phpnew_value = null)
+ * @method static assign($var, $value = null)
  * @method static load
- * @method static display($PHPnew_file_name, $returnpath = false)
+ * @method static display($file_name, $returnpath = false)
  * return system\Qstyle
  */
 class View extends Facade
