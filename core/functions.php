@@ -585,5 +585,14 @@ function hook($name = '', $params = [], $single=false)
 {
     $return = [];
     app('hook')->trigger($name, [$params, &$return,$single]);
-    return $single && $return?$return[0]:$return;
+
+    return $single && $return && is_array($return)?$return[0]:$return;
+}
+
+/**
+ * 中断hook运行
+ * @auth false
+ */
+function abort_hook(){
+     throw new \JBZoo\Event\ExceptionStop();
 }

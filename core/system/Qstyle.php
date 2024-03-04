@@ -7,7 +7,7 @@ namespace system;
 */
 class Qstyle{
 	public $templates_dir         = array(PUBLIC_PATH.'template');       //模板路径,支持数组叠代多层目录,最后面的优先搜索;
-    public $templates_cache       = RUNTIME_PATH.'cache_tpl/';            //缓存模板路径;
+    public $templates_cache       = RUNTIME_PATH.'tpl/';            //缓存模板路径;
 	public $templates_postfix     = '.html';						//模板后缀;
     public $templates_caching     = '.php';							//缓存后缀;
     public $templates_var         = 'All';							//变量获取模式, All,ASSIGN;
@@ -87,6 +87,7 @@ class Qstyle{
         $this->preg__debug($this->templates_viewcount.' 次模板调用开始.....', E_NOTICE);
 	    if(isset($this->templates_debug[$PHPnew_file_name]) === true || !$PHPnew_file_name){
             $this->preg__debug('参数为空 或者 重复模板调用:'. var_export($PHPnew_file_name, true).' 函数停止前进',E_WARNING);
+
             return false;
         }
 
@@ -126,6 +127,7 @@ class Qstyle{
 
         $htmlname = basename($PHPnew_file_name);
         $PHPnew_path = false;
+
         if($true_check === true){
             if(isset($tplcache['cache']) && $tplcache['cache'])
                 $PHPnew_path = $this->templates_cache_file[$PHPnew_file_name];
@@ -140,7 +142,6 @@ class Qstyle{
                 
                 if(stripos($this->templates_message,'[qstyle debug]') !== false || stripos($this->templates_message,'{qstyle debug}') !== false){
                    echo highlight_string($this->templates_message);
-
                    throw new \Exception('jump_exit');
                 }
                 
@@ -158,6 +159,7 @@ class Qstyle{
             $this->preg__debug("第".$this->templates_viewcount."次输出: ".$htmlname.' & '. $PHPnew_path);
             include $PHPnew_path;
         }else{
+            $this->__parse_var();
             if($returnpath !== false){
                 $this->preg__debug("第".$this->templates_viewcount."次强制返回路径: ".$htmlname.' & ' .$PHPnew_path);
             }else if(!$PHPnew_path){
@@ -653,43 +655,8 @@ class Qstyle{
         }
         return $redata;
 	}
-    // 内部方法: css文件引用规范方法.
-    protected function preg__css($math){
-        if(!$math[1])
-            return false;
-        $css_file_path  = '';
-        if(strpos($math[0],'link') !== false){
-            if(strpos($math[0],'/php') !== false){
-                $css_file_path = $this->__preg_source_parse(trim($math[1]));
-                $math[0] = preg_replace('/ href="[^"]*"/is'," href=\"$css_file_path\"", $math[0]);
-            }
 
-            $this->preg__debug('CSS 自动匹配: '.$css_file_path);
-            return $math[0];
-        }else{
-            $css_file_path = $this->__preg_source_parse($math[1]);
-            $this->preg__debug('CSS 自动匹配: '.$css_file_path);
-            return '<link rel="stylesheet" type="text/css" href="'.$css_file_path.'" />';
-        }
-    }
 
-    // 内部方法: js文件引用规范方法.
-    protected function preg__js($math){
-        $js_file_path = '';
-        if(strpos($math[0],'src') !== false){
-            if(strpos($math[0],'/php') !== false){
-                $js_file_path = $this->__preg_source_parse(trim($math[1]));
-                $math[0] = preg_replace('/ src="[^"]*"/is'," src=\"$js_file_path\"", $math[0]);
-            }
-
-            $this->preg__debug('JS 自动匹配: '.$js_file_path);
-            return $math[0];
-        }else{
-            $js_file_path = $this->__preg_source_parse(trim($math[1]));
-            $this->preg__debug('JS 自动匹配: '.$js_file_path);
-            return '<script type="text/javascript" src="'.$js_file_path.'"></script>';
-        }
-    }
 
     // 内部方法: html代码自动匹配路径方法
     protected function preg__autofile($math){
@@ -838,17 +805,10 @@ class Qstyle{
         //处理自动搜索文件路径
         $template = preg_replace_callback("/\{__(.*)\}/sU", array($this, 'preg__autofile'), $template,-1,$regint);
         $this->preg__debug('解析模板细节: {__name} 自动匹配路径解析次数:'.($regint));
-        /*
-        // 处理掉所有的路径问题.
-        $template = preg_replace_callback("/\<link[^>]*?href=\"([^\s]*)\".*?\/\>/is",array($this,'preg__css'), $template,-1,$regint);
-        $template = preg_replace_callback("/\<style[^>]*?\>([^\s]+?\.*?)\<\/style\>/is",array($this,'preg__css'), $template,-1,$regints);
-        $this->preg__debug('解析模板细节: <link><style> CSS路径自动匹配路径解析次数:'.($regint+$regints));
-        $template = preg_replace_callback("/\<script[^>]*?src=\"([^\s]*)\".*?\>\<\/script\>/is",array($this,'preg__js'), $template,-1,$regint);
-        $template = preg_replace_callback("/\<script[^>]*?\>([^\s]*\.*?)\<\/script\>/is",array($this,'preg__js'), $template,-1,$regints);
-        $this->preg__debug('解析模板细节: <script> JS路径自动匹配路径解析次数:'.($regint+$regints));
-        */
+
         //替换语言包/静态变量/php代码.
-        $template = preg_replace_callback("/\{eval\s+(.+?)\}([\n\r\t]*)/is",array($this,'preg__evaltags'), $template,-1,$regint);
+        $template = preg_replace_callback("/\{([\:\!]+)(.+?)\}([\n\r\t]*)/is",array($this,'preg__evaltags'), $template,-1,$regint);
+
         $this->preg__debug('解析模板细节: {eval phpcode} eval运行php代码解析次数:'.($regint));
         $template = preg_replace_callback("/\<\?php\s+(.+?)\?\>/is", array($this,'preg__base'), $template,-1,$regint);
         $this->preg__debug('解析模板细节: <?php code ?> 原生态php代码解析次数:'.($regint));
@@ -994,11 +954,18 @@ class Qstyle{
         }
     }
     
-	protected function preg__evaltags($math) {
-	    $php = rtrim(trim($math[1]),';');
-        $lf  = $math[2];
+	protected function preg__evaltags($match) {
+
+	    $php = rtrim(trim($match[2]),';');
+        $lf  = $match[3];
 		$php = str_replace('\"', '"', $php);
-		return $this->preg__base("<?php $php;?>$lf");
+
+        if($match[1]==':'){
+            return $this->preg__base("<?php echo $php;?>$lf");
+        }else{
+            return $this->preg__base("<?php $php;?>$lf");
+        }
+
 	}
     
     protected function preg__todobug($math){
@@ -1202,7 +1169,7 @@ class Qstyle{
     }
     
 	//公共方法: 删除模板缓存,假如不传入参数, 将默认删除缓存目录的所有文件.;
-	public function cache_dele($path = null){
+	public function cache_delete($path = null){
 		if($path === null){
 			$path = $this->templates_cache;
     		$file_arr = scandir($path);
@@ -1211,7 +1178,7 @@ class Qstyle{
     				continue;
     			}
     			if(is_dir($path . $val) === true)
-    				$this->cache_dele($path . $val . '/');
+    				$this->cache_delete($path . $val . '/');
     			if(is_file($path . $val) === true && $val !== 'index.html')
     				unlink($path . $val);
     		}

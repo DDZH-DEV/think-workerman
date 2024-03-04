@@ -62,14 +62,20 @@ class Web
         //释放变量
         g(null);
 
+        $content = ob_get_clean();
+
+        !APP_DEBUG && $content =preg_replace("/\>[\s]+?\</",'><',$content);
+
         if (IS_CLI) {
-            $content = ob_get_clean();
+
             if (strtolower($_SERVER['HTTP_CONNECTION']) === "keep-alive") {
                 return $connection->send($content);
 
             } else {
                 return $connection->close($content);
             }
+        }else{
+            echo $content;
         }
     }
 

@@ -116,10 +116,14 @@ class Router
             if (isset($this->namedRoutes[$name])) {
                 throw new \RuntimeException("Can not redeclare route '{$name}'");
             }
-            $this->namedRoutes[$name] = $route;
+            $this->namedRoutes[self::turn($target)] = $route;
         }
 
         return;
+    }
+
+    static function turn($target){
+        return strtolower(str_replace(["app\\","\\controller\\","::"],['','/','/'],$target));
     }
 
     /**
@@ -134,7 +138,7 @@ class Router
      */
     public function generate($routeName, array $params = [])
     {
-
+        $routeName=strtolower($routeName);
         // Check if named route exists
         if (!isset($this->namedRoutes[$routeName])) {
             return $routeName;
@@ -167,7 +171,7 @@ class Router
             }
         }
 
-        return $url;
+        return rtrim($url,'/');
     }
 
     /**

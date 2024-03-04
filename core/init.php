@@ -41,18 +41,13 @@ foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
                     //$config 是配置的参数
                     $config = $hook['config'] ?? [];
                     if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
-                        $res = call_user_func_array($hook['event'], [$hook_params,$config]);
+                        $return=call_user_func_array($hook['event'], [$hook_params,$config,$return]);
                     } else if (is_callable($hook['event'])) {
-                        $res = call_user_func($hook['event'], $hook_params,$config);
-                    }else{
-                        $res = null;
+                        $return=call_user_func($hook['event'], $hook_params,$config,$return);
                     }
 
-                    $return[]=$res;
-
-                    if($res===false || $single){
+                    if($return===false || ($return && $single)){
                         throw new \JBZoo\Event\ExceptionStop($hook['name'].'运行结束');
-                        return false;
                     }
 
                 },$hook['sort']);

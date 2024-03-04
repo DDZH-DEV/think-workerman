@@ -8,6 +8,5 @@ return [
     'db'=> \think\facade\Db::class,
     'view'=>\system\View::class,
     'assets'=>\system\Assets::class,
-    'hook'=>JBZoo\Event\EventManager::class,
-    'sms'=>\app\user\service\Smsbao::class
+    'hook'=>JBZoo\Event\EventManager::class
 ];

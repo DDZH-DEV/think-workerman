@@ -50,6 +50,7 @@ class WebServer extends Web
      */
     static function dispatchHttp($connection = null, $object = null, $request = null)
     {
+
         self::init();
 
         $match = app('router')->match();
