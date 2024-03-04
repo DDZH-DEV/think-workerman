@@ -9,14 +9,7 @@
         "ext-json": "*",
         "topthink/think-orm": "^2.0",
         "topthink/think-cache": "^2.0",
-        "topthink/think-log": "^2.0",
-
-
-        "topthink/think-validate": "^2.0",
-        "wikimedia/minify": "*",
-        "gregwar/captcha": "*",
-        "matomo/device-detector": "^6.1",
-        "zoujingli/wechat-developer": "^1.2"
+        "topthink/think-log": "^2.0"
     },
     "autoload": {
         "psr-4": {
