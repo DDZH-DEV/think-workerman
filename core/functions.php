@@ -334,14 +334,15 @@ if (!function_exists('ip')) {
      */
     function ip()
     {
-        static $realip;
-        if (isset($_SERVER)) {
-            if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
-                $realip = $_SERVER["HTTP_X_FORWARDED_FOR"];
-            } else if (isset($_SERVER["HTTP_CLIENT_IP"])) {
-                $realip = $_SERVER["HTTP_CLIENT_IP"];
+        $server=g('SERVER');
+
+        if (isset($server)) {
+            if (isset($server["HTTP_X_FORWARDED_FOR"])) {
+                $realip = $server["HTTP_X_FORWARDED_FOR"];
+            } else if (isset($server["HTTP_CLIENT_IP"])) {
+                $realip = $server["HTTP_CLIENT_IP"];
             } else {
-                $realip = $_SERVER["REMOTE_ADDR"];
+                $realip = $server["REMOTE_ADDR"];
             }
         } else {
             if (getenv("HTTP_X_FORWARDED_FOR")) {
@@ -424,7 +425,8 @@ if (!function_exists('addToQueue')) {
 
         static $Queue;
         static $queue_key;
-        $queue_key = $queue_key ? $queue_key : md5(json_encode(config('http')));
+        $queue_key = $queue_key ? $queue_key : str_replace(['-','.','*'],'_',gethostname().'_QUEUES');
+        console('QUEUE KEY :'.$queue_key);
 
         if (!$Queue) {
             $_redis = new \Redis();

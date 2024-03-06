@@ -11,7 +11,8 @@
         "topthink/think-cache": "^2.0",
         "topthink/think-log": "^2.0", 
 
-        "wikimedia/minify": "*"
+        "wikimedia/minify": "*",
+        "zoujingli/wechat-developer": "^1.2"
     },
     "autoload": {
         "psr-4": {

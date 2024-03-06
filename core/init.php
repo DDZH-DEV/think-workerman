@@ -28,7 +28,7 @@ foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
         system\Config::load($config_file, $dir_name);
     }
     //钩子机制
-    if ((file_exists($hook_file = $dir . '/hook.php'))) {
+    if (is_dir($dir) && file_exists($hook_file = $dir . '/hook.php')) {
 
         $hooks = require_once $hook_file;
 
@@ -55,7 +55,7 @@ foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
         }
     }
 
-    is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
+    is_dir($dir) && is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }
 
 error_reporting(E_ALL & ~E_NOTICE);

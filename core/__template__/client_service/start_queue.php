@@ -28,7 +28,7 @@ $worker->count = config('queue.count');
 
 $worker->onWorkerStart = function () {
 
-    $queue_key=md5(json_encode(config('http')));
+    $queue_key=str_replace(['-','.','*'],'_',gethostname().'_QUEUES');
 
     static $Queue;
 
@@ -44,12 +44,19 @@ $worker->onWorkerStart = function () {
 
         while($Queue->count()>0){
 
-            $row = $Queue->pop();
+            try {
+                $row = $Queue->pop();
+            }catch (\Exception $e){
+                console($e->getMessage(),'error');
+                sleep(10);
+                break;
+            }
+
 
             $task = json_decode($row, true);
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
-            //自定义的回调方法
+            //自定义的回调方法 
             if(isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])){
                 call_user_func($task['_callback'],$task);
             }else{
@@ -66,7 +73,7 @@ $worker->onWorkerStart = function () {
         }
 
 
-        sleep(1);
+        usleep(500);
     }
 
 };

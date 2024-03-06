@@ -32,6 +32,7 @@ class Http
         $query_string = is_array($params) ? http_build_query($params) : $params;
 
         $ch = curl_init();
+        
         $defaults = [];
         if ('GET' == $method) {
             $geturl = $query_string ? $url . (stripos($url, "?") !== FALSE ? "&" : "?") . $query_string : $url;
@@ -74,14 +75,14 @@ class Http
             return [
                 'ret' => FALSE,
                 'errno' => $errno,
-                'msg' => $err,
+                'content' => $err,
                 'info' => $info,
             ];
         }
         curl_close($ch);
         return [
             'ret' => TRUE,
-            'msg' => $ret,
+            'content' => $ret,
         ];
     }
 
