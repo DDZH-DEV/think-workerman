@@ -56,7 +56,7 @@ $worker->onWorkerStart = function () {
             $task = json_decode($row, true);
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
-            //自定义的回调方法 
+            //自定义的回调方法
             if(isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])){
                 call_user_func($task['_callback'],$task);
             }else{

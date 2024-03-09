@@ -77,7 +77,7 @@ class WebServer extends Web
             g('CONTROLLER',$match['controller']);
             g('ACTION',$match['action']);
             //全局设置
-            g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']));
+            g('IS_MOBILE', is_mobile($server['HTTP_USER_AGENT']??''));
             //跨域问题
 //            self::fixHttpCrossDomain($server);
             try {

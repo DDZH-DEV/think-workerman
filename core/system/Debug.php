@@ -44,6 +44,4 @@ class Debug
         self::log_exception(new \ErrorException($str, 0, $num, $file, $line));
     }
 
-
-
 }

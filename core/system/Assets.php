@@ -2,8 +2,7 @@
 /**
  * Assets.php
  *
- * @Author  : 9rax.dev@gmail.com
-  */
+   */
 namespace system;
 
 use Wikimedia\Minify\JavaScriptMinifier;

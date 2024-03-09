@@ -70,7 +70,7 @@ class Qstyle{
             $this->templates_postfix = '.'.ltrim($this->templates_postfix, '.');
             
             if(!$this->templates_cache || is_dir($this->templates_cache) == false){
-                @mkdir($this->templates_cache, true);
+                @mkdir($this->templates_cache, 0777,true);
             }
             
             if($this->templates_isdebug){
@@ -135,7 +135,7 @@ class Qstyle{
             if(!$this->templates_file[$PHPnew_file_name] || !$this->templates_message = $this->preg__file($this->templates_file[$PHPnew_file_name])){
                 $this->preg__debug('模板文件'.$PHPnew_file_name.' 读取失败,请检查模板是否存在',E_WARNING);
             }
-            
+
             if($this->templates_message){
                 $this->templates_message = $this->__parse_html($this->templates_message);
                 $PHPnew_path = $this->templates_cache_file[$PHPnew_file_name];
@@ -146,7 +146,7 @@ class Qstyle{
                 }
                 
                 if($this->templates_message && !$this->preg__file($PHPnew_path,$this->templates_message,true)){
-                    $this->preg__debug('模板文件无法写入: '. $htmlname);
+                    $this->preg__debug('模板文件无法写入: '. $htmlname . ' | '.$PHPnew_path);
                 }
                 $this->templates_message = null;
                 $this->templates_update += 1;
@@ -273,6 +273,7 @@ class Qstyle{
             return $this->templates_dir;
         
         $path = $this->__exp_path($path);
+
         if(!isset($this->templates_dir[$path]) && is_dir($path) === true){
             $this->templates_dir[$path] = $path;
         }else{
@@ -364,12 +365,7 @@ class Qstyle{
 
     
     protected function __exp_path($path){
-        $path = trim($path);
-        if(is_dir($path)){
-           return trim(strtr($path, array('\\'=>'/','\\\\'=>'/','//'=>'/')),'./').'/';
-        }else{
-           return './'.trim(strtr($path, array('\\'=>'/','\\\\'=>'/','//'=>'/')),'./').'/';
-        }
+        return trim(str_replace(["//"],["/"],$path.'/'));
     }
     
     protected function __exp_file($filepath){
@@ -513,6 +509,7 @@ class Qstyle{
     // 内部方法: 读文件与写文件的公用方法.
     protected function preg__file($path, $lock='rb' ,$cls = false){
         $mode = $cls === true?'wb+':'rb';
+
         if($cls === false && is_file($path) === false) return false;
         if(!@$fp = fopen($path, $mode))
             return false;

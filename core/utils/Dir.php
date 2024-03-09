@@ -67,8 +67,7 @@ class Dir
      * @param $dir
      *
      * @return bool
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2019/8/5 15:43
+          * @DateTime: 2019/8/5 15:43
      */
     static function mkdir($dir)
     {
@@ -83,8 +82,7 @@ class Dir
      * @param bool $new
      *
      * @return array
-     * @Author  : 9rax.dev@gmail.com
-     * @DateTime: 2019/8/21 13:39
+          * @DateTime: 2019/8/21 13:39
      */
     static function scan_dir($dir, $ext = '', $new = false)
     {

@@ -64,8 +64,7 @@ class Crypt
      * @param $passphrase
      *
      * @return string
-     * @Author: zaoyongvip@gmail.com
-     */
+          */
     public static function encrypt($plain_text, $passphrase)
     {
 
