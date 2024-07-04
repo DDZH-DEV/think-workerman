@@ -124,9 +124,6 @@ class WebServer extends Web
      */
     protected static function fixHttpCrossDomain($server)
     {
-
-
-
         _header('Access-Control-Allow-Credentials','true');
         if (isset($server['HTTP_ORIGIN'])) {
             _header('Access-Control-Allow-Origin', $server['HTTP_ORIGIN']??config('http.cross_url'));

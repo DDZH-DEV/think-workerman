@@ -18,7 +18,7 @@ return [
                 //密码
                 'password' => 'root',
                 // 数据库名
-                'database' => '',
+                'database' => 'xnc',
                 // 数据库编码默认采用utf8
                 'charset' => 'utf8',
                 // 数据库表前缀
@@ -146,5 +146,7 @@ return [
     ],
 
     'assets' => ['public_dir' => PUBLIC_PATH, 'pipeline_dir' => 'min', 'pipeline_gzip' => true, 'pipeline' => !APP_DEBUG],
+
+    'qurl'=>'/QEditor'
 
 ];

@@ -21,41 +21,52 @@ require_once(CORE_PATH . DIRECTORY_SEPARATOR . 'functions.php');
 is_file(APP_PATH . 'provider.php') && bind(include APP_PATH . 'provider.php');
 //加载默认配置文件
 is_file($file = APP_PATH . 'config.php') && system\Config::load($file);
+
+
 //加载各应用下的文件
 foreach (glob(dirname(__DIR__, 1) . '/apps/*') as $dir) {
     $dir_name = basename($dir);
-    if (is_dir($dir) && file_exists($config_file = $dir . '/config.php')) {
-        system\Config::load($config_file, $dir_name);
-    }
     //钩子机制
-    if (is_dir($dir) && file_exists($hook_file = $dir . '/hook.php')) {
+    if (is_dir($dir)) {
+        //配置文件
+        if (file_exists($config_file = $dir . '/config.php')) {
+            system\Config::load($config_file, $dir_name);
+        }
+        //应用钩子
+        if (file_exists($hook_file = $dir . '/hook.php')) {
+            $hooks = require_once $hook_file;
+            foreach ($hooks as $hook_name => $hook) {
+                if ($hook['status']) {
+                    app('hook')->on($hook['hook'], function ($hook_params = [], &$return, $single) use ($hook) {
 
-        $hooks = require_once $hook_file;
+                        //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
+                        //$config 是配置的参数
+                        $config = $hook['config'] ?? [];
 
-        foreach ($hooks as $hook_name => $hook) {
+                        try {
+                            if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
+                                $return = call_user_func_array($hook['event'], [$hook_params, $config, $return]);
+                            } else if (is_callable($hook['event'])) {
+                                $return = call_user_func($hook['event'], $hook_params, $config, $return);
+                            }
+                        } catch (\Exception $e) {
+                            \system\Debug::log_exception($e);
+                            $return = $e->getMessage();
+                        }
 
-            if ($hook['status']) {
-                app('hook')->on($hook['hook'], function ($hook_params = [], &$return, $single) use ($hook) {
+                        if ($return === false || ($return && $single)) {
+                            throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
+                        }
 
-                    //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
-                    //$config 是配置的参数
-                    $config = $hook['config'] ?? [];
-                    if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
-                        $return=call_user_func_array($hook['event'], [$hook_params,$config,$return]);
-                    } else if (is_callable($hook['event'])) {
-                        $return=call_user_func($hook['event'], $hook_params,$config,$return);
-                    }
-
-                    if($return===false || ($return && $single)){
-                        throw new \JBZoo\Event\ExceptionStop($hook['name'].'运行结束');
-                    }
-
-                },$hook['sort']);
+                    }, $hook['sort']);
+                }
             }
         }
+        //自定义函数
+        is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
+
     }
 
-    is_dir($dir) && is_file($dir . '/functions.php') && include_once $dir . '/functions.php';
 }
 
 error_reporting(E_ALL & ~E_NOTICE);

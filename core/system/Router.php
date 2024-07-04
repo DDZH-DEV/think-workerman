@@ -141,7 +141,7 @@ class Router
         $routeName=strtolower($routeName);
         // Check if named route exists
         if (!isset($this->namedRoutes[$routeName])) {
-            return $routeName;
+            return $params?implode('?',[$routeName,http_build_query($params)]):$routeName;
         }
 
         // Replace named parameters

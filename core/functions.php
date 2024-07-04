@@ -524,7 +524,7 @@ if (!function_exists('url')) {
     /**
      * @param $name
      * @param $params
-     * @return void
+     * @return string
      * '/users/[i:id]/'
      * 'i' => '[0-9]++',
      * 'a' => '[0-9A-Za-z]++',
@@ -534,9 +534,13 @@ if (!function_exists('url')) {
      * '' => '[^/\.]++'
      *
      */
-    function url($name = '', $params = [])
+    function url($name = '', $params = [],$domain='')
     {
-        return app('router')->generate($name, $params);
+        if($domain===true){
+            $server=g("SERVER");
+            $domain=($server['REQUEST_SCHEME']?:'http').'://'.$server['HTTP_HOST'].'///';
+        }
+        return preg_replace("/\/{3,}/",'/','///'.$domain.app('router')->generate($name, $params));
     }
 }
 
@@ -550,7 +554,7 @@ if (!function_exists('url')) {
 function assets($type, $act_type = 'add')
 {
     //全部输出
-    if ($type === TRUE) {
+    if ($type === true) {
         echo app('assets')->css();
         echo app('assets')->js();
         return app('assets')->reset();
@@ -568,7 +572,7 @@ function assets($type, $act_type = 'add')
     //载入
     if ($act_type === 'add') {
         app('assets')->add($type);
-    } else {
+    } else if($type){
         //重置类型
         echo app('assets')->$type();
         $act = 'reset' . ucfirst($type);
@@ -587,7 +591,6 @@ function hook($name = '', $params = [], $single=false)
 {
     $return = [];
     app('hook')->trigger($name, [$params, &$return,$single]);
-
     return $single && $return && is_array($return)?$return[0]:$return;
 }
 

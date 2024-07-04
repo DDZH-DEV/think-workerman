@@ -403,10 +403,9 @@ class Assets
     /**
      * Add/replace collection.
      *
-     * @param  string  $collectionName
      * @param  array   $assets
      */
-    public function registerCollection($collectionName, array $assets)
+    public function registerCollection(array $assets)
     {
         $this->collections = $assets+$this->collections;
 

@@ -74,5 +74,8 @@ class App extends Facade
         if (defined('FPM_MODE') || defined('WEB_SERVER')) {
             WebServer::dispatchHttp();
         }
+
+        ob_end_flush();
+        session_write_close();
     }
 }
