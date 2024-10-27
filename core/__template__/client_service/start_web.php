@@ -1,18 +1,12 @@
 <?php
 
-use Workerman\Worker;
+use Workerman\Worker; 
 
-
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/init.php';
-
-
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/base.php'; 
 
 define('WORKER_VERSION',Worker::VERSION);
 
-$web = new \system\WebServer(config('http.http_server'));
-$web->name  =  config('http.name')?config('http.name'):'WebServer';
-$web->count = config('http.count');
-
+\system\WebServer::run();  
 
 if (!defined('GLOBAL_START')) {
     Worker::runAll();

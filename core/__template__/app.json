@@ -1,0 +1,7 @@
+{
+    "name": "__TEMPLATE__模块",
+    "version": "0.0.1",
+    "enabled": true,
+    "description": "__TEMPLATE__模块的描述",
+    "depends":[]
+}

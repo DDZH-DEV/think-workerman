@@ -2,7 +2,7 @@
 
 use Workerman\Worker;
 
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'base.php';
 
 
 if (!config('global_data.server_port')) {

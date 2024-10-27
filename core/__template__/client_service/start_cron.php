@@ -3,7 +3,7 @@
 use Workerman\Crontab\Crontab;
 use Workerman\Worker;
 
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/base.php';
 
 $worker = new Worker();
 $worker->name = 'Cron';

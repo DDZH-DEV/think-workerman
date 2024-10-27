@@ -15,7 +15,7 @@
 use \Workerman\Worker;
 
 // 自动加载类
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/init.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/base.php';
 
 
 //消息队列 进程

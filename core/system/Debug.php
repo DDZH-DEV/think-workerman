@@ -6,8 +6,96 @@ use think\facade\Log;
 
 class Debug
 {
-    function slog()
+    /**
+     * 发送日志
+     * @param string|array $message
+     * @param string $level
+     * @param string $listen
+     * @param bool $write
+     * @return bool
+     */
+    static function slog($message = '', $level = '', $listen = '')
     {
+
+        $conf=config('socket_log');
+
+        if (!$message || !$conf['enable']) {
+            return true;
+        }
+        $address = ($listen?:$conf['client']);
+
+        $console = false;
+        if (strpos($level, '@') > 1) {
+            $params = explode('@', $level);
+            $level = $params[0];
+            $console = true;
+        }
+        $logs[]=array(
+            'type' => $level,
+            'msg' => $message,
+            'css' => ''
+        );
+
+        $server=g('SERVER');
+        //p($server);
+        array_unshift($logs, array(
+            'type' => 'group',
+            'msg' => $server['HTTP_HOST'].$server['REQUEST_URI'],
+            'css' => 'color:#40e2ff;background:#171717;'
+        ));
+
+        if (config('socket_log.show_included_files')) {
+            $logs[] = array(
+                'type' => 'groupCollapsed',
+                'msg' => 'included_files',
+                'css' => ''
+            );
+            $logs[] = array(
+                'type' => 'log',
+                'msg' => implode("\n", get_included_files()),
+                'css' => ''
+            );
+            $logs[] = array(
+                'type' => 'groupEnd',
+                'msg' => '',
+                'css' => '',
+            );
+        }
+
+        $logs[] = array(
+            'type' => 'groupEnd',
+            'msg' => '',
+            'css' => '',
+        );
+        $content = array(
+            'client_id' => $address,
+            'logs' => $logs,
+            'level' => $level,
+            'console' => $console
+        );
+        static $Curl, $_flag;
+        $url = $conf['server'] . $address;
+        $Curl = $Curl ? $Curl : curl_init();
+        if ($_flag == 1) {
+            curl_setopt($Curl, CURLOPT_POSTFIELDS, json_encode($content, JSON_UNESCAPED_UNICODE));
+            $response=curl_exec($Curl);
+            return $response;
+        } else {
+            curl_setopt($Curl, CURLOPT_URL, $url);
+            curl_setopt($Curl, CURLOPT_POST, true);
+            curl_setopt($Curl, CURLOPT_POSTFIELDS, json_encode($content, JSON_UNESCAPED_UNICODE));
+            curl_setopt($Curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($Curl, CURLOPT_CONNECTTIMEOUT, 1);
+            curl_setopt($Curl, CURLOPT_TIMEOUT, 3);
+            $headers = array(
+                "Content-Type: application/json;charset=UTF-8"
+            );
+            curl_setopt($Curl, CURLOPT_HTTPHEADER, $headers);//设置header
+            $response=curl_exec($Curl);
+            $_flag = 1;
+            return $response;
+        }
+
 
     }
 

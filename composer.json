@@ -1,15 +1,14 @@
 {
     "require": {
-        "workerman/workerman": "*",
+        "workerman/workerman": "5.0.0-beta.7",
         "workerman/gateway-worker": "*",
-        "workerman/gatewayclient": "*",
-        "bardoqi/php-hive-queue": "*",
+        "workerman/gatewayclient": "*", 
         "workerman/crontab": "^1.0",
+        "bardoqi/php-hive-queue": "*",
         "jbzoo/event": "^4.0.1",
-        "ext-json": "*",
-        "topthink/think-orm": "^2.0",
-        "topthink/think-cache": "^2.0",
-        "topthink/think-log": "^2.0",
+        "topthink/think-orm": "*",
+        "topthink/think-cache": "*",
+        "topthink/think-log": "*",
 
         "wikimedia/minify": "*",
         "zoujingli/wechat-developer": "^1.2",
@@ -28,5 +27,7 @@
             "type": "composer",
             "url": "https://mirrors.aliyun.com/composer/"
         }
+    },
+    "config": { 
     }
 }

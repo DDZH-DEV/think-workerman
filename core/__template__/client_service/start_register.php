@@ -15,7 +15,7 @@ use \Workerman\Worker;
 use \GatewayWorker\Register;
 
 // 自动加载类
-require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/init.php';
+require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/base.php';
 
 $register = new Register('text://'.config('register.address'));
 

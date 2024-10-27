@@ -1,1 +1,0 @@
-nodemon --watch "./apps/"  -e "css,js"  -x  "./win_dev_move_files.bat"

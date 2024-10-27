@@ -61,6 +61,21 @@ class Qstyle
         return $this;
     }
 
+    public  function release()
+    {
+        // 释放变量
+        $this->templates_assign = array();
+        $this->templates_static_assign = array();
+        $this->templates_css_assign = array();
+        $this->templates_blockreplace = array();
+        $this->templates_debug = array();
+        
+        // 重置计数器
+        $this->templates_update = 0;
+        $this->templates_viewcount = 0;
+        $this->templates_writecount = 0;
+    }
+
     //公共方法: 文件名, 是否返回缓存文件.
     public function display($PHPnew_file_name, $returnpath = false)
     {
@@ -889,7 +904,7 @@ class Qstyle
         $template = strtr($template, array('<style>' => '<style type="text/css">', '<script>' => '<script type="text/javascript">'));
 
         $filename = isset($this->templates_file[$this->templates_name]) ? $this->templates_file[$this->templates_name] : '';
-        $template = '<?php /* ' . $filename . ' */ if(is_object($this) === false){echo(\'Hacking!\');throw new \Exception("jump_exit");}else if(!isset($_SERVER[\'Qextract\'])){$_SERVER[\'Qextract\']=1;extract($this->templates_assign);}?>' . $template;
+        $template = '<?php /* ' . $filename . ' */ if(is_object($this) === false){echo(\'Hacking!\');throw new \Exception("jump_exit");}else if(!g(\'Qextract\') || IS_CLI){g(\'Qextract\',1);extract($this->templates_assign);}?>' . $template;
 
         $template = strtr($template, array('<?php' => '<?', '<?php echo' => '<?=', '?><?php' => ' '));
         $template = strtr($template, array('<?' => '<?php', '<?=' => '<?php echo '));
@@ -1041,9 +1056,9 @@ class Qstyle
             if (strpos($math, '$') !== false) {
                 $math = $this->__parse_htmlvar($math);
                 $math = strtr($math, array('<?=' => '', '?>' => ''));
-                $retunrstr = '<?php require($this->load(' . $math . '));?>' . $lf;
+                $retunrstr = '<?php require_once($this->load(' . $math . '));?>' . $lf;
             } else {
-                $retunrstr = '<?php require($this->load(\'' . $math . '\'));?>' . $lf;
+                $retunrstr = '<?php require_once($this->load(\'' . $math . '\'));?>' . $lf;
             }
             $this->preg__debug('解析模板细节: 引入文件: ' . $math);
             return $this->preg__base($retunrstr);

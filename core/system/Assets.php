@@ -475,16 +475,16 @@ class Assets
      */
     protected function pipeline(array $assets, $extension, $subdirectory)
     {
-        // Create destination dir if it doesn't exist.
-        $pipeline_dir = $this->pipeline_dir.DIRECTORY_SEPARATOR.($extension=='.js'?'js':'css');
-        if( ! is_dir($pipeline_dir))
-            @mkdir($pipeline_dir, 0777, true);
+        // 使用绝对路径
+        $pipeline_dir = $this->public_dir . '/' . $this->pipeline_dir . '/' . ($extension == '.js' ? 'js' : 'css');
+        if (!is_dir($pipeline_dir)) {
+            mkdir($pipeline_dir, 0777, true);
+        }
 
-
-        // Generate paths
+        // 生成路径
         $filename = $this->calculatePipelineHash($assets) . $extension;
-        $relative_path = "/{$this->pipeline_dir}/".($extension=='.js'?'js':'css')."/$filename";
-        $absolute_path = realpath($pipeline_dir) .DIRECTORY_SEPARATOR.$filename;
+        $relative_path = "/{$this->pipeline_dir}/" . ($extension == '.js' ? 'js' : 'css') . "/$filename";
+        $absolute_path = $pipeline_dir . '/' . $filename;
 
         // If pipeline already exists return it
         if(file_exists($absolute_path))
@@ -578,9 +578,9 @@ class Assets
                 if($link === false)
                     continue;
             }
-
+       
             // Fetch link content
-            $buffer .= ($this->fetch_command instanceof Closure) ? $this->fetch_command->__invoke($link) : file_get_contents($link);
+            $buffer .= (($extension=='.css')?"\r\n":';').(($this->fetch_command instanceof Closure) ? $this->fetch_command->__invoke($link) : file_get_contents($link));
 
 
         }

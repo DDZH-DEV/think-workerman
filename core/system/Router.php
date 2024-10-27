@@ -201,7 +201,7 @@ class Router
         }
 
         $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl) - 1] : '';
-
+ 
         // set Request Method if it isn't passed as a parameter
         if ($requestMethod === null) {
             $requestMethod = isset($server['REQUEST_METHOD']) ? $server['REQUEST_METHOD'] : 'GET';

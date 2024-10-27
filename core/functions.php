@@ -84,9 +84,13 @@ if (!function_exists('p')) {
 if (!function_exists('g')) {
     /**
      * 全局变量共享,每次控制器请求结束后释放
-     * @param MODULE|CONTROLLER|ACTION|IS_MOBILE|IP|POST|GET|FILES|SESSION|SERVER|COOKIE $name
+     * @param string $name 可选值:
+     *        'MODULE'|'CONTROLLER'|'ACTION'|'IS_MOBILE'|'IP'|
+     *        'POST'|'GET'|'FILES'|'SESSION'|'SERVER'|'COOKIE'|'REQUEST'
      * @param mixed $value
+     * @param bool $long
      * @return mixed|null
+     * @see g()
      */
     function g($name = '', $value = '', $long = false)
     {
@@ -149,13 +153,8 @@ if (!function_exists('json')) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
             throw new Exception('jump_exit');
         }
-        if (version_compare(\Workerman\Worker::VERSION, '4.0.0', '<')) {
-            \Workerman\Protocols\Http::header('content-type: application/json');
-            \Workerman\Protocols\Http::end(json_encode($result, JSON_UNESCAPED_UNICODE));
-        } else {
-            echo json_encode($result, JSON_UNESCAPED_UNICODE);
-            throw new Exception('jump_exit');
-        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        throw new Exception('jump_exit');
 
     }
 }
@@ -171,7 +170,7 @@ if (!function_exists('slog')) {
      */
     function slog($message, $level = 'log', $listen = '')
     {
-        return \system\Helper::slog($message, $level, $listen);
+        return \system\Debug::slog($message, $level, $listen);
     }
 }
 
@@ -422,13 +421,13 @@ if (!function_exists('addToQueue')) {
      */
     function addToQueue($type, $data, $callback = null)
     {
-
         static $Queue;
         static $queue_key;
         $queue_key = $queue_key ? $queue_key : str_replace(['-','.','*'],'_',gethostname().'_QUEUES');
         console('QUEUE KEY :'.$queue_key);
 
         if (!$Queue) {
+            /** @var \Redis $_redis */
             $_redis = new \Redis();
             $_redis->connect('127.0.0.1');
             $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
@@ -479,28 +478,7 @@ if (!function_exists('arrayRecursiveDiff')) {
         return $aReturn;
     }
 }
-
-if (!function_exists('exec_php_file')) {
-    /**
-     * 执行php文件
-     * @param $file
-     * @return false|string
-     */
-    function exec_php_file($file)
-    {
-        if (!$file || !file_exists($file)) {
-            return false;
-        }
-        \ob_start();
-        // Try to include php file.
-        try {
-            include $file;
-        } catch (\Exception $e) {
-            echo $e;
-        }
-        return \ob_get_clean();
-    }
-}
+ 
 
 
 if (!function_exists('config')) {
@@ -590,7 +568,7 @@ function assets($type, $act_type = 'add')
 function hook($name = '', $params = [], $single=false)
 {
     $return = [];
-    app('hook')->trigger($name, [$params, &$return,$single]);
+    app('hook')->trigger($name, [$single,$params, &$return]);
     return $single && $return && is_array($return)?$return[0]:$return;
 }
 
@@ -601,3 +579,92 @@ function hook($name = '', $params = [], $single=false)
 function abort_hook(){
      throw new \JBZoo\Event\ExceptionStop();
 }
+
+
+// 提取公共函数到单独的方法中
+function loadHooks($hooks) { 
+    
+    foreach ($hooks as $hook) { 
+
+        if ($hook['status']) {
+          
+            app('hook')->on($hook['hook'], function ($single, $hook_params = [], &$return = null) use ($hook) {
+                //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
+                //$config 是配置的参数
+                $config = $hook['config'] ?? [];
+
+                try {
+                    if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
+                        $result = call_user_func_array($hook['event'], [$hook_params, $config, $return]);
+                    } else if (is_callable($hook['event'])) {
+                        $result = call_user_func($hook['event'], $hook_params, $config, $return);
+                    }
+
+                    $return = $result ?? $return;
+                } catch (\Exception $e) {
+                    \system\Debug::log_exception($e);
+                    $return = $e->getMessage();
+                }
+
+                if ($return === false || ($return && $single)) {
+                    throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
+                }
+
+                return $return;
+            }, $hook['sort']);
+ 
+        }
+    }
+}
+
+// 提取文件合并逻辑到单独的函数中
+function mergeFiles() {
+    $merged_config = [];
+    $merged_hooks = [];
+    $merged_functions = "<?php\n\n";
+
+    // 首先加载 apps 根目录的 config.php
+    if (file_exists($root_config_file = APP_PATH . 'config.php')) {
+        $root_config = include $root_config_file;
+        $merged_config = array_merge($merged_config, $root_config);
+    }
+
+    foreach (glob(dirname(__DIR__, 1) . '/apps/*', GLOB_ONLYDIR) as $dir) { 
+        $app_name = basename($dir);
+        
+        // 检查应用是否启用
+        // 检查 app.json 文件
+        $app_json_file = $dir . '/app.json';
+        if (file_exists($app_json_file)) {
+            $app_config = json_decode(file_get_contents($app_json_file), true);
+            if (!isset($app_config['enable']) || $app_config['enable'] !== true) {
+                continue; // 如果应用未启用,跳过此应用
+            }
+        }
+        
+        // 合并配置
+        if (file_exists($config_file = $dir . '/config.php')) {
+            $config = include $config_file;
+            $merged_config[$app_name] = $config;
+        }
+
+        // 合并钩子
+        if (file_exists($hook_file = $dir . '/hook.php')) {
+            $hooks = include $hook_file;
+            $merged_hooks = array_merge($merged_hooks, $hooks);
+        }
+
+        // 合并函数
+        if (file_exists($functions_file = $dir . '/functions.php')) {
+            $content = file_get_contents($functions_file);
+            $content = preg_replace('/^<\?php/', '', $content);
+            $content = preg_replace('/\?>$/', '', $content);
+            
+            $merged_functions .= "// Functions from {$app_name}\n";
+            $merged_functions .= $content . "\n\n";
+        } 
+    }
+
+    return [$merged_config, $merged_hooks, $merged_functions];
+}
+

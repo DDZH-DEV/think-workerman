@@ -29,6 +29,15 @@ class Upload
     protected $file_size;
 
     protected $rule = '_FILE_';
+    
+    protected $ext;
+
+    protected $original_name;
+
+    protected $save_full;
+ 
+
+    protected $ip;
 
 
     protected $subdir_rules = [

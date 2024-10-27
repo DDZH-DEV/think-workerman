@@ -15,7 +15,7 @@ use \Workerman\Worker;
 use \GatewayWorker\Gateway;
 
 // 自动加载类
-require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/init.php';
+require_once dirname(__DIR__).DIRECTORY_SEPARATOR.'core/base.php';
 
 // gateway 进程，这里使用Text协议，可以用telnet测试
 $gateway = new Gateway('websocket://'.config('gateway.address'));

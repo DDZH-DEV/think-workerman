@@ -4,7 +4,7 @@ namespace system;
 
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(__DIR__, 2) . DIRECTORY_SEPARATOR);
 !defined('APP_PATH') && define('APP_PATH', ROOT_PATH . 'apps' . DIRECTORY_SEPARATOR);
-!defined('IS_WIN') && define('IS_WIN',strtoupper(substr(PHP_OS,0,3))==='WIN');
+!defined('IS_WIN') && define('IS_WIN', strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
 
 /**
  * 打印数据
@@ -24,64 +24,102 @@ function p(...$data)
  */
 class Dev
 {
-
-    static function init()
+    public static function run($argv)
     {
-        define('INIT_APP',1);
+        // 解析命令行参数
+        $appName = $argv[1] ?? null;
+        $depends = [];
+        $onlyProject = null;
+        
+        // 遍历参数寻找 --depends 和 --only
+        foreach ($argv as $arg) {
+            if (strpos($arg, '--depends=') === 0) {
+                $depends = explode(',', substr($arg, 10));
+            } elseif (strpos($arg, '--only=') === 0) {
+                $onlyProject = substr($arg, 7);
+            }
+        } 
 
-        $apps = include ROOT_PATH . '/apps.config.php';
-        //项目需要多少启动文件
-        self::initCliFiles($apps);
+        
 
-        foreach ($apps as $name => $app) {
-            self::init_app($name);
-            self::deldir(APP_PATH . $name . DIRECTORY_SEPARATOR . 'client_service');
+        if ($appName && !$onlyProject) {
+            return self::initApp($appName, $depends);
+        } else {
+
+            if ($onlyProject) {
+                self::updateAppConfigs($onlyProject);
+            }
+            
+            return self::initCliFiles();
         }
     }
 
-
-    protected static function initCliFiles($apps)
+    public static function initCliFiles()
     {
 
-        $from_dir = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__' . DIRECTORY_SEPARATOR . 'client_service';
+        $appConfigs = self::scanAppConfigs();
 
+
+        $from_dir = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__' . DIRECTORY_SEPARATOR . 'client_service';
         $to_dir = ROOT_PATH . 'server';
         self::copy_dir($from_dir, $to_dir);
 
         $funs = [];
-        if ($apps) {
-            array_map(function ($item) use (&$funs) {
-                $funs = array_merge($funs, $item[0]);
-            }, $apps);
 
-            $funs = array_filter($funs);
+        foreach ($appConfigs as $appName => $appConfig) {
+            if (isset($appConfig['depends']) && is_array($appConfig['depends'])) {
+                $funs = array_merge($funs, $appConfig['depends']);
+            }
         }
 
+        $funs = array_unique(array_filter($funs));
 
         $start_files = self::get_bat_files($funs);
 
-        //删除不需要的原装启动文件
+        // 删除不需要的原装启动文件
         $files = glob(ROOT_PATH . '/server/start*.php');
 
         foreach ($files as $file) {
-            if (!in_array(basename($file), $start_files) && in_array(basename($file),
-                    [
-                        'start_businessworker.php',
-                        'start_gateway.php',
-                        'start_register.php',
-                        'start_web.php',
-                        'start_queue.php',
-                        'start_timer.php',
-                        'start_cron.php',
-                        'start_global_data.php'
-                    ])) {
+            if (!in_array(basename($file), $start_files) && in_array(
+                basename($file),
+                [
+                    'start_businessworker.php',
+                    'start_gateway.php',
+                    'start_register.php',
+                    'start_web.php',
+                    'start_queue.php',
+                    'start_timer.php',
+                    'start_cron.php',
+                    'start_global_data.php'
+                ]
+            )) {
                 unlink($file);
             }
         }
 
-        //生成启动文件
-        self::build_start_file();
 
+        // 生成启动文件
+        self::build_start_file();
+    }
+
+    protected static function scanAppConfigs()
+    {
+        $appConfigs = [];
+        $appDirs = glob(APP_PATH . '*', GLOB_ONLYDIR);
+
+        foreach ($appDirs as $appDir) {
+            $appName = basename($appDir);
+            $jsonPath = $appDir . DIRECTORY_SEPARATOR . 'app.json';
+            $template_json = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__'.DIRECTORY_SEPARATOR.'app.json';
+            
+            if (!file_exists($jsonPath)) {
+                file_put_contents($jsonPath, str_replace('__TEMPLATE__', $appName, file_get_contents($template_json)));
+            }
+
+            $appConfigs[$appName] = json_decode(file_get_contents($jsonPath), true);
+        }
+
+        return $appConfigs;
     }
 
     /**
@@ -160,7 +198,7 @@ class Dev
     {
 
         global $argv;
-
+ 
         $watch = isset($argv) && $argv && strpos(implode('', $argv), 'nodemon') !== false;
 
         $bat = ROOT_PATH . 'start_win_' . $name . ($watch ? '_with_nodemon' : '') . '.cmd';
@@ -184,7 +222,7 @@ class Dev
 
         if ($watch) {
             //$command = 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start > run.log  '. PHP_EOL;
-            $command .= 'nodemon  -w "' . dirname($SERVER_PATH, 2) . DIRECTORY_SEPARATOR . '*" -i "' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . '**'.DIRECTORY_SEPARATOR.'*" -e "php" -x "';
+            $command .= 'nodemon  -w "' . dirname($SERVER_PATH, 2) . DIRECTORY_SEPARATOR . '*" -i "' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . '**' . '" -e "php" -x "';
             $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php restart;';
         } else {
             $linux_command .= $command . 'php ' . $SERVER_PATH . DIRECTORY_SEPARATOR . 'linux_server.php start';
@@ -197,19 +235,18 @@ class Dev
         $command .= ' ' . ($watch ? '"' : '') . PHP_EOL;
         $command .= 'pause;';
 
-        if(IS_WIN){
+        if (IS_WIN) {
             file_put_contents($bat, $command);
-        }else{
+        } else {
             file_put_contents($sh, $linux_command);
         }
-
     }
 
     /**
      * @param string $dir 初始化项目目录
      * @return void
      */
-    protected static function init_app(string $dir)
+    protected static function init_app(string $dir, array $depends = [])
     {
         //创建APP目录
         self::_mkdir(ROOT_PATH . 'apps' . DIRECTORY_SEPARATOR . $dir, true);
@@ -220,8 +257,20 @@ class Dev
 
         self::copy_dir($from_dir, $to_dir);
 
-        self::replaceTemplateStr($to_dir,$dir);
+        self::replaceTemplateStr($to_dir, $dir);
 
+        // 更新 app.json 文件
+        $appJsonPath = $to_dir . DIRECTORY_SEPARATOR . 'app.json';
+        if (file_exists($appJsonPath)) {
+            $appConfig = json_decode(file_get_contents($appJsonPath), true);
+            $appConfig['depends'] = $depends;
+            file_put_contents($appJsonPath, json_encode($appConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+
+        self::deldir(APP_PATH . $dir . DIRECTORY_SEPARATOR . 'client_service');
+
+        // 生成所需的启动文件
+        self::initCliFiles();
     }
 
     /**
@@ -230,17 +279,19 @@ class Dev
      * @param $app
      * @return void
      */
-    protected static function replaceTemplateStr($path,$app){
-        $files=array_merge(
-            glob($path.DIRECTORY_SEPARATOR.'*.php'),
-            glob($path.DIRECTORY_SEPARATOR.'*'.DIRECTORY_SEPARATOR.'*.php')
+    protected static function replaceTemplateStr($path, $app)
+    {
+        $files = array_merge(
+            glob($path . DIRECTORY_SEPARATOR . '*.php'),
+            glob($path . DIRECTORY_SEPARATOR . '*.json'),
+            glob($path . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . '*.php')
         );
-        if($files){
-            array_map(function ($file) use ($app){
-                if(is_file($file) && file_exists($file)){
-                    file_put_contents($file,str_replace('__TEMPLATE__',$app,file_get_contents($file)));
+        if ($files) {
+            array_map(function ($file) use ($app) {
+                if (is_file($file) && file_exists($file)) {
+                    file_put_contents($file, str_replace('__TEMPLATE__', $app, file_get_contents($file)));
                 }
-            },$files);
+            }, $files);
         }
     }
 
@@ -261,7 +312,7 @@ class Dev
     {
         //如果是目录则继续
         if (is_dir($path)) {
-            //扫描一个文件夹内的所有文件夹和文件并返回数组
+            //扫描文件夹内的所有文件夹和文件并返回数组
             $data = scandir($path);
             // todo 赋予文件夹权限
             chmod($path, 0777);
@@ -282,6 +333,29 @@ class Dev
             }
 
             is_dir($path) && @rmdir($path);
+        }
+    }
+
+    public static function initApp(string $appName, array $depends)
+    {
+        define('INIT_APP', 1);
+        self::init_app($appName, $depends);
+        echo "应用 {$appName} 已创建,依赖项已设置。\n";
+    }
+
+    protected static function updateAppConfigs($onlyProject)
+    {
+        $appDirs = glob(APP_PATH . '*', GLOB_ONLYDIR);
+        
+        foreach ($appDirs as $appDir) {
+            $appName = basename($appDir);
+            $jsonPath = $appDir . DIRECTORY_SEPARATOR . 'app.json';
+            
+            if (file_exists($jsonPath)) {
+                $appConfig = json_decode(file_get_contents($jsonPath), true);
+                $appConfig['enabled'] = ($appName === $onlyProject);
+                file_put_contents($jsonPath, json_encode($appConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
         }
     }
 }

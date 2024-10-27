@@ -41,6 +41,7 @@ return [
     //一般不需要修改
     'cache' => [
         'default' => 'redis',
+        
         'stores' => [
             'file' => [
                 'type' => 'File',
@@ -50,6 +51,8 @@ return [
                 'prefix' => '',
                 // 缓存有效期 0表示永久缓存
                 'expire' => 0,
+		
+		'serialize' => ['serialize', 'unserialize'],
             ],
             'redis' => [
                 'type' => 'redis',
@@ -57,6 +60,7 @@ return [
                 'port' => 6379,
                 'prefix' => '',
                 'expire' => 0,
+                'serialize' => ['serialize', 'unserialize'],
             ],
         ],
     ],
@@ -115,27 +119,11 @@ return [
         'cross_url' => 'http://127.0.0.1:909',
         'http_server' => 'http://0.0.0.0:909',
         'cdn_url' => '',  //静态文件分发地址 参考函数 staticFix()
-        'count' => 1
+        'worker_num' => 1
     ],
 
 
-    'waf' => [
-        //开启防火墙
-        'enable' => true,
-        //开启记录
-        'log' => true,
-        //日志目录
-        'log_path' => RUNTIME_PATH . 'waf',
-        //注入多少次后屏蔽
-        'deny_num' => 3,
-    ],
     'error_level' => E_ALL & ~E_NOTICE,
-
-    'map_rule' => [
-        'hook'=> APP_PATH . '*' . DIRECTORY_SEPARATOR . 'hook.php',
-        'routers' => APP_PATH . '*' . DIRECTORY_SEPARATOR . 'router.php',
-        'cron' => APP_PATH . '*' . DIRECTORY_SEPARATOR . 'cron.php'
-    ],
 
     'default_module' => 'index',
 
@@ -147,6 +135,6 @@ return [
 
     'assets' => ['public_dir' => PUBLIC_PATH, 'pipeline_dir' => 'min', 'pipeline_gzip' => true, 'pipeline' => !APP_DEBUG],
 
-    'qurl'=>'/QEditor'
+    'qurl'=>'/qeditor'
 
 ];

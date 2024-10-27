@@ -86,13 +86,16 @@ class Crypt
     /**
      * 解密字符串
      *
-     * @param string $data 字符串
-     * @param string $key  加密key
+     * @param string $base64Str 加密后的字符串
+     * @param string $passphrase 密钥
      *
-     * @return string
+     * @return string|null
      */
-    public static function decrypt($base64Str = '', $passphrase)
+    public static function decrypt($base64Str, $passphrase)
     {
+        if (empty($base64Str)) {
+            return null;
+        }
 
         $jsondata = json_decode(base64_decode($base64Str), true);
 

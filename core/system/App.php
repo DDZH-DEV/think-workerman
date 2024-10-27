@@ -15,16 +15,16 @@ class App extends Facade
 
     protected static function init()
     {
-
-        //初始化数据库
-        app('db')::setConfig(config('database'));
+        
+        //初始化数据库 
+        app('db')::setConfig(config('database')); 
         //缓存设置
         app('cache')::config(config('cache'));
         //设置日志
         app('log')::init(config('log'));
 
         app('assets')->config(config('assets'));
-
+        
         self::init_dir();
         self::init_error_log();
     }
@@ -75,7 +75,11 @@ class App extends Facade
             WebServer::dispatchHttp();
         }
 
-        ob_end_flush();
+        // 检查是否有活动的输出缓冲区
+        if (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        
         session_write_close();
     }
 }
