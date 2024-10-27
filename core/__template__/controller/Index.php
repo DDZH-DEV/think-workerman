@@ -11,7 +11,7 @@ use think\facade\Log;
 class Index
 {
     function index(){
-        echo '<h1>hello world!</h1><p>你可以访问<a href="//'.g('SERVER')['HTTP_HOST'].'/test">/test</a>来查看相关功能</p>';
+        echo '<h1>hello world!</h1><p>你可以访问<a href="'.url("__TEMPLATE__/Index/test").'">/test</a>来查看相关功能</p>';
     }
 
     /**
@@ -24,9 +24,9 @@ class Index
         p($params);
 
         p('<hr>数据库演示,请先配置数据库连接文件');
-        $model = Db::table('user');
-        $list = $model->where(['status' => 1])->find();
-        p($list);
+        // $model = Db::table('user');
+        // $list = $model->where(['status' => 1])->find();
+        // p($list);
 
         p('<hr>session 演示');
         //事先打印session
