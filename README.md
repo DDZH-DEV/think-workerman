@@ -13,7 +13,7 @@ php twcli                            //重新生成启动文件
  
 目前个人自己完全抛弃tp了,只用他的几个包,个人习惯包依赖越少越好,纯自用,已经支持视图MVC,路由,http,socket,queue,timer,cron,data几项功能个人习惯http业务走FPM
 
-***特别留意,如果要兼容两个平台不同的WebServer,在控制器里面接受参数时需要用快捷函数***
+***特别留意,如果要兼容不同的环境,在控制器里面接受参数时需要用快捷函数***
 
 ```php
 #session操作
@@ -45,7 +45,7 @@ _header("Content-type","text/html; charset=utf-8");
 一是判断应用目录是否包含view/static目录,如果有复制static目录到public/static目录
 二是监听server目录,如果start_*.php,且应用目录下有修改,则重启
 
-###伪静态
+### 伪静态
 ```php
 
 location / {

@@ -9,10 +9,8 @@ rax_im/
 server/
 public/test.php
 start_*.sh
-public/min/
-public/static/webpack/node_modules/
-public/uploads/
-apps/user/webpack/
+public/min/ 
+public/uploads/ 
 apps/
 public/static/
 public/sync/

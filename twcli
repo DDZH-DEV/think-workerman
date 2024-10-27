@@ -1,0 +1,10 @@
+<?php
+
+if (php_sapi_name() === 'cli' && !defined('INIT_APP')) {
+    //php twcli test --depends=socket,http,queue,cron,data
+    //php twcli --only=test
+    include_once __DIR__ . "/core/system/Dev.php";  
+    \system\Dev::run($argv);
+    return;
+} 
+
