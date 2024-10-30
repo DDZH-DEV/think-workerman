@@ -20,6 +20,7 @@ class Qstyle
     public $templates_ankey = '';                                // 加密模板文件名,避免被猜测到.
     public $templates_isdebug = false;
     public $templates_replace = array();                        // 全局替换块,区分大小写.
+    public $cssname = '';
 
     //结果集,请不要修改以下内容;
     protected $templates_lang = array();          // 语言数组.

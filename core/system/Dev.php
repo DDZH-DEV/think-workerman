@@ -158,7 +158,7 @@ class Dev
 
         $files = [];
 
-        if (strpos($type, 'socket') !== false) {
+        if (strpos($type, 'websocket') !== false) {
             $files[] = 'businessworker';
             $files[] = 'gateway';
             $files[] = 'register';
@@ -178,7 +178,7 @@ class Dev
         }
 
 
-        if (strpos($type, 'data') !== false) {
+        if (strpos($type, 'globaldata') !== false) {
             $files[] = 'global_data';
         }
 
@@ -353,7 +353,7 @@ class Dev
             
             if (file_exists($jsonPath)) {
                 $appConfig = json_decode(file_get_contents($jsonPath), true);
-                $appConfig['enabled'] = ($appName === $onlyProject);
+                $appConfig['enable'] = ($appName === $onlyProject);
                 file_put_contents($jsonPath, json_encode($appConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             }
         }

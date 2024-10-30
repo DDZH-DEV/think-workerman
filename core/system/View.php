@@ -5,12 +5,14 @@ namespace system;
 use think\Facade;
 
 /**
- * @method static assign($var, $value = null)
- * @method static load
- * @method static display($file_name, $returnpath = false)
- * @method static set_templates_path($dir)
- * @method static release()
- * return system\Qstyle
+ * Class View
+ * @package system
+ * @method static void assign($var, $value = null)
+ * @method static void load()
+ * @method static void display($file_name, $returnpath = false)
+ * @method static void set_templates_path(string $dir)
+ * @method static void release()
+ * @see \system\Qstyle
  */
 class View extends Facade
 {

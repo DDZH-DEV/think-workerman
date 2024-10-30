@@ -53,8 +53,8 @@ class WebServer
                 // 检查 app.json 文件
                 $app_json_file = $dir . '/app.json';
                 if (file_exists($app_json_file)) {
-                    $app_config = json_decode(file_get_contents($app_json_file), true);
-                    if (!isset($app_config['enable']) || $app_config['enable'] !== true) {
+                    $app_config = json_decode(file_get_contents($app_json_file), true); 
+                    if (!isset($app_config['enable']) || !$app_config['enable']) {
                         continue; // 如果应用未启用,跳过此应用
                     }
                 }
