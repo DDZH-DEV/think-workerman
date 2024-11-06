@@ -4,7 +4,6 @@ namespace system;
 
 class Router
 {
-
     /**
      * @var array Array of all routes (incl. named routes).
      */
@@ -76,7 +75,7 @@ class Router
         }
         foreach ($routes as $route) {
             call_user_func_array([$this, 'map'], $route);
-        }
+        } 
     }
 
     /**
@@ -110,20 +109,34 @@ class Router
      */
     public function map($method, $route, $target, $name = null)
     {
-
+        // 添加自动生成的路由名称
         $this->routes[] = [$method, $route, $target, $name];
+
+        // 生成标准化的路由名称（从target中提取）
+        $standardName = self::turn($target);
+
         if ($name) {
             if (isset($this->namedRoutes[$name])) {
                 throw new \RuntimeException("Can not redeclare route '{$name}'");
             }
-            $this->namedRoutes[self::turn($target)] = $route;
+        }
+
+        // 始终添加标准化的路由名称
+        if (!isset($this->namedRoutes[$standardName])) {
+            $this->namedRoutes[$standardName] = $route;
         }
 
         return;
     }
 
-    static function turn($target){
-        return strtolower(str_replace(["app\\","\\controller\\","::"],['','/','/'],$target));
+    static function turn($target)
+    {
+        // 将 "app\project\controller\Service::index" 转换为 "project/service/index"
+        return strtolower(str_replace(
+            ["app\\", "\\controller\\", "::"],
+            ['', '/', '/'],
+            $target
+        ));
     }
 
     /**
@@ -138,40 +151,47 @@ class Router
      */
     public function generate($routeName, array $params = [])
     {
-        $routeName=strtolower($routeName);
-        // Check if named route exists
+        $routeName = strtolower($routeName);
+
+        // 检查命名路由是否存在
         if (!isset($this->namedRoutes[$routeName])) {
-            return $params?implode('?',[$routeName,http_build_query($params)]):$routeName;
+            if (strpos($routeName, '/') !== false) {
+                $standardName = $routeName;
+            }
+
+            if (isset($this->namedRoutes[$standardName])) {
+                $route = $this->namedRoutes[$standardName];
+            } else {
+                return $params ? implode('?', [$routeName, http_build_query($params)]) : $routeName;
+            }
+        } else {
+            $route = $this->namedRoutes[$routeName];
         }
 
-        // Replace named parameters
-        $route = $this->namedRoutes[$routeName];
-
-        // prepend base path to route url again
         $url = $this->basePath . $route;
 
+        // 修改参数替换逻辑
         if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $index => $match) {
+            foreach ($matches as $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
 
-                if ($pre) {
-                    $block = substr($block, 1);
-                }
-
                 if (isset($params[$param])) {
-                    // Part is found, replace for param value
-                    $url = str_replace($block, $params[$param], $url);
-                } elseif ($optional && $index !== 0) {
-                    // Only strip preceding slash if it's not at the base
-                    $url = str_replace($pre . $block, '', $url);
+                    // 如果有参数值，直接替换整个块（包括可选括号）
+                    $replacement = $pre . $params[$param];
+                    // 移除外层的可选括号
+                    $url = str_replace(['(' . $block . ')?', $block], $replacement, $url);
                 } else {
-                    // Strip match block
-                    $url = str_replace($block, '', $url);
+                    // 如果没有参数值，移除整个可选块（包括括号）
+                    $url = str_replace(['(' . $block . ')?', $block], '', $url);
                 }
             }
         }
 
-        return rtrim($url,'/');
+        // 清理URL
+        $url = preg_replace('/\([^\)]*\)\?/', '', $url); // 移除剩余的可选块
+        $url = preg_replace('/\/+/', '/', $url);         // 移除重复的斜杠
+
+        return rtrim($url, '/').'.html';
     }
 
     /**
@@ -201,7 +221,7 @@ class Router
         }
 
         $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl) - 1] : '';
- 
+
         // set Request Method if it isn't passed as a parameter
         if ($requestMethod === null) {
             $requestMethod = isset($server['REQUEST_METHOD']) ? $server['REQUEST_METHOD'] : 'GET';
@@ -264,7 +284,6 @@ class Router
             }
         }
 
-
         //没有匹配则按照默认方式
 
         $params = str_replace(['.html', '.htm', '.shtml'], [''], preg_split("/([\/?])/", $server['REQUEST_URI']));
@@ -282,7 +301,6 @@ class Router
             $target[0] = config('default_module') ?: 'index';
         }
 
-
         if ($params) {
             $get = g('GET');
             foreach (array_chunk($params, 2) as $value) {
@@ -299,8 +317,6 @@ class Router
             'action'=>$target[2],
             'params' => $params
         ];
-
-
     }
 
     /**
@@ -310,6 +326,9 @@ class Router
      */
     protected function compileRoute($route)
     {
+        // 先处理嵌套的可选参数
+        $route = preg_replace('/\[\/\[(.*?)\]\]/', '(/[$1])', $route);
+
         if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
             $matchTypes = $this->matchTypes;
             foreach ($matches as $match) {
@@ -322,22 +341,24 @@ class Router
                     $pre = '\.';
                 }
 
-                $optional = $optional !== '' ? '?' : null;
+                // 简化的参数处理逻辑
+                if ($param) {
+                    $capture = "(?P<{$param}>{$type})";
+                } else {
+                    $capture = "({$type})";
+                }
 
-                //Older versions of PCRE require the 'P' in (?P<named>)
-                $pattern = '(?:'
-                    . ($pre !== '' ? $pre : null)
-                    . '('
-                    . ($param !== '' ? "?P<$param>" : null)
-                    . $type
-                    . ')'
-                    . $optional
-                    . ')'
-                    . $optional;
+                if ($optional) {
+                    $capture = "(?:{$pre}{$capture})?";
+                } else {
+                    $capture = "{$pre}{$capture}";
+                }
 
-                $route = str_replace($block, $pattern, $route);
+                $route = str_replace($block, $capture, $route);
             }
         }
-        return "`^$route$`u";
+
+        $regex = "`^{$route}$`u"; 
+        return $regex;
     }
 }

@@ -26,10 +26,10 @@ class WebServer
     }
 
     public static function init()
-    { 
+    {
         static $init;
-        if ($init) return;  
-        !defined('WEB_SERVER') && define('WEB_SERVER', 'true'); 
+        if ($init) return;
+        !defined('WEB_SERVER') && define('WEB_SERVER', 'true');
         self::loadAppsRouters();
         $init = true;
 
@@ -37,7 +37,6 @@ class WebServer
             \GatewayClient\Gateway::$registerAddress = config('register.address');
             \GatewayWorker\Lib\Gateway::$registerAddress = config('register.address');
         }
-        
     }
 
     private static function loadAppsRouters()
@@ -49,17 +48,18 @@ class WebServer
         } else {
             $routes = [];
             foreach (glob(APP_PATH . '*', GLOB_ONLYDIR) as $dir) {
-
                 // 检查 app.json 文件
                 $app_json_file = $dir . '/app.json';
+
                 if (file_exists($app_json_file)) {
-                    $app_config = json_decode(file_get_contents($app_json_file), true); 
+                    $app_config = json_decode(file_get_contents($app_json_file), true);
                     if (!isset($app_config['enable']) || !$app_config['enable']) {
                         continue; // 如果应用未启用,跳过此应用
                     }
                 }
 
                 $routerFile = $dir . '/router.php';
+
                 if (file_exists($routerFile)) {
                     $appRoutes = include $routerFile;
                     $routes = array_merge($routes, $appRoutes);
@@ -135,7 +135,7 @@ class WebServer
                 'SERVER_ADDR' => $connection->getLocalIp(),
                 'HTTPS' => ($connection->getLocalPort() == 443 || $request->header('X-Forwarded-Proto') === 'https') ? 'on' : 'off',
             ]);
-            
+
             $_GET = $request->get();
             $_POST = $request->post();
             $_FILES = $request->file();
@@ -175,21 +175,21 @@ class WebServer
         g('IS_POST', $server['REQUEST_METHOD'] === 'POST');
         g('IS_GET', $server['REQUEST_METHOD'] === 'GET');
         g('IS_AJAX', isset($server['HTTP_X_REQUESTED_WITH']) && strtolower($server['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
-        
+
         // 获取请求的 URI 并移除查询字符串
         $uri = $server['REQUEST_URI'];
         $path = parse_url($uri, PHP_URL_PATH);
-        
+
         // 检查是否是根目录
         if ($path === '/') {
             // 根目录执行路由
             self::executeRoute($connection, $object, $request, $match);
             return;
         }
-        
+
         // 文件直接输出
         $file = PUBLIC_PATH . ltrim($path, '/');
-        
+
         if (file_exists($file) && is_file($file)) {
             $object = $object ?: new self();
             $object->handleFileRequest($connection, $file, $request);
@@ -200,11 +200,11 @@ class WebServer
         // 如果不是文件，执行路由
         self::executeRoute($connection, $object, $request, $match);
     }
- 
+
     private static function executeRoute($connection, $object, $request, $match)
     {
-        $class = $match['target']; 
-        
+        $class = $match['target'];
+
         if (class_exists($class) && method_exists($class, $match['action'])) {
             g('MODULE', $match['module']);
             g('CONTROLLER', $match['controller']);
@@ -212,7 +212,7 @@ class WebServer
             g('IS_MOBILE', is_mobile(g('SERVER')['HTTP_USER_AGENT'] ?? ''));
             // 释放 Qstyle 中的变量
             View::release();
-            
+
             // 检查是否有活动的输出缓冲区
             if (ob_get_level() > 0) {
                 ob_end_clean();
@@ -220,7 +220,7 @@ class WebServer
             ob_start();
             try {
                 call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
-            } catch (Exception $e) { 
+            } catch (Exception $e) {
                 if ($e->getMessage() !== 'jump_exit') {
                     if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
@@ -249,13 +249,12 @@ class WebServer
 
     protected static function response($connection, $request)
     {
-        
         $headers = g('HEADER') ?: [];
         $cookies = g('COOKIE') ?: [];
         $_SESSION = g('SESSION') ?: [];
 
         if (PHP_SAPI === 'cli') {
-            $content = ob_get_clean(); 
+            $content = ob_get_clean();
             $response = new Response(200, $headers, $content);
 
             foreach ($cookies as $name => $value) {
@@ -267,14 +266,13 @@ class WebServer
 
             $connection->send($response);
         } else {
-            
             foreach ($cookies as $name => $value) {
                 setcookie($name, $value);
             }
             foreach ($headers as $name => $value) {
                 header("$name: $value");
-            } 
-            $content = ob_get_clean(); 
+            }
+            $content = ob_get_clean();
             echo $content;
         }
 
@@ -329,10 +327,8 @@ class WebServer
             $server->worker->name = $config['name'];
             $server->worker->count = $config['worker_num'] ?? 4;
             Worker::runAll();
-        } 
+        }
     }
-
- 
 
     protected function executePhpFile($connection, $file, $request)
     {

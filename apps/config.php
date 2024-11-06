@@ -40,8 +40,8 @@ return [
     ],
     //一般不需要修改
     'cache' => [
-        'default' => 'redis',
-        
+        'default' => 'file',
+
         'stores' => [
             'file' => [
                 'type' => 'File',

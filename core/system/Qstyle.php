@@ -70,7 +70,7 @@ class Qstyle
         $this->templates_css_assign = array();
         $this->templates_blockreplace = array();
         $this->templates_debug = array();
-        
+
         // 重置计数器
         $this->templates_update = 0;
         $this->templates_viewcount = 0;
@@ -80,7 +80,6 @@ class Qstyle
     //公共方法: 文件名, 是否返回缓存文件.
     public function display($PHPnew_file_name, $returnpath = false)
     {
-
         static $once = 0;
 
         if ($once === 0) {
@@ -123,7 +122,6 @@ class Qstyle
             }
             return true;
         } else {
-
             strpos($PHPnew_file_name, $this->templates_postfix) === false && $PHPnew_file_name .= $this->templates_postfix;
             $this->templates_name = $PHPnew_file_name;
             $tplcache = $this->__get_path($PHPnew_file_name);
@@ -395,7 +393,6 @@ class Qstyle
         return '//' . $server['HTTP_HOST'] . dirname($server['REQUEST_URI']);
     }
 
-
     protected function __exp_path($path)
     {
         return trim(str_replace(["//"], ["/"], $path . '/'));
@@ -407,7 +404,7 @@ class Qstyle
         return ltrim(strtr($filepath, array('\\' => '/', '\\\\' => '/', '//' => '/')), './');
     }
 
-    //保护的方法: 当语法有自动匹配功能时, 此方法会被调用. 
+    //保护的方法: 当语法有自动匹配功能时, 此方法会被调用.
     protected function __real_alldir($dir = array(), $filename = '')
     {
         if (!$dir)
@@ -592,7 +589,6 @@ class Qstyle
 
         $template = $this->preg__file($static_file);
 
-
         # 增加todo bug标注支持.
         $template = preg_replace_callback("/(?:#|\/\/)(\s*)(?:TODO|BUG|INFO):(.*?)([^\n\r]*)/is", array($this, 'preg__todobug'), $template, -1, $regint);
 
@@ -613,7 +609,7 @@ class Qstyle
         $template = preg_replace_callback("/\{$const_regexp\}/s", array($this, 'preg_cssjs_var'), $template);
 
         $template = preg_replace_callback("/\{__([^\s]*?\.[^\s]*?)\}/s", array($this, 'preg_static_autofile'), $template);
-        # 处理base加密的内容 
+        # 处理base加密的内容
         $template = preg_replace_callback('/\{\#(.*)\}/isU', array($this, 'preg__parse_database'), $template);
         $template = strtr($template, array('Qstyle~~<~~' => '{', 'Qstyle~~>~~' => '}', 'Qstyle~~<<~~' => '$'));
         $tem = explode('.', $static_file);
@@ -695,7 +691,6 @@ class Qstyle
         }
         return $redata;
     }
-
 
     // 内部方法: html代码自动匹配路径方法
     protected function preg__autofile($math)
@@ -884,6 +879,10 @@ class Qstyle
         $template = preg_replace("/\{else\}/is", "<? } else { ?>", $template);
         $template = preg_replace("/\{\/if\}/is", "<? } ?>", $template, -1, $regint);
 
+        $template = preg_replace_callback("/\{foreach\s+(\S+)\s+(\S+)\}/is", array($this, 'preg__loopone'), $template, -1, $reginta);
+        $template = preg_replace_callback("/\{foreach\s+(\S+)\s+(\S+)\s+(\S+)\}/is", array($this, 'preg__looptwo'), $template, -1, $regintb);
+        $template = preg_replace("/\{\/foreach\}/is", "<? }} ?>", $template);
+
         $template = preg_replace_callback("/\{loop\s+(\S+)\s+(\S+)\}/is", array($this, 'preg__loopone'), $template, -1, $reginta);
         $template = preg_replace_callback("/\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}/is", array($this, 'preg__looptwo'), $template, -1, $regintb);
         $template = preg_replace("/\{\/loop\}/is", "<? }} ?>", $template);
@@ -916,7 +915,7 @@ class Qstyle
             $this->preg__debug('解析模板细节: <input> 标签注入默认class次数:' . $regint);
         }
 
-        # 处理base加密的内容 
+        # 处理base加密的内容
         $template = preg_replace_callback('/\{\#(.*)\}/isU', array($this, 'preg__parse_database'), $template);
 
         # 最终再释放所有的php代码.
@@ -1003,7 +1002,6 @@ class Qstyle
 
     protected function preg__evaltags($match)
     {
-
         $php = rtrim(trim($match[2]), ';');
         $lf = $match[3];
         $php = str_replace('\"', '"', $php);
@@ -1013,7 +1011,6 @@ class Qstyle
         } else {
             return $this->preg__base("<?php $php;?>$lf");
         }
-
     }
 
     protected function preg__todobug($math)
@@ -1038,13 +1035,17 @@ class Qstyle
 
     protected function preg__loopone($math)
     {
-        $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} AS {$math[2]}){ ?>";
+        $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[2]}){ ?>";
         return $this->preg__stripvtags($expr);
     }
 
     protected function preg__looptwo($math)
     {
-        $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} AS {$math[2]} => {$math[3]}){ ?>";
+        if(in_array($math[2],['as','=>'])){
+            $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[3]}){ ?>";
+        }else{
+            $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[2]} => {$math[3]}){ ?>";
+        }
         return $this->preg__stripvtags($expr);
     }
 
@@ -1265,8 +1266,6 @@ class Qstyle
     public function __destruct()
     {
         if ($this->templates_isdebug) {
-
-
             $this->templates_debug[]['Notice'] = 'Qstyle 所有工作已经结束.....';
 
             # 植入几个全局统计.
@@ -1289,7 +1288,6 @@ class Qstyle
                     $newarrr[] = array('Notice' => "全局替换次数: " . count($this->templates_replace));
 
                     $newarrr[] = array('Notice' => "全局设置: 模板后缀:" . var_export($this->templates_postfix, true) . '; 缓存后缀: ' . var_export($this->templates_caching, true) . '; 变量模式: ' . $this->templates_var . '; 自动更新: ' . var_export($this->templates_auto, true) . '; 当次强制更新: ' . var_export($this->templates_new, true) . '; 清除无意义字符: ' . var_export($this->templates_space, true) . '; 安全码: ' . var_export($this->templates_ankey, true));
-
                 }
             }
 

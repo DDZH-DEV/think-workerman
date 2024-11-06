@@ -5,10 +5,10 @@ use system\Config;
 if (!function_exists('app')) {
     /**
      * 快速获取容器中的实例 支持依赖注入
-     * @param config|db|cache|log|router|string $name 类名或标识 默认获取当前应用实例
+     * @param string $name 类名或标识 默认获取当前应用实例
      * @param array $args 参数
      * @param bool $newInstance 是否每次创建新的实例
-     * @return \think\DbManager|\JBZoo\Event\EventManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template
+     * @return \think\DbManager|\JBZoo\Event\EventManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template|\think\facade\Db|\think\facade\Cache|\think\facade\Log
      */
     function app(string $name = '', array $args = [], bool $newInstance = false)
     {
@@ -28,7 +28,6 @@ if (!function_exists('bind')) {
         return \think\Container::getInstance()->bind($name, $concrete);
     }
 }
-
 
 if (!function_exists('cache')) {
     /**
@@ -80,7 +79,6 @@ if (!function_exists('p')) {
     }
 }
 
-
 if (!function_exists('g')) {
     /**
      * 全局变量共享,每次控制器请求结束后释放
@@ -109,7 +107,6 @@ if (!function_exists('g')) {
         }
     }
 }
-
 
 if (!function_exists('convert')) {
     /**
@@ -155,7 +152,6 @@ if (!function_exists('json')) {
         }
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
         throw new Exception('jump_exit');
-
     }
 }
 
@@ -173,7 +169,6 @@ if (!function_exists('slog')) {
         return \system\Debug::slog($message, $level, $listen);
     }
 }
-
 
 if (!function_exists('data')) {
     /**
@@ -214,7 +209,6 @@ if (!function_exists('data')) {
             g($layer, $data);
 //            p('delete item '.$name);
             return true;
-
         } elseif ($name === '') {
             // 读取所有
             $tmp = [];
@@ -225,7 +219,6 @@ if (!function_exists('data')) {
             }
 //            p('read all');
             return $tmp;
-
         } else {
             $data[$name] = $value;
 //            p('set item '.$name,$data);
@@ -247,7 +240,6 @@ if (!function_exists('session')) {
     }
 }
 
-
 if (!function_exists('cookie')) {
     /**
      * cookie快捷操作
@@ -264,7 +256,6 @@ if (!function_exists('cookie')) {
     }
 }
 
-
 if (!function_exists('_header')) {
     /**
      * header快捷操作
@@ -280,7 +271,6 @@ if (!function_exists('_header')) {
         return data($name, $value, 'HEADER');
     }
 }
-
 
 if (!function_exists('input')) {
     /**
@@ -356,7 +346,6 @@ if (!function_exists('ip')) {
     }
 }
 
-
 if (!function_exists('is_mobile')) {
     /**
      * 判断是否是手机
@@ -427,7 +416,9 @@ if (!function_exists('addToQueue')) {
         console('QUEUE KEY :'.$queue_key);
 
         if (!$Queue) {
-            /** @var \Redis $_redis */
+            /**
+             * @var \Redis $_redis
+             */
             $_redis = new \Redis();
             $_redis->connect('127.0.0.1');
             $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
@@ -439,7 +430,6 @@ if (!function_exists('addToQueue')) {
         //console('[add_queue]:'.$type.'|'.$queue_key);
 
         $Queue->push(json_encode($data, JSON_UNESCAPED_UNICODE));
-
     }
 }
 
@@ -478,8 +468,6 @@ if (!function_exists('arrayRecursiveDiff')) {
         return $aReturn;
     }
 }
- 
-
 
 if (!function_exists('config')) {
     /**
@@ -496,7 +484,6 @@ if (!function_exists('config')) {
         return 0 === strpos($name, '?') ? Config::has(substr($name, 1)) : Config::get($name, $value);
     }
 }
-
 
 if (!function_exists('url')) {
     /**
@@ -522,7 +509,6 @@ if (!function_exists('url')) {
     }
 }
 
-
 /**
  * 组件快捷操作(添加或者输出静态文件)
  *
@@ -544,7 +530,6 @@ function assets($type, $act_type = 'add')
         echo app('assets')->css();
         echo app('assets')->js();
         return app('assets')->reset();
-
     }
 
     //载入
@@ -580,14 +565,10 @@ function abort_hook(){
      throw new \JBZoo\Event\ExceptionStop();
 }
 
-
 // 提取公共函数到单独的方法中
-function loadHooks($hooks) { 
-    
-    foreach ($hooks as $hook) { 
-
+function loadHooks($hooks) {
+    foreach ($hooks as $hook) {
         if ($hook['status']) {
-          
             app('hook')->on($hook['hook'], function ($single, $hook_params = [], &$return = null) use ($hook) {
                 //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
                 //$config 是配置的参数
@@ -612,7 +593,6 @@ function loadHooks($hooks) {
 
                 return $return;
             }, $hook['sort']);
- 
         }
     }
 }
@@ -629,9 +609,9 @@ function mergeFiles() {
         $merged_config = array_merge($merged_config, $root_config);
     }
 
-    foreach (glob(dirname(__DIR__, 1) . '/apps/*', GLOB_ONLYDIR) as $dir) { 
+    foreach (glob(dirname(__DIR__, 1) . '/apps/*', GLOB_ONLYDIR) as $dir) {
         $app_name = basename($dir);
-        
+
         // 检查应用是否启用
         // 检查 app.json 文件
         $app_json_file = $dir . '/app.json';
@@ -641,7 +621,7 @@ function mergeFiles() {
                 continue; // 如果应用未启用,跳过此应用
             }
         }
-        
+
         // 合并配置
         if (file_exists($config_file = $dir . '/config.php')) {
             $config = include $config_file;
@@ -659,12 +639,11 @@ function mergeFiles() {
             $content = file_get_contents($functions_file);
             $content = preg_replace('/^<\?php/', '', $content);
             $content = preg_replace('/\?>$/', '', $content);
-            
+
             $merged_functions .= "// Functions from {$app_name}\n";
             $merged_functions .= $content . "\n\n";
-        } 
+        }
     }
 
     return [$merged_config, $merged_hooks, $merged_functions];
 }
-
