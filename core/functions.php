@@ -10,8 +10,7 @@ if (!function_exists('app')) {
      * @param bool $newInstance 是否每次创建新的实例
      * @return \think\DbManager|\JBZoo\Event\EventManager|\system\Config|\system\Router|\think\CacheManager|\think\LogManager|\think\DbManager|\think\Template|\think\facade\Db|\think\facade\Cache|\think\facade\Log
      */
-    function app(string $name = '', array $args = [], bool $newInstance = false)
-    {
+    function app(string $name = '', array $args = [], bool $newInstance = false) {
         return $name ?
             \think\Container::getInstance()->make($name, $args, $newInstance) :
             \think\Container::getInstance();
@@ -23,8 +22,7 @@ if (!function_exists('bind')) {
      * @param $concrete
      * @return void
      */
-    function bind($name, $concrete = null)
-    {
+    function bind($name, $concrete = null) {
         return \think\Container::getInstance()->bind($name, $concrete);
     }
 }
@@ -38,8 +36,7 @@ if (!function_exists('cache')) {
      * @param string $tag 缓存标签
      * @return mixed
      */
-    function cache(string $name = null, $value = '', $options = null, $tag = null)
-    {
+    function cache(string $name = null, $value = '', $options = null, $tag = null) {
         if (is_null($name)) {
             return app('cache');
         }
@@ -69,8 +66,7 @@ if (!function_exists('p')) {
      * 打印数据
      * @param mixed ...$data
      * */
-    function p(...$data)
-    {
+    function p(...$data) {
         $arg_list = func_get_args();
 
         $arg_list = func_num_args() == 1 ? $arg_list[0] : $arg_list;
@@ -90,8 +86,7 @@ if (!function_exists('g')) {
      * @return mixed|null
      * @see g()
      */
-    function g($name = '', $value = '', $long = false)
-    {
+    function g($name = '', $value = '', $long = false) {
         if (is_null($name)) {
             // 清除
             system\G::clear();
@@ -114,8 +109,7 @@ if (!function_exists('convert')) {
      * @param $size
      * @return string
      */
-    function convert($size)
-    {
+    function convert($size) {
         $size = $size === true ? memory_get_usage() : $size;
         $unit = array('b', 'kb', 'mb', 'gb', 'tb', 'pb');
         return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
@@ -129,8 +123,7 @@ if (!function_exists('json')) {
      * @param $status
      * @return string json
      */
-    function json($data, $code = 200, $msg = null, $debug = [])
-    {
+    function json($data, $code = 200, $msg = null, $debug = []) {
         //p($msg);
         if (is_string($data) && $msg === null) {
             $msg = $data;
@@ -148,7 +141,7 @@ if (!function_exists('json')) {
         }
         if (defined('FPM_MODE')) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
-            throw new Exception('jump_exit');
+            return throw new Exception('jump_exit');
         }
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
         throw new Exception('jump_exit');
@@ -164,8 +157,7 @@ if (!function_exists('slog')) {
      * @param bool $write
      * @return bool
      */
-    function slog($message, $level = 'log', $listen = '')
-    {
+    function slog($message, $level = 'log', $listen = '') {
         return \system\Debug::slog($message, $level, $listen);
     }
 }
@@ -178,14 +170,13 @@ if (!function_exists('data')) {
      * @param string $layer
      * @return array|bool|mixed
      */
-    function data($name = '', $value = '', $layer = 'SESSION')
-    {
+    function data($name = '', $value = '', $layer = 'SESSION') {
         $data = g($layer);
 
         if (is_array($name)) {
             try {
                 foreach ($name as $dataName => $dataValue) {
-                    $data[$dataName] = json_encode($dataValue, true);
+                    $data[$dataName] = is_array($dataValue) ? $dataValue : json_encode($dataValue, true);
                 }
                 g($layer, $data);
                 return true;
@@ -196,32 +187,38 @@ if (!function_exists('data')) {
             // 清除,奇葩的workmanSession机制
             $data = ['destroy' => date('YmdHis')];
             g($layer, $data);
-//            p('clear');
+            //            p('clear');
             return true;
         } elseif ($name && !$value && !is_null($value)) {
             // 判断或获取
-            //p($data);
-            return (isset($data[$name]) && $data[$name])
-                ? (json_decode($data[$name], true) ? json_decode($data[$name], true) : $data[$name]) : '';
+            if (!isset($data[$name])) {
+                return '';
+            }
+            // 如果已经是数组则直接返回
+            if (is_array($data[$name])) {
+                return $data[$name];
+            }
+            // 尝试 JSON 解码
+            return json_decode($data[$name], true) ?: $data[$name];
         } elseif (is_null($value)) {
             // 删除
             if (isset($data[$name])) unset($data[$name]);
             g($layer, $data);
-//            p('delete item '.$name);
+            //            p('delete item '.$name);
             return true;
         } elseif ($name === '') {
             // 读取所有
             $tmp = [];
             if (is_array($data)) {
                 foreach ($data as $k => $v) {
-                    $tmp[$k] = json_decode($v, true) ? json_decode($v, true) : $v;
+                    $tmp[$k] = is_string($v) ? json_decode($v, true) : $v;
                 }
             }
-//            p('read all');
+            //            p('read all');
             return $tmp;
         } else {
             $data[$name] = $value;
-//            p('set item '.$name,$data);
+            //            p('set item '.$name,$data);
             g($layer, $data);
         }
     }
@@ -234,8 +231,7 @@ if (!function_exists('session')) {
      * @param string $value
      * @return array|bool|mixed
      */
-    function session($name = '', $value = '')
-    {
+    function session($name = '', $value = '') {
         return data($name, $value, 'SESSION');
     }
 }
@@ -247,10 +243,9 @@ if (!function_exists('cookie')) {
      * @param string $value
      * @return array|bool|mixed
      */
-    function cookie($name = '', $value = '')
-    {
+    function cookie($name = '', $value = '') {
         if (!IS_CLI && $name && $value) {
-            setcookie($name, $value,0,'/');
+            setcookie($name, $value, 0, '/');
         }
         return data($name, $value, 'COOKIE');
     }
@@ -263,8 +258,7 @@ if (!function_exists('_header')) {
      * @param string $value
      * @return array|bool|mixed
      */
-    function _header($name = '', $value = '')
-    {
+    function _header($name = '', $value = '') {
         if (!IS_CLI && $name && $value) {
             return header($name . ":" . $value);
         }
@@ -280,8 +274,7 @@ if (!function_exists('input')) {
      * @param string $filter 过滤方法
      * @return mixed
      */
-    function input($key = '', $default_value = null, $filter = '')
-    {
+    function input($key = '', $default_value = null, $filter = '') {
         if (0 === strpos($key, '?')) {
             $key = substr($key, 1);
             $has = true;
@@ -321,9 +314,8 @@ if (!function_exists('ip')) {
     /**
      * @return array|false|mixed|string
      */
-    function ip()
-    {
-        $server=g('SERVER');
+    function ip() {
+        $server = g('SERVER');
 
         if (isset($server)) {
             if (isset($server["HTTP_X_FORWARDED_FOR"])) {
@@ -351,8 +343,7 @@ if (!function_exists('is_mobile')) {
      * 判断是否是手机
      * @return int
      */
-    function is_mobile($agent)
-    {
+    function is_mobile($agent) {
         // returns true if one of the specified mobile browsers is detected
         // 如果监测到是指定的浏览器之一则返回true
 
@@ -379,8 +370,7 @@ if (!function_exists('console')) {
      * @param $message
      * @param string $type
      */
-    function console($message, $type = 'info')
-    {
+    function console($message, $type = 'info') {
         if (defined('WEB_SERVER') || !IS_CLI) {
             return;
         }
@@ -394,12 +384,10 @@ if (!function_exists('console')) {
  * @param $url
  * @return string
  */
-function staticFix($url)
-{
+function staticFix($url) {
     $cdn_url = config('http.cdn_url');
     return ($url && strpos($url, 'http') === false) ?
-        config('http.cdn_url') . $url :
-        ($url ? $url : config('http.cdn_url') . '/default.png');
+        config('http.cdn_url') . $url : ($url ? $url : config('http.cdn_url') . '/default.png');
 }
 
 if (!function_exists('addToQueue')) {
@@ -408,12 +396,11 @@ if (!function_exists('addToQueue')) {
      * @param $type
      * @param $data
      */
-    function addToQueue($type, $data, $callback = null)
-    {
+    function addToQueue($type, $data, $callback = null) {
         static $Queue;
         static $queue_key;
-        $queue_key = $queue_key ? $queue_key : str_replace(['-','.','*'],'_',gethostname().'_QUEUES');
-        console('QUEUE KEY :'.$queue_key);
+        $queue_key = $queue_key ? $queue_key : str_replace(['-', '.', '*'], '_', gethostname() . '_QUEUES');
+        console('QUEUE KEY :' . $queue_key);
 
         if (!$Queue) {
             /**
@@ -441,8 +428,7 @@ if (!function_exists('arrayRecursiveDiff')) {
      *
      * @return array
      */
-    function arrayRecursiveDiff($aArray1, $aArray2)
-    {
+    function arrayRecursiveDiff($aArray1, $aArray2) {
         $aReturn = array();
         if ($aArray1) {
             foreach ($aArray1 as $mKey => $mValue) {
@@ -476,8 +462,7 @@ if (!function_exists('config')) {
      * @param mixed $value 参数值
      * @return mixed
      */
-    function config($name = '', $value = null)
-    {
+    function config($name = '', $value = null) {
         if (is_array($name)) {
             return Config::set($name, $value);
         }
@@ -499,13 +484,12 @@ if (!function_exists('url')) {
      * '' => '[^/\.]++'
      *
      */
-    function url($name = '', $params = [],$domain='')
-    {
-        if($domain===true){
-            $server=g("SERVER");
-            $domain=($server['REQUEST_SCHEME']?:'http').'://'.$server['HTTP_HOST'].'///';
+    function url($name = '', $params = [], $domain = '') {
+        if ($domain === true) {
+            $server = g("SERVER");
+            $domain = ($server['REQUEST_SCHEME'] ?: 'http') . '://' . $server['HTTP_HOST'] . '///';
         }
-        return preg_replace("/\/{3,}/",'/','///'.$domain.app('router')->generate($name, $params));
+        return preg_replace("/\/{3,}/", '/', '///' . $domain . app('router')->generate($name, $params));
     }
 }
 
@@ -515,8 +499,7 @@ if (!function_exists('url')) {
  * @param mixed|array|string $type
  * @param string $act_type
  */
-function assets($type, $act_type = 'add')
-{
+function assets($type, $act_type = 'add') {
     //全部输出
     if ($type === true) {
         echo app('assets')->css();
@@ -535,7 +518,7 @@ function assets($type, $act_type = 'add')
     //载入
     if ($act_type === 'add') {
         app('assets')->add($type);
-    } else if($type){
+    } else if ($type) {
         //重置类型
         echo app('assets')->$type();
         $act = 'reset' . ucfirst($type);
@@ -550,19 +533,18 @@ function assets($type, $act_type = 'add')
  * @param $single
  * @return void
  */
-function hook($name = '', $params = [], $single=false)
-{
+function hook($name = '', $params = [], $single = false) {
     $return = [];
-    app('hook')->trigger($name, [$single,$params, &$return]);
-    return $single && $return && is_array($return)?$return[0]:$return;
+    app('hook')->trigger($name, [$single, $params, &$return]);
+    return $single && $return && is_array($return) ? $return[0] : $return;
 }
 
 /**
  * 中断hook运行
  * @auth false
  */
-function abort_hook(){
-     throw new \JBZoo\Event\ExceptionStop();
+function abort_hook() {
+    throw new \JBZoo\Event\ExceptionStop();
 }
 
 // 提取公共函数到单独的方法中

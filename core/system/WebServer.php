@@ -12,35 +12,31 @@ use Workerman\Protocols\Http\Session;
 
 define("IS_LOW_WORKERMAN", version_compare(Worker::VERSION, '3.5.3', '<'));
 
-class WebServer
-{
+class WebServer {
     protected $worker;
     public static $debug = false;
 
-    public function __construct($socket_name = '', array $context_option = array())
-    {
+    public function __construct($socket_name = '', array $context_option = array()) {
         if (PHP_SAPI === 'cli') {
             $this->worker = new Worker($socket_name, $context_option);
             $this->worker->onMessage = [$this, 'handleRequest'];
         }
     }
 
-    public static function init()
-    {
+    public static function init() {
         static $init;
         if ($init) return;
         !defined('WEB_SERVER') && define('WEB_SERVER', 'true');
         self::loadAppsRouters();
         $init = true;
 
-        if(file_exists(ROOT_PATH.'server'.DIRECTORY_SEPARATOR.'start_gateway.php')){
+        if (file_exists(ROOT_PATH . 'server' . DIRECTORY_SEPARATOR . 'start_gateway.php')) {
             \GatewayClient\Gateway::$registerAddress = config('register.address');
             \GatewayWorker\Lib\Gateway::$registerAddress = config('register.address');
         }
     }
 
-    private static function loadAppsRouters()
-    {
+    private static function loadAppsRouters() {
         $cacheFile = RUNTIME_PATH . '/router_cache.php';
 
         if (!APP_DEBUG && file_exists($cacheFile)) {
@@ -74,8 +70,7 @@ class WebServer
         app('router')->addRoutes($routes);
     }
 
-    public function handleRequest($connection, $request)
-    {
+    public function handleRequest($connection, $request) {
         $this->initGlobals($connection, $request);
 
         $uri = $request->uri();
@@ -105,8 +100,7 @@ class WebServer
         }
     }
 
-    protected function initGlobals($connection, $request)
-    {
+    protected function initGlobals($connection, $request) {
         if (PHP_SAPI === 'cli') {
             $_SERVER = array_merge($_SERVER, [
                 'REQUEST_METHOD' => $request->method(),
@@ -142,6 +136,10 @@ class WebServer
             $_COOKIE = $request->cookie();
             $_SESSION = $request->session()->all();
             $_REQUEST = array_merge($_GET, $_POST);
+            // 确保session数据被正确初始化
+            if (!isset($_SESSION)) {
+                $_SESSION = [];
+            }
         } else {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -158,6 +156,7 @@ class WebServer
         g('SERVER', $_SERVER);
         g('IP', $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '');
         g('POST', $_POST);
+        g('RAW', file_get_contents('php://input'));
         g('GET', $_GET);
         g('FILES', $_FILES);
         g('SESSION', $_SESSION);
@@ -165,8 +164,7 @@ class WebServer
         g('REQUEST', $_REQUEST);
     }
 
-    public static function dispatchHttp($connection = null, $object = null, $request = null)
-    {
+    public static function dispatchHttp($connection = null, $object = null, $request = null) {
         self::init();
 
         $match = app('router')->match();
@@ -201,8 +199,7 @@ class WebServer
         self::executeRoute($connection, $object, $request, $match);
     }
 
-    private static function executeRoute($connection, $object, $request, $match)
-    {
+    private static function executeRoute($connection, $object, $request, $match) {
         $class = $match['target'];
 
         if (class_exists($class) && method_exists($class, $match['action'])) {
@@ -221,6 +218,7 @@ class WebServer
             try {
                 call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
             } catch (Exception $e) {
+
                 if ($e->getMessage() !== 'jump_exit') {
                     if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
@@ -229,6 +227,7 @@ class WebServer
                     Debug::log_exception($e);
                 }
             }
+
 
             self::response($connection, $request);
         } else {
@@ -247,8 +246,7 @@ class WebServer
         }
     }
 
-    protected static function response($connection, $request)
-    {
+    protected static function response($connection, $request) {
         $headers = g('HEADER') ?: [];
         $cookies = g('COOKIE') ?: [];
         $_SESSION = g('SESSION') ?: [];
@@ -267,7 +265,7 @@ class WebServer
             $connection->send($response);
         } else {
             foreach ($cookies as $name => $value) {
-                setcookie($name, $value);
+                setcookie($name, $value, 0, '/', '', false, true);
             }
             foreach ($headers as $name => $value) {
                 header("$name: $value");
@@ -277,13 +275,11 @@ class WebServer
         }
 
         if (PHP_SAPI !== 'cli') {
-            $_SESSION = g('SESSION');
             session_write_close();
         }
     }
 
-    protected function handleFileRequest($connection, $file, $request)
-    {
+    protected function handleFileRequest($connection, $file, $request) {
         $mimeTypes = [
             'css' => 'text/css',
             'js' => 'application/javascript',
@@ -309,8 +305,7 @@ class WebServer
         }
     }
 
-    protected static function fixHttpCrossDomain($server)
-    {
+    protected static function fixHttpCrossDomain($server) {
         _header('Access-Control-Allow-Credentials', 'true');
         if (isset($server['HTTP_ORIGIN'])) {
             _header('Access-Control-Allow-Origin', $server['HTTP_ORIGIN'] ?? config('http.cross_url'));
@@ -319,8 +314,7 @@ class WebServer
         }
     }
 
-    public static function run()
-    {
+    public static function run() {
         if (PHP_SAPI === 'cli') {
             $config = config('http');
             $server = new static($config['http_server']);
@@ -330,8 +324,7 @@ class WebServer
         }
     }
 
-    protected function executePhpFile($connection, $file, $request)
-    {
+    protected function executePhpFile($connection, $file, $request) {
         ob_start();
 
         $_SERVER['SCRIPT_FILENAME'] = $file;

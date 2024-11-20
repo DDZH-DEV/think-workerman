@@ -116,8 +116,8 @@ return [
     'http' => [
         'name' => 'WebServer',
         'upload_dir' => 'uploads',
-        'cross_url' => 'http://127.0.0.1:909',
-        'http_server' => 'http://0.0.0.0:909',
+        'cross_url' => 'http://127.0.0.1:9999',
+        'http_server' => 'http://0.0.0.0:9999',
         'cdn_url' => '',  //静态文件分发地址 参考函数 staticFix()
         'worker_num' => 1
     ],

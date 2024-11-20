@@ -7,8 +7,7 @@ namespace system;
 # @version: Qstyle 8.0.0;
 */
 
-class Qstyle
-{
+class Qstyle {
     public $templates_dir = array(ROOT_PATH . 'template');       //模板路径,支持数组叠代多层目录,最后面的优先搜索;
     public $templates_cache = RUNTIME_PATH . 'tpl/';            //缓存模板路径;
     public $templates_postfix = '.html';                        //模板后缀;
@@ -19,7 +18,7 @@ class Qstyle
     public $templates_space = false;                            //清除无意义字符
     public $templates_ankey = '';                                // 加密模板文件名,避免被猜测到.
     public $templates_isdebug = false;
-    public $templates_replace = array();                        // 全局替换块,区分大小写.
+    public $templates_replace = array();                        // 全局替块,区分大小写.
     public $cssname = '';
 
     //结果集,请不要修改以下内容;
@@ -42,8 +41,7 @@ class Qstyle
     const _STATIC = 'STATIC';
     const _LISTTPL = 'LISTTPL';
 
-    public function __construct()
-    {
+    public function __construct() {
         $dirags = func_get_args();
         $this->templates_dir = (array)$this->templates_dir;
         foreach ($this->templates_dir as $key => $val) {
@@ -62,8 +60,7 @@ class Qstyle
         return $this;
     }
 
-    public  function release()
-    {
+    public  function release() {
         // 释放变量
         $this->templates_assign = array();
         $this->templates_static_assign = array();
@@ -78,8 +75,7 @@ class Qstyle
     }
 
     //公共方法: 文件名, 是否返回缓存文件.
-    public function display($PHPnew_file_name, $returnpath = false)
-    {
+    public function display($PHPnew_file_name, $returnpath = false) {
         static $once = 0;
 
         if ($once === 0) {
@@ -90,7 +86,7 @@ class Qstyle
             }
 
             if ($this->templates_isdebug) {
-                $tplnotice = $this->templates_dir ? '模板目录已经被指定:' . implode(', ', $this->templates_dir) . ' (验证存在)' : '未指定模板目录, 系统将从自动目录中寻找模板';
+                $tplnotice = $this->templates_dir ? '板录已经被指定:' . implode(', ', $this->templates_dir) . ' (验证存在)' : '未指模板目录, 系统将从自目录中寻找模板';
                 $this->preg__debug($tplnotice);
                 $autodir = $this->set_auto_path(self::_STATIC);
                 $this->preg__debug('静态文件匹配自动目录: ' . implode(', ', $autodir) . ' (验证存在)');
@@ -146,7 +142,7 @@ class Qstyle
                 $PHPnew_path = $this->templates_cache_file[$PHPnew_file_name];
         } else {
             if (!$this->templates_file[$PHPnew_file_name] || !$this->templates_message = $this->preg__file($this->templates_file[$PHPnew_file_name])) {
-                throw new \Exception('模板文件' . $PHPnew_file_name . ' 读取失败'.'当前匹配目录:'.implode(',',$this->templates_dir));
+                throw new \Exception('模板文件' . $PHPnew_file_name . ' 读取失败' . '当前匹配目录:' . implode(',', $this->templates_dir));
             }
 
             if ($this->templates_message) {
@@ -185,8 +181,7 @@ class Qstyle
         return $PHPnew_path;
     }
 
-    protected function parse_tpl_block($path, $blockname)
-    {
+    protected function parse_tpl_block($path, $blockname) {
         $data = $this->preg__file($path);
         $data = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", '{$1}', $data);
         if (preg_match("/\{block\s+{$blockname}\}(.*?)\{\/block\}/is", $data, $Reg)) {
@@ -206,22 +201,20 @@ class Qstyle
                 extract($this->templates_assign);
                 @eval('?>' . $phpnew_phpcode_log_phpcode);
             } else {
-                echo(htmlspecialchars($data));
+                echo (htmlspecialchars($data));
             }
         } else {
             echo '无法找到的block块:' . $blockname;
         }
     }
 
-    public function load()
-    {
+    public function load() {
         $args = func_get_args();
         return call_user_func_array(array($this, 'display'), $args);
     }
 
     //公共方法: 用户用强制性变量赋值;
-    public function assign($phpnew_var, $phpnew_value = null)
-    {
+    public function assign($phpnew_var, $phpnew_value = null) {
         if (!$phpnew_var) return false;
         if ($phpnew_var === true)
             return $this->templates_assign;
@@ -238,16 +231,14 @@ class Qstyle
         return $this->templates_assign;
     }
 
-    public function set_templates_type($parema = '变量模式[All,ASSIGN]')
-    {
+    public function set_templates_type($parema = '变量模式[All,ASSIGN]') {
         if ($parema !== true) {
             $this->templates_var = $parema;
         }
         return $this->templates_var;
     }
 
-    public function set_templates_suffix($parema = '', $paremb = '')
-    {
+    public function set_templates_suffix($parema = '', $paremb = '') {
         if ($parema) {
             $this->templates_postfix = $parema;
         }
@@ -258,40 +249,34 @@ class Qstyle
         return array('templates_postfix' => $this->templates_postfix, 'templates_caching' => $this->templates_caching);
     }
 
-    public function set_templates_auto($parem = '设置自动更新[bool]')
-    {
+    public function set_templates_auto($parem = '设置自动更新[bool]') {
         $this->templates_auto = (bool)$parem;
         return $this->templates_auto;
     }
 
-    public function set_templates_space($parem = '清除多余空白[bool]')
-    {
+    public function set_templates_space($parem = '清除多余空白[bool]') {
         $this->templates_space = (bool)$parem;
         return $this->templates_space;
     }
 
-    public function set_templates_isdebug($parem = '启用调试[bool]')
-    {
+    public function set_templates_isdebug($parem = '启用调试[bool]') {
         $this->templates_isdebug = (bool)$parem;
         return $this->templates_isdebug;
     }
 
-    public function set_templates_oncenew($parem = '当次更新[bool]')
-    {
+    public function set_templates_oncenew($parem = '当次更新[bool]') {
         $this->templates_new = (bool)$parem;
         return $this->templates_new;
     }
 
-    public function set_templates_ankey($parem = '安全码')
-    {
+    public function set_templates_ankey($parem = '安全码') {
         if ($parem !== true) {
             $this->templates_ankey = $parem;
         }
         return $this->templates_ankey;
     }
 
-    public function set_templates_path($path = '模板路径')
-    {
+    public function set_templates_path($path = '模板路径') {
         if (!$path) return false;
         if ($path === true)
             return $this->templates_dir;
@@ -306,8 +291,7 @@ class Qstyle
         return $this->templates_dir;
     }
 
-    public function set_templates_replace($phpnew_var = '关键值,替换值', $phpnew_value = null)
-    {
+    public function set_templates_replace($phpnew_var = '关键值,替换值', $phpnew_value = null) {
         if ($phpnew_var === true)
             return $this->templates_replace;
 
@@ -324,8 +308,7 @@ class Qstyle
         return $this->templates_replace;
     }
 
-    public function set_cache_path($dir = '缓存目录路径')
-    {
+    public function set_cache_path($dir = '缓存目录路径') {
         if ($dir !== true && is_dir($dir)) {
             $this->templates_cache = $dir;
         }
@@ -333,8 +316,7 @@ class Qstyle
     }
 
     //公共方法: 定义静态变量, 主要用于css, js.
-    public function set_static_assign($var1 = null, $var2 = null)
-    {
+    public function set_static_assign($var1 = null, $var2 = null) {
         if (!$var1) return false;
         if ($var1 === true)
             return $this->templates_static_assign;
@@ -350,8 +332,7 @@ class Qstyle
     }
 
     //公共方法: 设置语言数组, 模板中就可以用{lang str}
-    public function set_language($var1 = null, $var2 = null)
-    {
+    public function set_language($var1 = null, $var2 = null) {
         if (!$var1) return false;
         if ($var1 === true)
             return $this->templates_lang;
@@ -366,9 +347,8 @@ class Qstyle
         return $this->templates_lang;
     }
 
-    //公共方法: 设置自动匹配的路径, 默认先不工作, 等有此语法再读取目录.
-    public function set_auto_path($set_path = '自动搜索目录路径')
-    {
+    //公共方法: 设置自动匹配的路径, 默认先不工, 等有此语法再读取目录.
+    public function set_auto_path($set_path = '自动搜目录路径') {
         if (in_array($set_path, array(self::_STATIC, self::_LISTTPL))) {
             if ($set_path === self::_STATIC) {
                 return array_reverse($this->templates_autofile);
@@ -387,26 +367,22 @@ class Qstyle
     }
 
     //私有方法: 定位域名, 以此来影响部分文件.
-    protected function preg__urlhost()
-    {
+    protected function preg__urlhost() {
         $server = g('SERVER');
         return '//' . $server['HTTP_HOST'] . dirname($server['REQUEST_URI']);
     }
 
-    protected function __exp_path($path)
-    {
+    protected function __exp_path($path) {
         return trim(str_replace(["//"], ["/"], $path . '/'));
     }
 
-    protected function __exp_file($filepath)
-    {
+    protected function __exp_file($filepath) {
         $filepath = trim($filepath);
         return ltrim(strtr($filepath, array('\\' => '/', '\\\\' => '/', '//' => '/')), './');
     }
 
-    //保护的方法: 当语法有自动匹配功能时, 此方法会被调用.
-    protected function __real_alldir($dir = array(), $filename = '')
-    {
+    //方: 法有自匹配功时, 此方法会被调用.
+    protected function __real_alldir($dir = array(), $filename = '') {
         if (!$dir)
             return array();
         $dirlist = array();
@@ -436,12 +412,11 @@ class Qstyle
     }
 
     // 内部方法: 检查是否应该更新, 参数:当前配置数组.
-    protected function __check_update($html_array)
-    {
+    protected function __check_update($html_array) {
         if (is_dir($this->templates_cache) === false)
             $this->preg__debug('缓存目录不存在: ' . $this->templates_cache, E_WARNING);
         if (empty($html_array['tpl']) === true)
-            $this->preg__debug('模板文件不存在: ' . $this->templates_name.'当前匹配目录:'.implode(',',$this->templates_dir), E_WARNING);
+            $this->preg__debug('模板文件不存在: ' . $this->templates_name . '当前匹配目录:' . implode(',', $this->templates_dir), E_WARNING);
         if ($this->templates_new === true) {
             $this->preg__debug('templates_new 自动更新已经开启!');
             return false;
@@ -455,8 +430,7 @@ class Qstyle
     }
 
     // 内部方法: 取得路径信息.
-    protected function __get_path($htmlfile)
-    {
+    protected function __get_path($htmlfile) {
         $rename = false;
         if (stripos($htmlfile, '/') !== false) {
             if (is_file($htmlfile) === false) {
@@ -475,7 +449,7 @@ class Qstyle
         if ($rename) {
             $this->preg__debug('模板文件自动搜索到路径: ' . $rename);
         } else {
-            throw new \Exception('模板文件不存在:' . $htmlfile.'当前匹配目录:'.implode(',',$this->templates_dir));
+            throw new \Exception('模板文件不存在:' . $htmlfile . '当前匹配目录:' . implode(',', $this->templates_dir));
         }
 
         $htmlfile = $rename;
@@ -492,8 +466,7 @@ class Qstyle
         return $retruans;
     }
 
-    protected function __search_tpl($htmlfile)
-    {
+    protected function __search_tpl($htmlfile) {
         $dir = $this->set_auto_path(self::_LISTTPL);
         $htmlfile = $this->__exp_file($htmlfile);
         $paths = false;
@@ -525,8 +498,7 @@ class Qstyle
     }
 
     // 内部方法: 取得全局变量并且赋予模板.
-    protected function __parse_var($isrun = false)
-    {
+    protected function __parse_var($isrun = false) {
         static $savevar = 0;
 
         if ($isrun === true)
@@ -542,9 +514,8 @@ class Qstyle
         }
     }
 
-    // 内部方法: 读文件与写文件的公用方法.
-    protected function preg__file($path, $lock = 'rb', $cls = false)
-    {
+    // 内部方法: 读文件与写文件的公用法.
+    protected function preg__file($path, $lock = 'rb', $cls = false) {
         $mode = $cls === true ? 'wb+' : 'rb';
 
         if ($cls === false && is_file($path) === false) return false;
@@ -575,8 +546,7 @@ class Qstyle
     }
 
     // 内部方法: css,js静态文件解析方法.
-    protected function __preg_source_parse($template)
-    {
+    protected function __preg_source_parse($template) {
         static $savefile = array();
         if (isset($savefile[$template]))
             return $savefile[$template];
@@ -622,8 +592,7 @@ class Qstyle
     }
 
     // 内部方法: css,js静态文件路径计算方法, 跟preg__autofile有小小区别.
-    protected function preg_static_autofile($math)
-    {
+    protected function preg_static_autofile($math) {
         static $reals = '';
         $args = func_get_args();
         if ($args)
@@ -657,8 +626,7 @@ class Qstyle
     }
 
     // 内部方法: css,js静态文件变量计算方法.
-    protected function preg_cssjs_var($math)
-    {
+    protected function preg_cssjs_var($math) {
         if (is_string($math) === false)
             $math = $math[1];
         $redata = $math;
@@ -693,8 +661,7 @@ class Qstyle
     }
 
     // 内部方法: html代码自动匹配路径方法
-    protected function preg__autofile($math)
-    {
+    protected function preg__autofile($math) {
         if (is_string($math) === false) {
             $mathfile = $math[1];
         } else {
@@ -719,8 +686,7 @@ class Qstyle
     }
 
     // 处理变量与常量.
-    protected function __parse_htmlvar($template)
-    {
+    protected function __parse_htmlvar($template) {
         if (!$template)
             return '';
 
@@ -741,60 +707,54 @@ class Qstyle
         return $template;
     }
 
-    protected function preg__binary($math)
-    {
-        if ($math)
-            $math = explode('|', $math[1]);
+    protected function preg__binary($math) {
+        if (!$math) return '';
 
-        $var0 = $var1 = $var2 = '';
-        if (isset($math[0]))
-            $var0 = $this->__parse_htmlvar($math[0]);
-
-        if (isset($math[1]))
-            $var1 = $this->__parse_htmlvar($math[1]);
-
-        if (isset($math[2]))
-            $var2 = $this->__parse_htmlvar($math[2]);
-
-        if (strpos($var0, '$') !== false)
-            $var = trim($var0, '<?=>');
-        if (strpos($var1, '$') !== false)
-            $var1 = trim($var1, '<?=>');
-        if (strpos($var2, '$') !== false)
-            $var2 = trim($var2, '<?=>');
-
-        if (isset($math[2]) === false) {
-            $math[1] = $var;
-            $var2 = $var1;
-            $var1 = ltrim($var, '!');
-        }
-
-        if ($var1 != '' && strpos($var1, '$') !== 0) {
-            $var1 = strtr($var1, array('\'' => '\\\''));
-            $var1 = "'{$var1}'";
+        if (is_string($math)) {
+            $parts = explode('|', $math);
         } else {
-            if (!$var1) {
-                $var1 = strtr($var1, array('\'' => '\\\''));
-                $var1 = "'{$var1}'";
-            }
+            $parts = explode('|', $math[1]);
         }
 
-        if ($var2 != '' && strpos($var2, '$') !== 0) {
-            $var2 = strtr($var2, array('\'' => '\\\''));
-            $var2 = "'{$var2}'";
-        } else {
-            if (!$var2) {
-                $var2 = strtr($var2, array('\'' => '\\\''));
-                $var2 = "'{$var2}'";
-            }
+        // 处理变量部分(支持点语法)
+        $var = trim($parts[0]);
+        if (strpos($var, '.') !== false) {
+            $var = $this->__parse_dot_notation($var);
         }
-        return $this->preg__base("<?php echo (isset($var) AND $var)?{$var1}:{$var2};?>");
+
+        // 处理default值
+        $default = isset($parts[1]) ? trim($parts[1]) : '';
+        if (strpos($default, 'default=') === 0) {
+            $default = substr($default, 8);
+            // 如果default值是字符串,需要处理引号
+            if (!is_numeric($default) && strpos($default, '$') !== 0) {
+                $default = "'" . trim($default, "'\"") . "'";
+            }
+            return "<?php echo isset($var) ? $var : $default; ?>";
+        }
+
+        // 其他二元运算保持不变
+        $true_value = isset($parts[1]) ? trim($parts[1]) : '';
+        $false_value = isset($parts[2]) ? trim($parts[2]) : '';
+
+        if (!$true_value) {
+            $true_value = $var;
+        }
+
+        if ($true_value && strpos($true_value, '$') !== 0) {
+            $true_value = "'" . addslashes($true_value) . "'";
+        }
+
+        if ($false_value && strpos($false_value, '$') !== 0) {
+            $false_value = "'" . addslashes($false_value) . "'";
+        }
+
+        return "<?php echo isset($var) && $var ? $true_value : $false_value; ?>";
     }
 
     // TODO: 核心代码开始
     //内部函数: 模板语法处理替换
-    protected function __parse_html($template)
-    {
+    protected function __parse_html($template) {
         $template = strtr($template, array('\{' => 'Qstyle~~<~~', '\}' => 'Qstyle~~>~~', '\$' => 'Qstyle~~<<~~'));
         static $savefile = array();
         if (isset($savefile[$this->templates_name]))
@@ -837,7 +797,7 @@ class Qstyle
                     $template = strtr($template, array($keys => $vals));
                 }
             }
-            $this->preg__debug('解析模板细节: block 注入块替换次数:' . ($ri));
+            $this->preg__debug('解模板节: block 入块换次数:' . ($ri));
         }
 
         //处理自动搜索文件路径
@@ -862,15 +822,15 @@ class Qstyle
         $const_regexp2 = "([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)(\[[a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+\])+";
         $template = preg_replace_callback("/\{$const_regexp2\}/s", array($this, 'preg__const'), $template, -1, $regintb);
 
-        // 普通变量数组转化.
+        // 普通变量数组转化
         $varRegexp = "((\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\-\>)?[a-zA-Z0-9_\x7f-\xff]*)(\[[a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+\])*)";
-        $varRegexp2 = "\{((\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\-\>)?[a-zA-Z0-9_\x7f-\xff]*)(\[[a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+\])*)\}";
+        $varRegexp2 = "\{((\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\-\>)?[a-zA-Z0-9_\x7f-\xff]*)([\.|\[][a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+[\]]*)*)\}";
         $const_regexp = "([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)";
-        $template = preg_replace("/\{(\\\$[a-zA-Z0-9_\[\]\'\"\$\.\x7f-\xff]+)\}/s", '<?=$1?>', $template);
+
+        // 直接使用回调处理所有变量
+        $template = preg_replace_callback("/\{(\\\$[a-zA-Z0-9_\[\]\'\"\$\.\x7f-\xff]+)\}/s", array($this, 'preg__var'), $template);
         $template = preg_replace_callback("/$varRegexp2/s", array($this, 'preg__var'), $template);
-//  	    $template = preg_replace_callback("/$varRegexp/s", array($this,'preg__var'), $template);
-        $template = preg_replace_callback("/\<\?\=\<\?\=$varRegexp\?\>\?\>/s", array($this, 'preg__var'), $template, -1, $regint);
-        $this->preg__debug('解析模板细节: {$var} 变量,数组代码解析次数:' . ($regint));
+        $template = preg_replace_callback("/\<\?\=\<\?\=$varRegexp\?\>\?\>/s", array($this, 'preg__var'), $template);
 
         //替换特定函数
         $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'preg__if'), $template);
@@ -928,11 +888,300 @@ class Qstyle
         $template = strtr($template, array('Qstyle~~<~~' => '{', 'Qstyle~~>~~' => '}', 'Qstyle~~<<~~' => '$'));
         $this->preg__debug('模板解析结束... 内容共计: ' . strlen($template) . ' 字节');
 
+        // 修改三元运算符的处理方式
+        $template = preg_replace_callback('/\{(\$[a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\s*\?\s*([^:]+?)\s*:\s*([^\}]+)\}/s', function ($matches) {
+            $var = $matches[1];          // $vo
+            $field = $matches[2];        // expire_time
+            $true_value = trim($matches[3]);    // date('Y-m-d H:i', $vo.expire_time)
+            $false_value = trim($matches[4]);   // '永久'
+
+            // 构建数组访问表达式
+            $array_access = sprintf("%s['%s']", $var, $field);
+
+            // 处理真值中的点语法
+            if (strpos($true_value, '.') !== false) {
+                $true_value = preg_replace_callback('/\$[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+/', function ($m) {
+                    $parts = explode('.', $m[0]);
+                    return $parts[0] . '[\'' . $parts[1] . '\']';
+                }, $true_value);
+            }
+
+            // 处理假值
+            if (strpos($false_value, '$') === 0) {
+                if (strpos($false_value, '.') !== false) {
+                    $false_value = $this->__parse_dot_notation($false_value);
+                }
+            } else if (!is_numeric($false_value)) {
+                $false_value = "'" . trim($false_value, "'\"") . "'";
+            }
+
+            return "<?php echo isset($array_access) && $array_access ? $true_value : $false_value; ?>";
+        }, $template);
+
+        // 1. 先处理三元运算符表达式 (移到最前面，在其他变量处理之前)
+        $template = preg_replace_callback('/\{(\$[a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\s*(==|===|>=|<=|!=|>|<)\s*([^\?\s]+)\s*\?\s*([^\:]+?)\s*:\s*([^\}]+)\}/s', function ($matches) {
+            $var = $matches[1];          // $warrant
+            $field = $matches[2];        // type
+            $operator = $matches[3];     // ==
+            $value = trim($matches[4]);  // 1
+            $true_value = trim($matches[5]);    // 可能是变量或字符串
+            $false_value = trim($matches[6]);   // 可能是变量或字符串
+
+            // 构建数组访问表达式
+            $array_access = sprintf("%s['%s']", $var, $field);
+
+            // 处理比较值
+            if (!is_numeric($value) && strpos($value, '$') !== 0) {
+                $value = "'" . trim($value, "'\"") . "'";
+            }
+
+            // 处理真值和假值
+            $processValue = function ($val) {
+                $val = trim($val);
+                // 如果是变量
+                if (strpos($val, '$') === 0) {
+                    if (strpos($val, '.') !== false) {
+                        return $this->__parse_dot_notation($val);
+                    }
+                    return $val;
+                }
+                // 如果是数字
+                if (is_numeric($val)) {
+                    return $val;
+                }
+                // 如果已经有引号包裹
+                if (preg_match('/^[\'"].*[\'"]$/', $val)) {
+                    return $val;
+                }
+                // 其他情况添加引号
+                return "'" . $val . "'";
+            };
+
+            $true_value = $processValue($true_value);
+            $false_value = $processValue($false_value);
+
+            // 构建完整的三元表达式
+            if ($operator === '==') {
+                return "<?php echo isset($array_access) && $array_access ? $true_value : $false_value; ?>";
+            } else {
+                return "<?php echo $array_access $operator $value ? $true_value : $false_value; ?>";
+            }
+        }, $template);
+
+        // 2. 然后再处理其他变量和达式
+        $template = preg_replace_callback("/\{(\[\!]*\\$[^}\n]*\|[^\n]*)\}/isU", array($this, 'preg__binary'), $template);
+
+        // 1. 先处理简单的三元运算符表达式 (新增)
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)\s*\?\s*([^:]+?)\s*:\s*([^\}]+)\}/s',
+            function ($matches) {
+                $condition = $this->__parse_dot_notation($matches[1]); // 条件
+                $true_value = trim($matches[2]); // 真值
+                $false_value = trim($matches[3]); // 假值
+
+                // 处理真值
+                if (strpos($true_value, '$') === 0) {
+                    // 如果是变量，检查是否包含点语法
+                    if (strpos($true_value, '.') !== false) {
+                        $true_value = $this->__parse_dot_notation($true_value);
+                    }
+                } else if (!is_numeric($true_value) && strpos($true_value, '/') !== 0) {
+                    // 如果不是变量、数字或路径，加上引号
+                    $true_value = "'" . trim($true_value, "'\"") . "'";
+                }
+
+                // 处理假值
+                if (strpos($false_value, '$') === 0) {
+                    // 如果是变量，检查是否包含点语法
+                    if (strpos($false_value, '.') !== false) {
+                        $false_value = $this->__parse_dot_notation($false_value);
+                    }
+                } else if (!is_numeric($false_value) && strpos($false_value, '/') !== 0) {
+                    // 如果不是变量、数字或路径，加上引号
+                    $false_value = "'" . trim($false_value, "'\"") . "'";
+                }
+
+                return "<?php echo isset($condition) && $condition ? $true_value : $false_value; ?>";
+            },
+            $template
+        );
+
+        // 1. 处理简单三元运算符 (修改正则表达式使其更精确)
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_]+)(\s*\?\s*[\'\"]?[^:]+?[\'\"]?\s*:\s*[\'\"]?[^\}]+?[\'\"]?)\}/s',
+            function ($matches) {
+                $var = $matches[1];          // $info
+                $expression = $matches[2];    // ? '编辑' : '添加'
+
+                // 提取真值和假值
+                if (preg_match('/\?\s*([\'\"]?.*?[\'\"]?)\s*:\s*([\'\"]?.*?[\'\"]?)$/s', $expression, $parts)) {
+                    $true_value = trim($parts[1]);
+                    $false_value = trim($parts[2]);
+
+                    // 处理真值
+                    if (strpos($true_value, '$') === 0) {
+                        // 是变量
+                        if (strpos($true_value, '.') !== false) {
+                            $true_value = $this->__parse_dot_notation($true_value);
+                        }
+                    } else if (!is_numeric($true_value)) {
+                        // 不是变量且不是数字，确保有引号
+                        if (!preg_match('/^[\'"].*[\'"]$/', $true_value)) {
+                            $true_value = "'" . trim($true_value, "'\"") . "'";
+                        }
+                    }
+
+                    // 处理假值
+                    if (strpos($false_value, '$') === 0) {
+                        // 是变量
+                        if (strpos($false_value, '.') !== false) {
+                            $false_value = $this->__parse_dot_notation($false_value);
+                        }
+                    } else if (!is_numeric($false_value)) {
+                        // 不是变量且不是数字，确保有引号
+                        if (!preg_match('/^[\'"].*[\'"]$/', $false_value)) {
+                            $false_value = "'" . trim($false_value, "'\"") . "'";
+                        }
+                    }
+
+                    return "<?php echo isset($var) && $var ? $true_value : $false_value; ?>";
+                }
+
+                // 如果无法解析，返回原始内容
+                return $matches[0];
+            },
+            $template
+        );
+
+        // 2. 处理带条件的三元运算符 (比如 {$info.type=='project' ?'selected':''})
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)\s*(==|===|!=|!==|>=|<=|>|<)\s*[\'\"]?([^\s\'\"\?]+)[\'\"]?\s*\?\s*[\'\"]?([^\:]+?)[\'\"]?\s*:\s*[\'\"]?([^\}]+?)[\'\"]?\}/s',
+            function ($matches) {
+                $var = $this->__parse_dot_notation($matches[1]);  // 变量
+                $operator = $matches[2];                          // 操作符
+                $compare_value = $matches[3];                     // 比较值
+                $true_value = trim($matches[4]);                 // 真值
+                $false_value = trim($matches[5]);                // 假值
+
+                // 处理比较值
+                if (!is_numeric($compare_value) && $compare_value !== 'true' && $compare_value !== 'false') {
+                    $compare_value = "'" . trim($compare_value, "'\"") . "'";
+                }
+
+                // 处理真值
+                if (!is_numeric($true_value) && !preg_match('/^[\'"].*[\'"]$/', $true_value)) {
+                    $true_value = "'" . trim($true_value, "'\"") . "'";
+                }
+
+                // 处理假值
+                if (!is_numeric($false_value) && !preg_match('/^[\'"].*[\'"]$/', $false_value)) {
+                    $false_value = "'" . trim($false_value, "'\"") . "'";
+                }
+
+                return "<?php echo isset($var) && $var $operator $compare_value ? $true_value : $false_value; ?>";
+            },
+            $template
+        );
+
+        // 处理带函数调用的三元表达式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\.]+)\s*\?\s*([a-zA-Z0-9_]+\([^\)]*\))\s*:\s*[\'\"]?([^\}]+?)[\'\"]?\}/s',
+            function ($matches) {
+                $var = $this->__parse_dot_notation($matches[1]);  // 变量
+                $func_call = $matches[2];  // 函数调用部分
+                $false_value = trim($matches[3]);  // 假值
+
+                // 处理假值
+                if (strpos($false_value, '$') === 0) {
+                    if (strpos($false_value, '.') !== false) {
+                        $false_value = $this->__parse_dot_notation($false_value);
+                    }
+                } else if (!is_numeric($false_value)) {
+                    $false_value = "'" . trim($false_value, "'\"") . "'";
+                }
+
+                return "<?php echo isset($var) && $var ? $func_call : $false_value; ?>";
+            },
+            $template
+        );
+
+        // 特别处理 date 函数的情况，使用更精确的匹配模式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\[\]\'\"]+)\s*\?\s*date\([\'\"](Y\-m\-d\s+H\s*:\s*i(?:\s*:\s*s)?)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\"]+)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/s',
+            function ($matches) {
+                $condition_var = $matches[1];  // $vo['expire_time']
+                $date_format = preg_replace('/\s+/', '', $matches[2]);  // 移除日期格式中的多余空格
+                $timestamp_var = $matches[3];  // $vo['expire_time']
+                $false_value = $matches[4];    // 永久
+
+                return "<?php echo isset($condition_var) && $condition_var ? date('$date_format', $timestamp_var) : '$false_value'; ?>";
+            },
+            $template
+        );
+
+        // 处理其他一般的三元表达式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\.]+)\s*\?\s*([^\:]+?)\s*\:\s*[\'\"]?([^\}]+?)[\'\"]?\}/s',
+            function ($matches) {
+                $var = $this->__parse_dot_notation($matches[1]);  // 变量
+                $true_value = trim($matches[2]);  // 真值
+                $false_value = trim($matches[3]);  // 假值
+
+                // 处理假值
+                if (strpos($false_value, '$') === 0) {
+                    if (strpos($false_value, '.') !== false) {
+                        $false_value = $this->__parse_dot_notation($false_value);
+                    }
+                } else if (!is_numeric($false_value)) {
+                    $false_value = "'" . trim($false_value, "'\"") . "'";
+                }
+
+                return "<?php echo isset($var) && $var ? $true_value : $false_value; ?>";
+            },
+            $template
+        );
+
+        // 1. 首先处理带 date() 函数的特殊三元表达式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\[\]\'\"]+)\s*\?\s*date\([\'\"](Y\-m\-d\s+H\s*:\s*i(?:\s*:\s*s)?)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\"]+)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/s',
+            function ($matches) {
+                $condition_var = $matches[1];  // $vo['expire_time']
+                $date_format = preg_replace('/\s+/', '', $matches[2]);  // 移除日期格式中的多余空格
+                $timestamp_var = $matches[3];  // $vo['expire_time']
+                $false_value = $matches[4];    // 永久
+
+                return "<?php echo isset($condition_var) && $condition_var ? date('$date_format', $timestamp_var) : '$false_value'; ?>";
+            },
+            $template
+        );
+
+        // 2. 然后再处理其他普通的三元表达式
+        // ... 其他三元表达式的处理代码 ...
+
+        // 在 __parse_html 方法中添加对空合并运算符的处理
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_]+(?:\[[^\]]+\])+)\s*\?\?\s*[\'\"]([^\}]*)[\'\"]\}/s',
+            function ($matches) {
+                $var = $matches[1];       // $option_values[$option.id][$version.id]
+                $default = $matches[2];   // ''
+
+                // 处理数组访问中的点语法
+                if (strpos($var, '.') !== false) {
+                    $var = preg_replace_callback('/\[[^\]]*\.[^\]]*\]/', function ($m) {
+                        $inner = trim($m[0], '[]');
+                        return '[' . $this->__parse_dot_notation($inner) . ']';
+                    }, $var);
+                }
+
+                return "<?php echo $var ?? '$default'; ?>";
+            },
+            $template
+        );
+
         return $template;
     }
 
-    protected function preg__parse_database($math)
-    {
+    protected function preg__parse_database($math) {
         $fname = trim($math[1]);
         if (!$fname)
             return null;
@@ -975,14 +1224,12 @@ class Qstyle
         }
     }
 
-    protected function preg__parse_ahref($math)
-    {
+    protected function preg__parse_ahref($math) {
         $hrefdata = preg_replace('/&(?!amp;)/isU', '&amp;', $math[1]);
         return 'href="' . $hrefdata . '"';
     }
 
-    protected function preg__static($math)
-    {
+    protected function preg__static($math) {
         if (is_string($math) === false)
             $math = $math[1];
         if ($math) {
@@ -1000,11 +1247,26 @@ class Qstyle
         }
     }
 
-    protected function preg__evaltags($match)
-    {
+    protected function preg__evaltags($match) {
         $php = rtrim(trim($match[2]), ';');
         $lf = $match[3];
         $php = str_replace('\"', '"', $php);
+
+        // 处理函数参数中的点语法
+        if (strpos($php, '.') !== false) {
+            preg_match_all('/\$[a-zA-Z0-9_]+\.[a-zA-Z0-9_\.]+/', $php, $matches);
+            if (!empty($matches[0])) {
+                foreach ($matches[0] as $var) {
+                    $parts = explode('.', $var);
+                    $varName = array_shift($parts);
+                    $replacement = $varName;
+                    foreach ($parts as $part) {
+                        $replacement .= "['$part']";
+                    }
+                    $php = str_replace($var, $replacement, $php);
+                }
+            }
+        }
 
         if ($match[1] == ':') {
             return $this->preg__base("<?php echo $php;?>$lf");
@@ -1013,44 +1275,63 @@ class Qstyle
         }
     }
 
-    protected function preg__todobug($math)
-    {
+    protected function preg__todobug($math) {
         if (strpos($math[1], "\n") !== false && strpos($math[3], "\n") !== false) {
             return "\n";
         }
         return ''; //默认todo, bug全部隐藏.
     }
 
-    protected function preg__if($math)
-    {
-        $expr = "<? if({$math[1]}){ ?>";
+    protected function preg__if($math) {
+        // 处理条件表达式中的点语法
+        $condition = $this->__parse_condition($math[1]);
+        $expr = "<? if({$condition}){ ?>";
         return $this->preg__stripvtags($expr);
     }
 
-    protected function preg__ifelse($math)
-    {
-        $expr = "<? }else if({$math[1]}){ ?>";
+    protected function preg__ifelse($math) {
+        // 处理条件表达式中的点语法
+        $condition = $this->__parse_condition($math[1]);
+        $expr = "<? }else if({$condition}){ ?>";
         return $this->preg__stripvtags($expr);
     }
 
-    protected function preg__loopone($math)
-    {
+    // 新增方法：处理条件表达式
+    protected function __parse_condition($condition) {
+        // 处理点语法访问
+        if (strpos($condition, '.') !== false) {
+            // 匹配所有的变量引用（包含点语法）
+            preg_match_all('/\$[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+/', $condition, $matches);
+            if (!empty($matches[0])) {
+                foreach ($matches[0] as $var) {
+                    $parts = explode('.', $var);
+                    $varName = array_shift($parts);
+                    $replacement = $varName;
+                    foreach ($parts as $part) {
+                        $replacement .= "['$part']";
+                    }
+                    $condition = str_replace($var, $replacement, $condition);
+                }
+            }
+        }
+        return $condition;
+    }
+
+    protected function preg__loopone($math) {
         $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[2]}){ ?>";
         return $this->preg__stripvtags($expr);
     }
 
-    protected function preg__looptwo($math)
-    {
-        if(in_array($math[2],['as','=>'])){
+    protected function preg__looptwo($math) {
+        if (in_array($math[2], ['as', '=>'])) {
             $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[3]}){ ?>";
-        }else{
+        } else {
             $expr = "<? if(is_array({$math[1]})===true){foreach({$math[1]} as {$math[2]} => {$math[3]}){ ?>";
         }
         return $this->preg__stripvtags($expr);
     }
 
-    protected function preg__template($math)
-    {
+    protected function preg__template($math) {
         $lf = $math[2];
         if (is_string($math) === false)
             $math = trim($math[1]);
@@ -1070,8 +1351,7 @@ class Qstyle
         return false;
     }
 
-    protected function preg__language($math)
-    {
+    protected function preg__language($math) {
         if (is_string($math) === false) {
             $math = $math[1];
             return $this->preg__base("<?php echo \$this->preg__language('$math'); ?>");
@@ -1090,43 +1370,44 @@ class Qstyle
         }
     }
 
-    protected function preg__const($math)
-    {
+    protected function preg__const($math) {
         if (strpos($math[2], '$') !== false) {
             $math[2] = strtr($math[2], array('$' => 'Qstyle~~<<~~'));
         }
 
         if ($math[2]) {
             $returnstr = $math[1] . str_replace("\\\"", "\"", preg_replace_callback("/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\]/s", function ($s) {
-                    if ($s[1]) {
-                        if (preg_match('/[a-z]+/s', $s[1]) > 0) {
-                            return "['{$s[1]}']";
-                        } else {
-                            return "[{$s[1]}]";
-                        }
+                if ($s[1]) {
+                    if (preg_match('/[a-z]+/s', $s[1]) > 0) {
+                        return "['{$s[1]}']";
+                    } else {
+                        return "[{$s[1]}]";
                     }
-                }, $math[2]));
+                }
+            }, $math[2]));
 
             return '<?=isset(' . $returnstr . ') && ' . $returnstr . '?>';
         }
     }
 
-    protected function preg__var($math)
-    {
-        if (!is_string($math))
-            $math = $math[1];
-
-        $returnstr = '';
-        if ($math) {
-            $math = trim(trim($math), '<>?=');
-            $varname = "<?={$math}?>";
-            $returnstr = str_replace("\\\"", "\"", preg_replace("/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\]/s", "['\\1']", $varname));
+    protected function preg__var($math) {
+        if (!is_string($math)) {
+            $math = trim($math[1]);
         }
-        return $returnstr;
+
+        if (!$math) return '';
+
+        $math = trim(trim($math), '<>?=');
+
+        // 处理点语法
+        if (strpos($math, '.') !== false) {
+            $math = $this->__parse_dot_notation($math);
+        }
+
+        return "<?php echo isset($math) ? $math : ''; ?>";
     }
 
-    protected function preg__base($math)
-    {
+    protected function preg__base($math) {
         if (is_string($math) === false)
             $math = $math[0];
         if ($math) {
@@ -1135,8 +1416,7 @@ class Qstyle
         }
     }
 
-    protected function preg__debase($math)
-    {
+    protected function preg__debase($math) {
         if (is_string($math) === false)
             $math = $math[1];
         $returnstr = '';
@@ -1146,8 +1426,7 @@ class Qstyle
         }
     }
 
-    protected function preg__stripvtags($math)
-    {
+    protected function preg__stripvtags($math) {
         if (is_string($math) === false)
             $math = $math[1];
         $returnstr = '';
@@ -1157,8 +1436,7 @@ class Qstyle
         return $returnstr;
     }
 
-    protected function preg__input($math)
-    {
+    protected function preg__input($math) {
         $inputvar = trim($math[0]);
         $type = trim($math[1]);
         if (stripos($inputvar, 'id=') === false) {
@@ -1171,8 +1449,7 @@ class Qstyle
         return $inputvar;
     }
 
-    protected function preg__contents($math)
-    {
+    protected function preg__contents($math) {
         static $savearray = array();
         $filename = trim($math[1]);
         if ($savearray[$filename] >= 2) {
@@ -1197,8 +1474,7 @@ class Qstyle
         return '';
     }
 
-    protected function preg__transamp($math)
-    {
+    protected function preg__transamp($math) {
         $s = trim($math[0]);
         if ($s) {
             $s = str_replace('&', '&amp;', $s);
@@ -1208,8 +1484,7 @@ class Qstyle
         }
     }
 
-    protected function preg__stripscriptamp($math)
-    {
+    protected function preg__stripscriptamp($math) {
         $s = trim($math[1]);
         if ($s) {
             $s = str_replace('&amp;', '&', $s);
@@ -1218,8 +1493,7 @@ class Qstyle
         return false;
     }
 
-    protected function preg__stripblock($math)
-    {
+    protected function preg__stripblock($math) {
         $var = $math[1];
         $text = trim($math[2]);
         if ($var && $text)
@@ -1227,8 +1501,7 @@ class Qstyle
         return '';
     }
 
-    protected function preg__debug($mess, $cls = E_NOTICE)
-    {
+    protected function preg__debug($mess, $cls = E_NOTICE) {
         if (($this->templates_isdebug || $cls === true) && $mess) {
             $mess = htmlspecialchars($mess);
             if ($cls === true || in_array($cls, array('0', E_NOTICE)) === true) {
@@ -1243,8 +1516,7 @@ class Qstyle
     }
 
     //公共方法: 删除模板缓存,假如不传入参数, 将默认删除缓存目录的所有文件.;
-    public function cache_delete($path = null)
-    {
+    public function cache_delete($path = null) {
         if ($path === null) {
             $path = $this->templates_cache;
             $file_arr = scandir($path);
@@ -1263,8 +1535,7 @@ class Qstyle
         }
     }
 
-    public function __destruct()
-    {
+    public function __destruct() {
         if ($this->templates_isdebug) {
             $this->templates_debug[]['Notice'] = 'Qstyle 所有工作已经结束.....';
 
@@ -1282,7 +1553,7 @@ class Qstyle
                     $newarrr[] = array('Notice' => 'block解析数据: ' . count($this->templates_blockreplace));
                     $newarrr[] = array('Notice' => "\n");
 
-                    $newarrr[] = array('Notice' => "模板更新次数: " . $this->templates_update);
+                    $newarrr[] = array('Notice' => "模板更新数: " . $this->templates_update);
                     $newarrr[] = array('Notice' => "加载视图次数: " . $this->templates_viewcount);
                     $newarrr[] = array('Notice' => "写入文件次数: " . $this->templates_writecount);
                     $newarrr[] = array('Notice' => "全局替换次数: " . count($this->templates_replace));
@@ -1314,9 +1585,28 @@ class Qstyle
                         $val = '<br />';
                         $clstr = '';
                     }
-                    echo('<div style="background-color: #498BBC; text-align: left; border-bottom: 1px solid #F2F8FB; padding: 2px 6px; font-size:13px; color: white;">' . $clstr . ' ' . $val . '</div>');
+                    echo ('<div style="background-color: #498BBC; text-align: left; border-bottom: 1px solid #F2F8FB; padding: 2px 6px; font-size:13px; color: white;">' . $clstr . ' ' . $val . '</div>');
                 }
             }
         }
+    }
+
+    // 新增辅助方法：处理点语法
+    protected function __parse_dot_notation($var) {
+        if (strpos($var, '.') !== false) {
+            $parts = explode('.', trim($var));
+            $varName = array_shift($parts);
+            $result = $varName;
+            foreach ($parts as $part) {
+                $part = trim($part);
+                if (is_numeric($part)) {
+                    $result .= "[$part]";
+                } else {
+                    $result .= "['$part']";
+                }
+            }
+            return $result;
+        }
+        return $var;
     }
 }

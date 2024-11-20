@@ -7,6 +7,7 @@ if (!defined('IS_CLI')) {
     include dirname(__DIR__) . "/core/base.php";  
     g('IP', ip());
     g('POST', $_POST);
+    g('RAW', file_get_contents('php://input'));
     g('GET', $_GET);
     g('FILES', $_FILES);
     g('SESSION', $_SESSION);
