@@ -302,7 +302,7 @@ if (!function_exists('input')) {
                 (is_callable($filter) ? call_user_func($filter, $params[$key]) : $params[$key]) :
                 $default_value;
         } else {
-            $find = g('_' . strtoupper($method));
+            $find = g(strtoupper($method));
             if ($find && isset($find[$key])) {
                 return is_callable($filter) ? call_user_func($filter, $find[$key]) : $find[$key];
             }
@@ -400,7 +400,7 @@ if (!function_exists('addToQueue')) {
         static $Queue;
         static $queue_key;
         $queue_key = $queue_key ? $queue_key : str_replace(['-', '.', '*'], '_', gethostname() . '_QUEUES');
-        console('QUEUE KEY :' . $queue_key);
+        // console('QUEUE KEY :' . $queue_key);
 
         if (!$Queue) {
             /**
