@@ -9,9 +9,8 @@ use GatewayWorker\BusinessWorker;
  * 主要是处理 onConnect onMessage onClose 三个方法
  * onConnect 和 onClose 如果不需要可以不用实现并删除
  */
-class SocketEvent
-{
-    private const APP_SOCKET_EVENT_PATH = '/service/AppSocketEvent.php';
+class SocketEvent {
+    private const APP_SOCKET_EVENT_PATH = '/AppSocketEvent.php';
     private static array $socket_apps = [];
 
     public static function onWorkerStart(BusinessWorker $businessWorker) {
@@ -66,17 +65,19 @@ class SocketEvent
 
     private static function initSocketApps() {
         if (empty(self::$socket_apps)) {
-            self::$socket_apps = array_filter(scandir(APP_PATH), fn($item) =>
+            self::$socket_apps = array_filter(
+                scandir(APP_PATH),
+                fn($item) =>
                 !in_array($item, ['.', '..']) &&
-                is_dir(APP_PATH . $item) &&
-                file_exists(APP_PATH . $item . self::APP_SOCKET_EVENT_PATH)
+                    is_dir(APP_PATH . $item) &&
+                    file_exists(APP_PATH . $item . self::APP_SOCKET_EVENT_PATH)
             );
         }
     }
 
     private static function callAppMethod(string $method, array $params) {
         foreach (self::$socket_apps as $app) {
-            $className = "app\\{$app}\\service\\AppSocketEvent";
+            $className = "app\\{$app}\\AppSocketEvent";
             if (method_exists($className, $method)) {
                 call_user_func_array([$className, $method], $params);
             }
@@ -97,4 +98,3 @@ class SocketEvent
         console($message);
     }
 }
-
