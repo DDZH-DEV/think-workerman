@@ -74,7 +74,7 @@ class WebServer {
         $this->initGlobals($connection, $request);
 
         $uri = $request->uri();
-        $path = parse_url($uri, PHP_URL_PATH);
+        $path = parse_url($uri, PHP_URL_PATH) ?? '/';
         $file = PUBLIC_PATH . ltrim($path, '/');
 
         if ($path === '/') {
@@ -88,8 +88,8 @@ class WebServer {
                 $file = $indexFile;
             }
         }
-
         if (is_file($file)) {
+
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
                 $this->executePhpFile($connection, $file, $request);
             } else {
@@ -177,9 +177,8 @@ class WebServer {
         // 获取请求的 URI 并移除查询字符串
         $uri = $server['REQUEST_URI'];
         $path = parse_url($uri, PHP_URL_PATH);
-
-        // 检查是否是根目录
-        if ($path === '/') {
+        // 检查是否是根目录或以 /index.php 开头
+        if ($path === '/' || strpos($path, '/index.php') === 0) {
             // 根目录执行路由
             self::executeRoute($connection, $object, $request, $match);
             return;
@@ -187,6 +186,7 @@ class WebServer {
 
         // 文件直接输出
         $file = PUBLIC_PATH . ltrim($path, '/');
+
 
         if (file_exists($file) && is_file($file)) {
             $object = $object ?: new self();
@@ -201,7 +201,6 @@ class WebServer {
 
     private static function executeRoute($connection, $object, $request, $match) {
         $class = $match['target'];
-
         if (class_exists($class) && method_exists($class, $match['action'])) {
             g('MODULE', $match['module']);
             g('CONTROLLER', $match['controller']);
@@ -280,6 +279,7 @@ class WebServer {
     }
 
     protected function handleFileRequest($connection, $file, $request) {
+
         $mimeTypes = [
             'css' => 'text/css',
             'js' => 'application/javascript',
@@ -294,14 +294,28 @@ class WebServer {
 
         if (file_exists($file)) {
             $content = file_get_contents($file);
-            $response = new Response(200, [
-                'Content-Type' => $mimeType,
-                'Content-Length' => strlen($content),
-            ], $content);
-            $connection->send($response);
+
+            // 判断是否在 CLI 模式下
+            if (PHP_SAPI === 'cli' && $connection) {
+                $response = new Response(200, [
+                    'Content-Type' => $mimeType,
+                    'Content-Length' => strlen($content),
+                ], $content);
+                $connection->send($response);
+            } else {
+                // 非 CLI 模式，直接输出内容
+                header('Content-Type: ' . $mimeType);
+                header('Content-Length: ' . strlen($content));
+                echo $content;
+            }
         } else {
-            $response = new Response(404, [], 'File not found');
-            $connection->send($response);
+            if (PHP_SAPI === 'cli' && $connection) {
+                $response = new Response(404, [], 'File not found');
+                $connection->send($response);
+            } else {
+                header("HTTP/1.1 404 Not Found");
+                echo 'File not found';
+            }
         }
     }
 

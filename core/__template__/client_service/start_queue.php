@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of workerman.
  *
@@ -28,13 +29,13 @@ $worker->count = config('queue.count');
 
 $worker->onWorkerStart = function () {
 
-    $queue_key=str_replace(['-','.','*'],'_',gethostname().'_QUEUES');
+    $queue_key = str_replace(['-', '.', '*'], '_', gethostname() . '_QUEUES');
 
     static $Queue;
 
-    if(!$Queue){
-        $_redis=new \Redis();
-        $_redis->connect(config('queue.host'),config('queue.port'));
+    if (!$Queue) {
+        $_redis = new \Redis();
+        $_redis->connect(config('queue.host'), config('queue.port'));
         $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
         $Queue = new \Phive\Queue\RedisQueue($_redis);
     }
@@ -42,12 +43,12 @@ $worker->onWorkerStart = function () {
 
     while (true) {
 
-        while($Queue->count()>0){
+        while ($Queue->count() > 0) {
 
             try {
                 $row = $Queue->pop();
-            }catch (\Exception $e){
-                console($e->getMessage(),'error');
+            } catch (\Exception $e) {
+                console($e->getMessage(), 'error');
                 sleep(10);
                 break;
             }
@@ -57,9 +58,9 @@ $worker->onWorkerStart = function () {
 
             console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
             //自定义的回调方法
-            if(isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])){
-                call_user_func($task['_callback'],$task);
-            }else{
+            if (isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])) {
+                call_user_func($task['_callback'], $task);
+            } else {
                 switch ($task['_type']) {
                     case 'test':
                         console('test');
@@ -73,9 +74,8 @@ $worker->onWorkerStart = function () {
         }
 
 
-        usleep(500);
+        sleep(1);
     }
-
 };
 
 // 如果不是在根目录启动，则运行runAll方法

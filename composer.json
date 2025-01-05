@@ -1,6 +1,6 @@
 {
     "require": {
-        "workerman/workerman": "5.0.0-beta.7",
+        "workerman/workerman": "5.0.0-rc.3",
         "workerman/gateway-worker": "*",
         "workerman/gatewayclient": "*", 
         "workerman/crontab": "^1.0",
