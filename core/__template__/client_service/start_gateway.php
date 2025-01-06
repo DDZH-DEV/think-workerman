@@ -32,7 +32,7 @@ $gateway->startPort = config('gateway.start_port');
 $gateway->registerAddress = config('register.address');
 
 // 心跳间隔
-$gateway->pingInterval = 25;
+$gateway->pingInterval = 60;
 // 25秒内客户端不发来任何消息则认为客户端下线
 $gateway->pingNotResponseLimit = 1;
 

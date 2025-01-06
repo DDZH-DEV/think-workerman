@@ -4,7 +4,7 @@
         "workerman/gateway-worker": "*",
         "workerman/gatewayclient": "*", 
         "workerman/crontab": "^1.0",
-        "bardoqi/php-hive-queue": "*",
+        
         "jbzoo/event": "^4.0.1",
         "topthink/think-orm": "*",
         "topthink/think-cache": "*",
@@ -12,6 +12,7 @@
 
         "wikimedia/minify": "*",
         "zoujingli/wechat-developer": "^1.2",
+	"ddzh-dev/php-hive-queue": "1.0.x-dev",
         "webman/captcha": "*"
     },
     "autoload": {

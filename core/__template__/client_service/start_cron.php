@@ -14,6 +14,7 @@ date_default_timezone_set('PRC');
 
 $worker->onWorkerStart = function ($worker) {
     $app_crons = glob(APP_PATH . '*/cron.php');
+    console('Found cron files: ' . implode(', ', $app_crons), 'info');
 
     if ($app_crons) {
         array_map(function ($crons_file) {
@@ -23,6 +24,8 @@ $worker->onWorkerStart = function ($worker) {
                     if (is_callable($cron['callback'])) {
                         console('Add CronJob ' . $cron['name'], 'success');
                         new Crontab($cron['time'], $cron['callback']);
+                    } else {
+                        console('Callback not callable for ' . $cron['name'], 'error');
                     }
                 }, $crons);
             }

@@ -7,7 +7,7 @@
  * For full copyright and license information, please see the MIT-LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @author walkor<walkor@workerman.net>
+
  * @copyright walkor<walkor@workerman.net>
  * @link http://www.workerman.net/
  * @license http://www.opensource.org/licenses/mit-license.php MIT License
@@ -47,30 +47,39 @@ $worker->onWorkerStart = function () {
 
             try {
                 $row = $Queue->pop();
+
+                if (empty($row)) {
+                    sleep(1);
+                    continue;
+                }
+
+                $task = json_decode($row, true);
+
+                console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
+                //自定义的回调方法
+                if (isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])) {
+                    call_user_func($task['_callback'], $task);
+                } else {
+                    switch ($task['_type']) {
+                        case 'test':
+                            console('test');
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                flush();
+            } catch (\Phive\Queue\NoItemAvailableException $e) {
+                // 队列为空时的特殊处理
+                sleep(1);
+                break;
             } catch (\Exception $e) {
-                console($e->getMessage(), 'error');
+                // 其他异常的处理
+                console('[ERROR]: ' . $e->getMessage());
                 sleep(10);
                 break;
             }
-
-
-            $task = json_decode($row, true);
-
-            console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
-            //自定义的回调方法
-            if (isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])) {
-                call_user_func($task['_callback'], $task);
-            } else {
-                switch ($task['_type']) {
-                    case 'test':
-                        console('test');
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            flush();
         }
 
 
