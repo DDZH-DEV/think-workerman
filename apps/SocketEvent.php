@@ -50,7 +50,7 @@ class SocketEvent {
      * @param int $client_id 连接id
      */
     public static function onClose($client_id) {
-        self::log('socket client onClose : ' . $client_id);
+        self::log('socket client onClose : ' . $client_id, 'error');
         self::cache('socket_request_' . $client_id, null);
         self::callAppMethod('onClose', [$client_id]);
     }
@@ -93,8 +93,8 @@ class SocketEvent {
         // 实现缓存逻辑
     }
 
-    private static function log($message) {
+    private static function log($message, $level = 'info') {
         // 实现日志逻辑
-        console($message);
+        console($message, $level);
     }
 }

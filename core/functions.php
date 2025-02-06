@@ -141,7 +141,7 @@ if (!function_exists('json')) {
         }
         if (defined('FPM_MODE')) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
-            return throw new Exception('jump_exit');
+            throw new Exception('jump_exit');
         }
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
         throw new Exception('jump_exit');

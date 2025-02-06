@@ -42,12 +42,18 @@ $worker->onWorkerStart = function () {
 
 
     while (true) {
+        try {
+            $count = $Queue->count();
+        } catch (\Exception $e) {
+            console('[ERROR]: Failed to get queue count: ' . $e->getMessage());
+            sleep(1);
+            continue;
+        }
 
-        while ($Queue->count() > 0) {
-
+        if ($count > 0) {
             try {
                 $row = $Queue->pop();
-
+                
                 if (empty($row)) {
                     sleep(1);
                     continue;
@@ -71,18 +77,15 @@ $worker->onWorkerStart = function () {
 
                 flush();
             } catch (\Phive\Queue\NoItemAvailableException $e) {
-                // 队列为空时的特殊处理
                 sleep(1);
-                break;
+                continue;
             } catch (\Exception $e) {
-                // 其他异常的处理
                 console('[ERROR]: ' . $e->getMessage());
                 sleep(10);
-                break;
+                continue;
             }
         }
-
-
+        
         sleep(1);
     }
 };
