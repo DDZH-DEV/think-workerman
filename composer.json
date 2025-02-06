@@ -8,8 +8,7 @@
         "jbzoo/event": "^4.0.1",
         "topthink/think-orm": "*",
         "topthink/think-cache": "*",
-        "topthink/think-log": "*",
-
+        "topthink/think-log": "^2.0.1",
         "wikimedia/minify": "*",
         "zoujingli/wechat-developer": "^1.2",
 	"ddzh-dev/php-hive-queue": "1.0.x-dev",
