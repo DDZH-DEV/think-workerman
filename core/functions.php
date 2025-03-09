@@ -121,10 +121,9 @@ if (!function_exists('json')) {
      * 前端json
      * @param $data
      * @param $status
-     * @return string json
+     * @return void
      */
     function json($data, $code = 200, $msg = null, $debug = []) {
-        //p($msg);
         if (is_string($data) && $msg === null) {
             $msg = $data;
             $data = '';
@@ -139,12 +138,10 @@ if (!function_exists('json')) {
                 'msg' => $msg
             ];
         }
-        if (defined('FPM_MODE')) {
-            echo json_encode($result, JSON_UNESCAPED_UNICODE);
-            throw new Exception('jump_exit');
-        }
+        
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
-        throw new Exception('jump_exit');
+        
+        // throw new \system\JumpException('json_response');
     }
 }
 
@@ -228,10 +225,10 @@ if (!function_exists('session')) {
     /**
      * session快捷操作
      * @param string $name
-     * @param string $value
+     * @param mixed $value
      * @return array|bool|mixed
      */
-    function session($name = '', $value = '') {
+    function session($name = '', $value='') {
         return data($name, $value, 'SESSION');
     }
 }
@@ -488,7 +485,7 @@ if (!function_exists('url')) {
         if ($domain === true) {
             $server = g("SERVER");
             $domain = ($server['REQUEST_SCHEME'] ?: 'http') . '://' . $server['HTTP_HOST'] . '///';
-        }
+        } 
         return preg_replace("/\/{3,}/", '/', '///' . $domain . app('router')->generate($name, $params));
     }
 }

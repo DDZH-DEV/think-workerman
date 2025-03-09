@@ -11,7 +11,8 @@ use Workerman\Protocols\Http\Response;
 use Workerman\Protocols\Http\Session;
 
 define("IS_LOW_WORKERMAN", version_compare(Worker::VERSION, '3.5.3', '<'));
-
+class JumpException extends \Exception {
+}
 class WebServer {
     protected $worker;
     public static $debug = false;
@@ -214,11 +215,12 @@ class WebServer {
                 ob_end_clean();
             }
             ob_start();
+            
+           
             try {
                 call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
             } catch (Exception $e) {
-
-                if ($e->getMessage() !== 'jump_exit') {
+                if (!($e instanceof \system\JumpException)) {
                     if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
                         !IS_CLI && die();
@@ -226,8 +228,8 @@ class WebServer {
                     Debug::log_exception($e);
                 }
             }
-
-
+ 
+ 
             self::response($connection, $request);
         } else {
             $message = strpos(g('SERVER')['REQUEST_URI'], '.php') !== false ?
@@ -247,7 +249,7 @@ class WebServer {
 
     protected static function response($connection, $request) {
         $headers = g('HEADER') ?: [];
-        $cookies = g('COOKIE') ?: [];
+        $cookies = g('COOKIE') ?: []; 
         $_SESSION = g('SESSION') ?: [];
 
         if (PHP_SAPI === 'cli') {
