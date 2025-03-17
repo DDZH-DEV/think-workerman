@@ -140,8 +140,7 @@ if (!function_exists('json')) {
         }
         
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
-        
-        // throw new \system\JumpException('json_response');
+         
     }
 }
 
@@ -528,7 +527,7 @@ function assets($type, $act_type = 'add') {
  * @param $name
  * @param $params
  * @param $single
- * @return void
+ * @return mixed
  */
 function hook($name = '', $params = [], $single = false) {
     $return = [];

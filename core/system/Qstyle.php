@@ -792,7 +792,18 @@ class Qstyle
     // TODO: 核心代码开始
     //内部函数: 模板语法处理替换
     protected function __parse_html($template)
-    {
+    {   
+
+        
+        // 在preg__parse方法中添加对{php}标签的处理
+        $template = preg_replace_callback(
+            '/\{php\}(.*?)\{\/php\}/s',
+            function($matches) {
+                return "<?php " . trim($matches[1]) . " ?>";
+            },
+            $template
+        );
+        
         // 首先处理switch结构
         $template = preg_replace_callback(
             "/\{switch\s+(.+?)\}([\s\S]*?)\{\/switch\}/is",
@@ -808,80 +819,44 @@ class Qstyle
         $template = preg_replace_callback(
             '/\{(\$[a-zA-Z0-9_\[\]\'\".]+)(?:\.[a-zA-Z0-9_]+)?\s*\?\s*date\([\'\"](Y\-m\-d\s+H\s*:\s*i(?:\s*:\s*s)?)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\".]+(?:\.[a-zA-Z0-9_]+)?)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/s',
             function ($matches) {
-                // 处理点语法的变量
-                $condition_var = $matches[1];
-                if (strpos($condition_var, '.') !== false) {
-                    $parts = explode('.', $condition_var);
-                    $condition_var = $parts[0] . "['" . $parts[1] . "']";
-                }
-
-                $timestamp_var = $matches[3];
-                if (strpos($timestamp_var, '.') !== false) {
-                    $parts = explode('.', $timestamp_var);
-                    $timestamp_var = $parts[0] . "['" . $parts[1] . "']";
-                }
-
-                $date_format = preg_replace('/\s+/', '', $matches[2]);  // 移除日期格式中的多余空格
-                $false_value = $matches[4];    // 默认值
-
-                return "<?php echo isset($condition_var) && $condition_var ? date('$date_format', $timestamp_var) : '$false_value'; ?>";
-            },
-            $template
-        );
-
-        // 1. 首先处理带 date() 函数的特殊三元表达式
-        $template = preg_replace_callback(
-            '/\{(\$[a-zA-Z0-9_\[\]\'\"]+)\s*\?\s*date\([\'\"](Y\-m\-d\s+H\s*:\s*i(?:\s*:\s*s)?)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\"]+)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/s',
-            function ($matches) {
-                $condition_var = $matches[1];  // $vo['expire_time']
-                $date_format = preg_replace('/\s+/', '', $matches[2]);  // 移除日期格式中的多余空格
-                $timestamp_var = $matches[3];  // $vo['expire_time']
-                $false_value = $matches[4];    // 永久
-
-                return "<?php echo isset($condition_var) && $condition_var ? date('$date_format', $timestamp_var) : '$false_value'; ?>";
-            },
-            $template
-        );
-
-        // 修改处理日期函数的三元运算符
-        $template = preg_replace_callback(
-            '/\{(\$[a-zA-Z0-9_\.]+)\.([a-zA-Z0-9_]+)\s*\?\s*date\([\'\"](.*?)[\'\"],\s*\$[a-zA-Z0-9_\.]+\.[a-zA-Z0-9_]+\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/',
-            function ($matches) {
-                $var = $matches[1];           // $order
-                $field = $matches[2];         // pay_time 
-                $format = $matches[3];        // Y-m-d H:i:s
-                $default = $matches[4];       // -
-
-                // 构建数组访问形式
-                $condition = $var . "['" . $field . "']";
-
-                // 确保 date() 函数作为一个完整的函数调用
-                return "<?php echo isset($condition) && $condition ? date('$format', $condition) : '$default'; ?>";
-            },
-            $template
-        );
-
-        // 2. 然后再处理日期函数的三元运算符
-        $template = preg_replace_callback(
-            '/\{(\$[a-zA-Z0-9_\[\]\'\"]+)\s*\?\s*date\([\'\"](Y\-m\-d\s+H:i:s)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\"]+)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/',
-            function ($matches) {
-                $condition = $matches[1];    // 已经被转换过的变量
-                $format = $matches[2];       // 日期格式
-                $timestamp = $matches[3];    // 已经被转换过的变量
-                $default = $matches[4];      // 默认值
-
-                return sprintf(
-                    '<?php echo isset(%s) && %s ? date(\'%s\', %s) : \'%s\'; ?>',
-                    $condition,
-                    $condition,
-                    $format,
-                    $timestamp,
-                    $default
+                return $this->__parse_date_expression(
+                    $matches[1],  // condition_var
+                    $matches[3],  // timestamp_var
+                    $matches[2],  // format
+                    $matches[4]   // default_value
                 );
             },
             $template
         );
 
+        // 处理简单形式的日期表达式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\[\]\'\"]+)\s*\?\s*date\([\'\"](Y\-m\-d\s+H:i:s)[\'\"]\s*,\s*(\$[a-zA-Z0-9_\[\]\'\"]+)\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/s',
+            function ($matches) {
+                return $this->__parse_date_expression(
+                    $matches[1],  // condition_var
+                    $matches[3],  // timestamp_var
+                    $matches[2],  // format
+                    $matches[4]   // default_value
+                );
+            },
+            $template
+        );
+
+        // 处理点语法形式的日期表达式
+        $template = preg_replace_callback(
+            '/\{(\$[a-zA-Z0-9_\.]+)\.([a-zA-Z0-9_]+)\s*\?\s*date\([\'\"](.*?)[\'\"],\s*\$[a-zA-Z0-9_\.]+\.[a-zA-Z0-9_]+\)\s*:\s*[\'\"]([^\}]+)[\'\"]\}/',
+            function ($matches) {
+                $condition_var = $matches[1] . "['" . $matches[2] . "']";  // 转换点语法为数组访问
+                return $this->__parse_date_expression(
+                    $condition_var,
+                    $condition_var,  // 在这种情况下，条件变量和时间戳变量相同
+                    $matches[3],     // format
+                    $matches[4]      // default_value
+                );
+            },
+            $template
+        );
 
         // 原有的解析逻辑继续...
         $this->preg__debug('模板解析开始... 内容共计: ' . strlen($template) . ' 字节');
@@ -1136,6 +1111,7 @@ $template = preg_replace_callback(
             array($this, '__parse_dot_notation'),
             $template
         );
+
 
 
 
@@ -1751,4 +1727,59 @@ $template = preg_replace_callback(
             $this->__process_ternary_value($true_value, true) . " : " .
             $this->__process_ternary_value($false_value, true) . "; ?>";
     }
+
+    // 统一处理日期格式化的函数
+    protected function __parse_date_expression($condition_var, $timestamp_var, $format, $default_value) {
+        // 处理点语法的变量
+        if (strpos($condition_var, '.') !== false) {
+            $parts = explode('.', $condition_var);
+            $condition_var = $parts[0] . "['" . $parts[1] . "']";
+        }
+
+        if (strpos($timestamp_var, '.') !== false) {
+            $parts = explode('.', $timestamp_var);
+            $timestamp_var = $parts[0] . "['" . $parts[1] . "']";
+        }
+
+        // 标准化日期格式（移除多余空格）
+        $format = preg_replace('/\s+/', '', $format);
+
+        return "<?php echo isset($condition_var) && $condition_var ? date('$format', $timestamp_var) : '$default_value'; ?>";
+    }
+
+    // 公共方法: 获取模板渲染后的内容
+    public function fetch($PHPnew_file_name)
+    {
+        ob_start();
+        try {
+            // 获取模板内容
+            $html_array = $this->__get_path($PHPnew_file_name);
+            
+            // 检查是否需要更新缓存
+            if ($this->__check_update($html_array) === false) {
+                $template = $this->preg__file($html_array['tpl']);
+                $template = $this->__parse_html($template);
+                $this->preg__file($html_array['cache'], $template, true);
+                $this->templates_update++;
+            }
+            
+            // 解析变量
+            $this->__parse_var(true);
+            extract($this->templates_assign);
+            
+            // 包含缓存文件
+            if (isset($html_array['cache'])) {
+                include $html_array['cache'];
+            }
+            
+            // 获取输出内容
+            $content = ob_get_clean();
+            echo $content;
+        } catch (\Exception $e) {
+            ob_end_clean();
+            throw $e;
+        }
+    }
+
+ 
 }

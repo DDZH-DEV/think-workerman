@@ -15,6 +15,11 @@ class Router
     protected $namedRoutes = [];
 
     /**
+     * @var array 存储同一目标的多个路由规则
+     */
+    protected $targetRoutes = [];
+
+    /**
      * @var string Can be used to ignore leading part of the Request URL (if main file lives in subdirectory of host)
      */
     protected $basePath = '';
@@ -70,7 +75,7 @@ class Router
      */
     public function addRoutes($routes)
     {
-        if (!is_array($routes) && !$routes instanceof Traversable) {
+        if (!is_array($routes) && !$routes instanceof \Traversable) {
             throw new \RuntimeException('Routes should be an array or an instance of Traversable');
         }
         foreach ($routes as $route) {
@@ -119,12 +124,30 @@ class Router
             if (isset($this->namedRoutes[$name])) {
                 throw new \RuntimeException("Can not redeclare route '{$name}'");
             }
+            $this->namedRoutes[$name] = $route;
         }
 
         // 始终添加标准化的路由名称
         if (!isset($this->namedRoutes[$standardName])) {
             $this->namedRoutes[$standardName] = $route;
         }
+        
+        // 为同一目标存储多个路由规则
+        if (!isset($this->targetRoutes[$standardName])) {
+            $this->targetRoutes[$standardName] = [];
+        }
+        
+        // 分析路由中的参数
+        preg_match_all('`\[([^:\]]*+):([^:\]]*+)\]`', $route, $matches, PREG_SET_ORDER);
+        $paramTypes = [];
+        foreach ($matches as $match) {
+            $paramTypes[$match[2]] = $match[1];
+        }
+        
+        $this->targetRoutes[$standardName][] = [
+            'route' => $route,
+            'params' => $paramTypes
+        ];
 
         return;
     }
@@ -152,20 +175,76 @@ class Router
     public function generate($routeName, array $params = [])
     {
         $routeName = strtolower($routeName);
-
-        // 检查命名路由是否存在
-        if (!isset($this->namedRoutes[$routeName])) {
-            if (strpos($routeName, '/') !== false) {
-                $standardName = $routeName;
+        $route = null;
+        
+        // 检查是否有多个路由规则指向同一目标
+        if (isset($this->targetRoutes[$routeName]) && count($this->targetRoutes[$routeName]) > 0) {
+            // 根据提供的参数选择最合适的路由规则
+            $bestMatch = null;
+            $bestScore = -1;
+            
+            foreach ($this->targetRoutes[$routeName] as $routeInfo) {
+                $score = 0;
+                $requiredParamsMatched = true;
+                
+                // 1. 检查路由所需的必要参数是否都提供了
+                foreach ($routeInfo['params'] as $paramName => $paramType) {
+                    // 判断参数是否是可选的（路由中包含问号）
+                    $isOptional = strpos($routeInfo['route'], "[{$paramType}:{$paramName}]?") !== false || 
+                                  strpos($routeInfo['route'], "(/[{$paramType}:{$paramName}])?") !== false;
+                    
+                    if (!$isOptional && !isset($params[$paramName])) {
+                        $requiredParamsMatched = false;
+                        break;
+                    }
+                }
+                
+                if (!$requiredParamsMatched) {
+                    continue; // 跳过这个路由，因为缺少必要参数
+                }
+                
+                // 2. 计算参数匹配得分
+                foreach ($params as $key => $value) {
+                    if (isset($routeInfo['params'][$key])) {
+                        $score++;
+                        
+                        // 类型匹配检查：数字参数优先匹配 'i' 类型，字符串优先匹配 '*' 类型
+                        if (is_numeric($value) && $routeInfo['params'][$key] == 'i') {
+                            $score += 2;  // 数字参数匹配整数类型路由
+                        } else if (!is_numeric($value) && $routeInfo['params'][$key] == '*') {
+                            $score += 2;  // 字符串参数匹配通配符类型路由
+                        }
+                    }
+                }
+                
+                // 3. 优先选择参数较少的路由（如果得分相同）
+                $paramCount = count($routeInfo['params']);
+                $score = $score * 10 - $paramCount; // 参数越少越好
+                
+                // 选择得分最高的路由
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestMatch = $routeInfo['route'];
+                }
             }
-
-            if (isset($this->namedRoutes[$standardName])) {
-                $route = $this->namedRoutes[$standardName];
-            } else {
-                return $params ? implode('?', [$routeName, http_build_query($params)]) : $routeName;
+            
+            // 如果找到匹配的路由，使用它
+            if ($bestMatch) {
+                $route = $bestMatch;
             }
-        } else {
+            // 如果没有找到匹配的路由，但有默认路由
+            else if (isset($this->namedRoutes[$routeName])) {
+                $route = $this->namedRoutes[$routeName];
+            }
+        }
+        // 如果没有多个路由规则，使用命名路由
+        else if (isset($this->namedRoutes[$routeName])) {
             $route = $this->namedRoutes[$routeName];
+        }
+        
+        // 如果找不到路由，返回原始名称
+        if (!$route) {
+            return $params ? implode('?', [$routeName, http_build_query($params)]) : $routeName;
         }
 
         $url = $this->basePath . $route;

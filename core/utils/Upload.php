@@ -5,17 +5,13 @@ namespace utils;
 use think\facade\Db;
 
 class Upload
-{
-
-
+{ 
     protected $mime = [
         'image' => ['mime' => ['image/jpeg', 'image/gif', 'image/png'], 'ext' => 'jpg,png,gif,jpeg'],
         'video' => ['mime' => ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/flv', 'video/mpeg', 'video/mpg', 'video/m4v', 'video/webm', 'video/ogg', 'video/3gp', 'video/mkv'], 'ext' => 'mp4,avi,mov,wmv,flv,mpeg,mpg,m4v,webm,ogg,3gp,mkv'],
         'doc' => ['mime' => ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'], 'ext' => 'pdf,doc,docx,xls,xlsx,ppt,pptx'],
-        'audio' => ['mime' => ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/flac', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p'], 'ext' => 'mp3,wav,ogg,m4a,aac,flac,m4b,m4p'],
+        'audio' => ['mime' => ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/flac', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p', 'audio/m4b', 'audio/m4p'], 'ext' => 'mp3,wav,ogg,m4a,aac,flac,m4b,m4p'],
         'zip' => ['mime' => ['application/zip', 'application/x-zip-compressed', 'application/x-7z-compressed', 'application/x-rar-compressed', 'application/x-tar', 'application/x-gzip', 'application/x-bzip2', 'application/x-7z-compressed', 'application/x-rar-compressed', 'application/x-tar', 'application/x-gzip', 'application/x-bzip2'], 'ext' => 'zip,rar,7z,tar,gz,bz2'],
-        'txt' => ['mime' => ['text/plain'], 'ext' => 'txt'],
-        'other' => ['mime' => ['*/*'], 'ext' => '*']
     ];
 
     protected $deny_ext = ['php', 'ext'];
@@ -45,11 +41,16 @@ class Upload
 
     protected $ip;
 
+    static $upload_path = UPLOAD_PATH;
+
+    static $base_path = PUBLIC_PATH ;
+
 
     protected $subdir_rules = [
         '_USER_' => 'getUserDirs',
         '_DATE_' => 'getDateDirs',
         '_FILE_' => 'getFileDirs',
+        '_NULL_' => 'getNullDirs',
     ];
 
     public function __construct($raw = false, $file = null)
@@ -104,7 +105,7 @@ class Upload
 
         $dir = $this->getSubdir($sub_dir_rule);
 
-        $save_path = str_replace(['\\\\', '\\'], ['\\', '/'], UPLOAD_PATH . $save_dir . DIRECTORY_SEPARATOR . $dir);
+        $save_path = str_replace(['\\\\', '\\'], ['\\', '/'], self::$upload_path . $save_dir . DIRECTORY_SEPARATOR . $dir);
 
         if (!is_dir($save_path)) {
             @mkdir($save_path, 0777, true);
@@ -116,7 +117,7 @@ class Upload
         file_put_contents($save_path, $rawString);
 
 
-        $path =  '/' . str_replace(str_replace('\\', '/', PUBLIC_PATH), '', $save_path);
+        $path =  '/' . str_replace(str_replace('\\', '/', self::$base_path), '', $save_path);
 
         $res = [
             'ext' => $ext,
@@ -131,16 +132,16 @@ class Upload
         return $res;
     }
 
-    public $user_id = 0;
+    static $user_id = 0;
 
-    protected $record = false;
+    static $record = false;
     /**
      * 记录
      * @auth false
      */
     protected function record($insert)
     {
-        if ($this->record) {
+        if (self::$record) {
             if (!self::$recordFunc) {
                 $this->defaultRecord($insert);
             } else {
@@ -152,6 +153,7 @@ class Upload
     }
     //自定义记录函数
     static $recordFunc = '';
+    static $recordTable = 'qe_files';
 
     /** 
      * CREATE TABLE `qe_files` (
@@ -173,11 +175,11 @@ class Upload
      */
     protected function defaultRecord($insert)
     {
-        $insert['user_id'] = $this->user_id;
+        $insert['user_id'] = self::$user_id;
         $insert['upload_time'] = time();
         $insert['ip'] = ip();
-        if (!Db::name('qe_files')->where('md5', $insert['md5'])->find()) {
-            Db::name('qe_files')->insert($insert);
+        if (!Db::name(self::$recordTable)->where('md5', $insert['md5'])->find()) {
+            Db::name(self::$recordTable)->insert($insert);
         }
     }
 
@@ -205,13 +207,15 @@ class Upload
      */
     protected function filter($type)
     {
-
+        // 如果是通用文件上传，只需检查是否为危险文件类型
+        if ($type == 'file' || $type == 'files') {
+            return !in_array(strtolower($this->ext), $this->deny_ext);
+        }
+        
+        // 其他特定类型的文件验证保持不变
         $filter = $this->mime[$type];
-
         $mimes = is_string($filter['mime']) ? explode(',', $filter['mime']) : $filter['mime'];
-
         $exts = is_string($filter['ext']) ? explode(',', $filter['ext']) : $filter['ext'];
-
         return in_array($this->ext, $exts) && in_array($this->file_type, $mimes);
     }
 
@@ -250,7 +254,7 @@ class Upload
         // 获取表单上传文件 例如上传了001.jpg
         $dir = $this->getSubdir($sub_dir_rule);
 
-        $save_path = UPLOAD_PATH . $save_dir . DIRECTORY_SEPARATOR . $dir;
+        $save_path = self::$upload_path . $save_dir . DIRECTORY_SEPARATOR . $dir; 
 
         if (!is_dir($save_path)) {
             @mkdir($save_path, 0777, true);
@@ -262,14 +266,14 @@ class Upload
             return false;
         }
 
-        $this->save_full = $save_path . DIRECTORY_SEPARATOR . $this->file_md5 . '.' . $this->ext;
+        $this->save_full = str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $save_path . DIRECTORY_SEPARATOR . $this->file_md5 . '.' . $this->ext); 
 
         $content = is_file($this->tmp_file) ? file_get_contents($this->tmp_file) : $this->tmp_file;
 
         $res = file_put_contents($this->save_full, $content);
 
         if ($res) {
-            $path = '/' . str_replace([PUBLIC_PATH, '\\'], ['', '/'], $this->save_full);
+            $path = '/' . str_replace([self::$base_path, '\\'], ['', '/'], $this->save_full);
             $res = [
                 'ext' => $this->ext,
                 'name' => $this->original_name,
@@ -297,7 +301,9 @@ class Upload
     {
         if (is_numeric($rule)) {
             $hash = md5($rule);
-        } else {
+        } else if($rule == '_NULL_') {
+            return '';
+        } else  {
             $rule = $rule ? $rule : $this->rule;
 
             if (in_array($rule, array_keys($this->subdir_rules))) {
@@ -328,7 +334,7 @@ class Upload
 
     protected function getUserDirs()
     {
-        $hash = md5($this->user_id);
+        $hash = md5(self::$user_id);
         $this->file_md5 = $hash;
         return implode('/', array_slice(str_split($hash, 2), 0, 3));
     }
@@ -342,8 +348,7 @@ class Upload
     {
         return date('Y/m-d', time());
     }
-
-
+ 
 
 
     /**
@@ -371,7 +376,7 @@ class Upload
         // 获取表单上传文件 例如上传了001.jpg
         $dir = $this->getSubdir($sub_dir_rule);
 
-        $save_path = PUBLIC_PATH . 'uploads' . DIRECTORY_SEPARATOR . $save_dir . DIRECTORY_SEPARATOR . $dir;
+        $save_path = self::$base_path . 'uploads' . DIRECTORY_SEPARATOR . $save_dir . DIRECTORY_SEPARATOR . $dir;
 
 
         if (!is_dir($save_path) && @(false == mkdir($save_path, 0777, true))) {
@@ -445,7 +450,7 @@ class Upload
                 'ext' => $this->ext,
                 'type' => $type,
                 'org_name' => $this->original_name,
-                'url' => '/' . str_replace([PUBLIC_PATH, '\\'], ['', '/'], $this->save_full),
+                'url' => '/' . str_replace([self::$base_path, '\\'], ['', '/'], $this->save_full),
                 'md5' => $this->file_md5,
                 'size' => filesize($this->save_full),
             ];

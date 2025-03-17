@@ -24,7 +24,7 @@ class View extends Facade
      */
     protected static function getFacadeClass()
     {
-        return 'system\Qstyle';
+        return 'system\View';
     }
 
     /**
@@ -37,9 +37,6 @@ class View extends Facade
 
         // 重新创建一个新的 Qstyle 实例
         static::$instance = new Qstyle();
-
-        // 如果需要重置 Qstyle 实例的某些属性,可以在这里进行
-        // 例如: static::$instance->resetSomeProperties();
     }
 
     protected static function getFacadeAccessor()
@@ -57,7 +54,7 @@ class View extends Facade
         }
 
         if (!isset(static::$instance)) {
-            static::$instance = new Qstyle();
+            static::$instance = app($name);
         }
 
         return static::$instance;

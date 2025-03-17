@@ -1090,7 +1090,7 @@ class Validate
      */
     public function image($file, $rule)
     {
-        if (!($file instanceof SplFileInfo)) {
+        if (!($file instanceof \SplFileInfo)) {
             return false;
         }
 
@@ -1290,7 +1290,7 @@ class Validate
     {
         if (is_array($value)) {
             $length = count($value);
-        } elseif ($value instanceof File) {
+        } elseif ($value instanceof \SplFileInfo) {
             $length = $value->getSize();
         } else {
             $length = mb_strlen((string) $value);
@@ -1317,7 +1317,7 @@ class Validate
     {
         if (is_array($value)) {
             $length = count($value);
-        } elseif ($value instanceof File) {
+        } elseif ($value instanceof \SplFileInfo) {
             $length = $value->getSize();
         } else {
             $length = mb_strlen((string) $value);
@@ -1337,7 +1337,7 @@ class Validate
     {
         if (is_array($value)) {
             $length = count($value);
-        } elseif ($value instanceof File) {
+        } elseif ($value instanceof \SplFileInfo) {
             $length = $value->getSize();
         } else {
             $length = mb_strlen((string) $value);

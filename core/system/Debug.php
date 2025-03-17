@@ -19,6 +19,10 @@ class Debug
 
         $conf=config('socket_log');
 
+        if(!$conf || !$conf['enable']){
+            return true;
+        }
+
         if (!$message || !$conf['enable']) {
             return true;
         }
