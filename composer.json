@@ -18,8 +18,7 @@
         "psr-4": {
             "app\\": "apps",
             "utils\\": "core/utils/",
-            "system\\": "core/system/",
-            "data\\": "core/system/data/"
+            "system\\": "core/system/"
         }
     },
     "repositories": {

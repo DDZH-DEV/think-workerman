@@ -11,6 +11,11 @@ use think\facade\Log;
 
 class App extends Facade {
     protected static function init() {
+
+        self::init_dir();
+        self::init_error_log();
+        
+        
         //初始化数据库
         app('db')::setConfig(config('database'));
         //缓存设置
@@ -19,9 +24,8 @@ class App extends Facade {
         app('log')::init(config('log'));
 
         app('assets')->config(config('assets'));
-
-        self::init_dir();
-        self::init_error_log();
+ 
+        
     }
 
     /**

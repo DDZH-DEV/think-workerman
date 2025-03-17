@@ -24,7 +24,7 @@ class View extends Facade
      */
     protected static function getFacadeClass()
     {
-        return 'system\View';
+        return 'view';
     }
 
     /**

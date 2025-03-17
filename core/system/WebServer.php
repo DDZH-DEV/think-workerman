@@ -220,7 +220,8 @@ class WebServer {
             try {
                 call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
             } catch (Exception $e) {
-                if (!($e instanceof \system\JumpException)) {
+           
+                if (!($e instanceof \system\JumpException)) { 
                     if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
                         !IS_CLI && die();
