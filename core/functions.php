@@ -144,19 +144,7 @@ if (!function_exists('json')) {
     }
 }
 
-if (!function_exists('slog')) {
-    /**
-     * 发送日志
-     * @param string|array $message
-     * @param string $level
-     * @param string $listen
-     * @param bool $write
-     * @return bool
-     */
-    function slog($message, $level = 'log', $listen = '') {
-        return \system\Debug::slog($message, $level, $listen);
-    }
-}
+ 
 
 if (!function_exists('data')) {
     /**
@@ -339,23 +327,33 @@ if (!function_exists('is_mobile')) {
      * 判断是否是手机
      * @return int
      */
-    function is_mobile($agent) {
-        // returns true if one of the specified mobile browsers is detected
-        // 如果监测到是指定的浏览器之一则返回true
+    function is_mobile($agent = '') {
+        if(!$agent){
+            $agent = g('SERVER')['HTTP_USER_AGENT'];
+        }
+        // 现代移动设备检测正则表达式
+        $regex_match = "/(
+            iphone|ipad|ipod|
+            android|
+            samsung|galaxy|
+            huawei|honor|
+            xiaomi|redmi|poco|
+            oppo|oneplus|realme|
+            vivo|iqoo|
+            meizu|
+            google|pixel|
+            windows phone|
+            mobile safari|
+            chrome\/[.0-9]* mobile|
+            firefox\/[.0-9]* mobile|
+            instagram|
+            fbav|fbsv|
+            line|miui|
+            webos|
+            ucbrowser|
+            weixin|micromessenger
+        )/ix"; // i表示不区分大小写，x表示允许正则表达式中的空白和注释
 
-        $regex_match = "/(nokia|iphone|android|motorola|^mot\-|softbank|foma|docomo|kddi|up\.browser|up\.link|";
-
-        $regex_match .= "htc|dopod|blazer|netfront|helio|hosin|huawei|novarra|CoolPad|webos|techfaith|palmsource|";
-
-        $regex_match .= "blackberry|alcatel|amoi|ktouch|nexian|samsung|^sam\-|s[cg]h|^lge|ericsson|philips|sagem|wellcom|bunjalloo|maui|";
-
-        $regex_match .= "symbian|smartphone|midp|wap|phone|windows ce|iemobile|^spice|^bird|^zte\-|longcos|pantech|gionee|^sie\-|portalmmm|";
-
-        $regex_match .= "jig\s browser|hiptop|^ucweb|^benq|haier|^lct|opera\s*mobi|opera\*mini|320x320|240x320|176x220";
-
-        $regex_match .= ")/i";
-
-        // preg_match()方法功能为匹配字符，既第二个参数所含字符是否包含第一个参数所含字符，包含则返回1既true
         return preg_match($regex_match, strtolower($agent));
     }
 }
@@ -485,7 +483,7 @@ if (!function_exists('url')) {
             $server = g("SERVER");
             $domain = ($server['REQUEST_SCHEME'] ?: 'http') . '://' . $server['HTTP_HOST'] . '///';
         } 
-        return preg_replace("/\/{3,}/", '/', '///' . $domain . app('router')->generate($name, $params));
+        return preg_replace("/\/{3,}/", '/',  $domain . '///' .app('router')->generate($name, $params));
     }
 }
 

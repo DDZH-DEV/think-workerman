@@ -95,8 +95,7 @@ class Dev
             )) {
                 unlink($file);
             }
-        }
-
+        } 
 
         // 生成启动文件
         self::build_start_file();
@@ -120,6 +119,37 @@ class Dev
         }
 
         return $appConfigs;
+    }
+
+    public static function moveStaticFiles()
+    {
+        $appConfigs = self::scanAppConfigs();
+        
+        // 确保目标目录存在
+        $targetDir = ROOT_PATH . 'public' . DIRECTORY_SEPARATOR . 'static';
+        !is_dir($targetDir) && mkdir($targetDir, 0777, true);
+        
+        foreach ($appConfigs as $appName => $config) {
+            // 检查应用是否启用（检查 enable 或 enabled 字段）
+            if (empty($config['enable']) && empty($config['enabled'])) {
+                continue;
+            }
+            
+            // 构建源目录路径
+            $sourceDir = APP_PATH . $appName . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . 'static';
+            
+            // 如果源目录存在，则复制文件
+            if (is_dir($sourceDir)) {
+                // 在目标目录中创建应用专属文件夹
+                $appTargetDir = $targetDir . DIRECTORY_SEPARATOR ;
+                !is_dir($appTargetDir) && mkdir($appTargetDir, 0777, true);
+                
+                // 复制文件
+                self::copy_dir($sourceDir, $appTargetDir);
+            }
+        }
+        
+        return true;
     }
 
     /**
@@ -177,11 +207,7 @@ class Dev
             $files[] = 'cron';
         }
 
-
-        if (strpos($type, 'globaldata') !== false) {
-            $files[] = 'global_data';
-        }
-
+ 
 
         foreach ($files as &$file) {
             $file = "start_" . $file . ".php";

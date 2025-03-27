@@ -11,7 +11,6 @@ use think\facade\Log;
 
 class App extends Facade {
     protected static function init() {
-
         self::init_dir();
         self::init_error_log();
         
