@@ -33,6 +33,7 @@ $worker->onWorkerStart = function () {
     static $client;
 
     // 内存限制和超时配置
+    define('TASK_TIME_CHECK', false);
     define('TASK_TIMEOUT', 3600); // 1小时超时
     define('MEMORY_LIMIT', 1024 * 1024 * 512); // 512MB 内存限制
     define('MEMORY_CHECK_INTERVAL', 300); // 5分钟检查一次内存
@@ -64,40 +65,74 @@ $worker->onWorkerStart = function () {
 
     // 处理任务的回调函数
     $task_handler = function ($task) {
-
-        static $taskStartTime = 0;
-
-        // 记录开始时间
+        // 记录任务开始时间
         $taskStartTime = time();
+        $timeoutTimer = null;
+        
+        // 根据配置决定是否启用任务超时检测
+        if (TASK_TIME_CHECK) {
+            // 创建超时定时器
+            $timeoutTimer = Timer::add(10, function() use ($taskStartTime, &$timeoutTimer, $task) {
+                // 检查任务是否超时
+                if (time() - $taskStartTime > TASK_TIMEOUT) {
+                    console('[QUEUE TIMEOUT]: 任务 "' . ($task['_name_'] ?? 'unknown') . '" 执行超时 (' . TASK_TIMEOUT . '秒)，强制中断', 'warning');
+                    
+                    // 记录超时日志
+                    error_log(sprintf(
+                        "[QUEUE TIMEOUT] Task: %s has been running for %d seconds, execution aborted",
+                        $task['_name_'] ?? 'unknown',
+                        time() - $taskStartTime
+                    ));
+                    
+                    // 清除定时器
+                    if ($timeoutTimer) {
+                        Timer::del($timeoutTimer);
+                        $timeoutTimer = null;
+                    }
+                    
+                    // 尝试中断处理过程
+                    throw new \RuntimeException("Task execution timeout after " . TASK_TIMEOUT . " seconds");
+                }
+            }, [], false);  // 非持久定时器
+        }
 
         try {
             console('[QUEUE TASK]: ' . $task['_name_'] . '|' . date('H:i:s', time())); 
+            
             if (isset($task['_callback_']) && $task['_callback_'] && is_callable($task['_callback_'])) {
                 $callback = $task['_callback_'];
                 unset($task['_callback_'],$task['_name_']);
                 call_user_func($callback, $task);
-            } else {
-                switch ($task['_name_']) {
-                    case 'test':
-                        console('test');
-                        break;
-                    default:
-                        console('[QUEUE]: Unknown task type ' . $task['_name_'], 'error');
-                        break;
-                }
-            }
-
+            } 
             // 清理内存
             gc_collect_cycles();
+            
+            // 任务成功完成，清除超时定时器(如果存在)
+            if (TASK_TIME_CHECK && $timeoutTimer) {
+                Timer::del($timeoutTimer);
+                $timeoutTimer = null;
+            }
+            
         } catch (\Exception $e) {
-            console('[TASK ERROR]: ' . $e->getMessage(), 'error');
-            // 记录错误日志
-            error_log(sprintf(
-                "[QUEUE ERROR] Task: %s, Error: %s, Stack: %s",
-                $task['_name_'] ?? 'unknown',
-                $e->getMessage(),
-                $e->getTraceAsString()
-            ));
+            // 清除超时定时器(如果存在)
+            if (TASK_TIME_CHECK && $timeoutTimer) {
+                Timer::del($timeoutTimer);
+                $timeoutTimer = null;
+            }
+            
+            // 检查是否是任务超时异常
+            if (strpos($e->getMessage(), 'Task execution timeout') !== false) {
+                console('[QUEUE TIMEOUT]: ' . $e->getMessage(), 'warning');
+            } else {
+                console('[TASK ERROR]: ' . $e->getMessage(), 'error');
+                // 记录错误日志
+                error_log(sprintf(
+                    "[QUEUE ERROR] Task: %s, Error: %s, Stack: %s",
+                    $task['_name_'] ?? 'unknown',
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+            }
 
             // 重新抛出异常，让redis-queue处理重试逻辑
             throw $e;
