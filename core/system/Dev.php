@@ -38,27 +38,24 @@ class Dev
             } elseif (strpos($arg, '--only=') === 0) {
                 $onlyProject = substr($arg, 7);
             }
-        } 
-
-        
+        }  
 
         if ($appName && !$onlyProject) {
             return self::initApp($appName, $depends);
-        } else {
-
+        } else { 
             if ($onlyProject) {
                 self::updateAppConfigs($onlyProject);
-            }
-            
+            } 
             return self::initCliFiles();
         }
+
+        self::moveStaticFiles();
     }
 
     public static function initCliFiles()
     {
 
-        $appConfigs = self::scanAppConfigs();
-
+        $appConfigs = self::scanAppConfigs(); 
 
         $from_dir = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__' . DIRECTORY_SEPARATOR . 'client_service';
         $to_dir = ROOT_PATH . 'server';
@@ -90,7 +87,6 @@ class Dev
                     'start_queue.php',
                     'start_timer.php',
                     'start_cron.php',
-                    'start_global_data.php'
                 ]
             )) {
                 unlink($file);
@@ -126,7 +122,7 @@ class Dev
         $appConfigs = self::scanAppConfigs();
         
         // 确保目标目录存在
-        $targetDir = ROOT_PATH . 'public' . DIRECTORY_SEPARATOR . 'static';
+        $targetDir = ROOT_PATH . 'public' . DIRECTORY_SEPARATOR . 'STATICS';
         !is_dir($targetDir) && mkdir($targetDir, 0777, true);
         
         foreach ($appConfigs as $appName => $config) {

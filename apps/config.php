@@ -86,9 +86,15 @@ return [
 
     'queue' => [
         'name' => 'Queue',
-        'count' => 1,
+        'count' => 4,
         'host' => '127.0.0.1',
-        'port' => 6379
+        'port' => 6379,
+        'auth' => '', // Redis密码
+        'db' => 0,    // Redis数据库
+        'max_attempts' => 5,         // 消费失败后最大重试次数
+        'retry_seconds' => 5,        // 重试基础间隔时间
+        'queues' => ['default'], // 需要订阅的队列
+        'default_queue' => 'default' // 默认队列名
     ],
 
     //多个应用时需要修改

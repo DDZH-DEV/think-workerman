@@ -1,16 +1,15 @@
 {
     "require": {
-        "workerman/workerman": "5.0.0-rc.3",
+        "workerman/workerman": "*",
         "workerman/gateway-worker": "*",
         "workerman/gatewayclient": "*", 
-        "workerman/crontab": "^1.0",
-        
-        "jbzoo/event": "^4.0.1",
+        "workerman/crontab": "^1.0", 
+        "workerman/redis-queue": "^1.0",
+        "jbzoo/event": "^4.0.1", 
         "topthink/think-orm": "*",
         "topthink/think-cache": "*",
         "topthink/think-log": "^2.0.1",
-        "wikimedia/minify": "*", 
-	"ddzh-dev/php-hive-queue": "1.0.x-dev", 
+        "wikimedia/minify": "*"
     },
     "autoload": {
         "psr-4": {

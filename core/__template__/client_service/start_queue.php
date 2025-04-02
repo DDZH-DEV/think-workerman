@@ -14,6 +14,8 @@
  */
 
 use \Workerman\Worker;
+use \Workerman\Timer;
+use \Workerman\RedisQueue\Client;
 
 // 自动加载类
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'core/base.php';
@@ -28,121 +30,104 @@ $worker->count = config('queue.count');
 
 
 $worker->onWorkerStart = function () {
-    $queue_key = str_replace(['-', '.', '*'], '_', gethostname() . '_QUEUES');
-    static $Queue;
-    static $isProcessing = false;
-    static $taskStartTime = 0;
-    static $lastMemoryCheck = 0;
-    
+    static $client;
+
+    // 内存限制和超时配置
     define('TASK_TIMEOUT', 3600); // 1小时超时
     define('MEMORY_LIMIT', 1024 * 1024 * 512); // 512MB 内存限制
     define('MEMORY_CHECK_INTERVAL', 300); // 5分钟检查一次内存
 
-    if (!$Queue) {
-        $_redis = new \Redis();
-        $_redis->connect(config('queue.host'), config('queue.port'));
-        $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
-        $Queue = new \Phive\Queue\RedisQueue($_redis);
+    // 获取队列配置
+    $redis_host = config('queue.host', '127.0.0.1');
+    $redis_port = config('queue.port', 6379);
+    $redis_auth = config('queue.auth', '');
+    $redis_db = config('queue.db', 0);
+    $max_attempts = config('queue.max_attempts', 5);
+    $retry_seconds = config('queue.retry_seconds', 5);
+
+    // 构建Redis连接字符串
+    $redis_address = "redis://{$redis_host}:{$redis_port}";
+
+    // 初始化RedisQueue客户端
+    $client = new Client($redis_address, [
+        'auth' => $redis_auth,
+        'db' => $redis_db,
+        'max_attempts' => $max_attempts,
+        'retry_seconds' => $retry_seconds
+    ]);
+
+    // 定义队列名
+    $queue_names = config('queue.queues', ['default']);
+    if (!is_array($queue_names)) {
+        $queue_names = ['default'];
     }
 
-    // 使用定时器替代死循环
-    \Workerman\Timer::add(1, function() use ($Queue, &$isProcessing, &$taskStartTime, &$lastMemoryCheck) {
-        // 检查内存使用情况
-        if (time() - $lastMemoryCheck > MEMORY_CHECK_INTERVAL) {
-            $memory = memory_get_usage(true);
-            if ($memory > MEMORY_LIMIT) {
-                console('[QUEUE]: Memory usage exceeded limit (' . round($memory / 1024 / 1024) . 'MB), restarting worker...', 'warning');
-                Worker::stopAll();
-                return;
-            }
-            $lastMemoryCheck = time();
-        }
+    // 处理任务的回调函数
+    $task_handler = function ($task) {
 
-        // 检查任务是否超时
-        if ($isProcessing && (time() - $taskStartTime > TASK_TIMEOUT)) {
-            console('[QUEUE]: 任务执行超时，强制释放锁', 'error');
-            error_log(sprintf(
-                "[QUEUE TIMEOUT] Task has been running for %d seconds",
-                time() - $taskStartTime
-            ));
-            $isProcessing = false;
-            $taskStartTime = 0;
-            return;
-        }
+        static $taskStartTime = 0;
 
-        // 如果上一个任务还在处理中，直接返回
-        if ($isProcessing) {
-            return;
-        }
+        // 记录开始时间
+        $taskStartTime = time();
 
         try {
-            $count = $Queue->count();
-            
-            if ($count <= 0) {
-                return;
-            }
-
-            $isProcessing = true;
-            $taskStartTime = time();
-            
-            $row = $Queue->pop();
-            
-            if (empty($row)) {
-                $isProcessing = false;
-                $taskStartTime = 0;
-                return;
-            }
-
-            $task = json_decode($row, true);
-            if (!$task) {
-                console('[QUEUE]: Invalid JSON data', 'error');
-                $isProcessing = false;
-                $taskStartTime = 0;
-                return;
-            }
-
-            console('[QUEUE]:' . $task['_type'] . '|' . date('H:i:s', time()));
-            
-            // 使用 try-catch 包装任务执行
-            try {
-                if (isset($task['_callback']) && $task['_callback'] && is_callable($task['_callback'])) {
-                    call_user_func($task['_callback'], $task);
-                } else {
-                    switch ($task['_type']) {
-                        case 'test':
-                            console('test');
-                            break;
-                        default:
-                            console('[QUEUE]: Unknown task type ' . $task['_type'], 'warning');
-                            break;
-                    }
+            console('[QUEUE TASK]: ' . $task['_name_'] . '|' . date('H:i:s', time())); 
+            if (isset($task['_callback_']) && $task['_callback_'] && is_callable($task['_callback_'])) {
+                $callback = $task['_callback_'];
+                unset($task['_callback_'],$task['_name_']);
+                call_user_func($callback, $task);
+            } else {
+                switch ($task['_name_']) {
+                    case 'test':
+                        console('test');
+                        break;
+                    default:
+                        console('[QUEUE]: Unknown task type ' . $task['_name_'], 'error');
+                        break;
                 }
-            } catch (\Exception $e) {
-                console('[TASK ERROR]: ' . $e->getMessage(), 'error');
-                // 记录错误日志
-                error_log(sprintf(
-                    "[QUEUE ERROR] Task: %s, Error: %s, Stack: %s",
-                    $task['_type'],
-                    $e->getMessage(),
-                    $e->getTraceAsString()
-                ));
             }
 
             // 清理内存
             gc_collect_cycles();
-            
-        } catch (\Phive\Queue\NoItemAvailableException $e) {
-            // 队列为空，正常情况
         } catch (\Exception $e) {
-            console('[QUEUE ERROR]: ' . $e->getMessage(), 'error');
+            console('[TASK ERROR]: ' . $e->getMessage(), 'error');
+            // 记录错误日志
             error_log(sprintf(
-                "[QUEUE SYSTEM ERROR] Error: %s, Stack: %s",
+                "[QUEUE ERROR] Task: %s, Error: %s, Stack: %s",
+                $task['_name_'] ?? 'unknown',
                 $e->getMessage(),
                 $e->getTraceAsString()
             ));
-        } finally {
-            $isProcessing = false;
-            $taskStartTime = 0;
+
+            // 重新抛出异常，让redis-queue处理重试逻辑
+            throw $e;
+        }
+    };
+
+    // 订阅所有配置的队列
+    foreach ($queue_names as $queue) {
+        $client->subscribe($queue, $task_handler);
+        console("[QUEUE]: Subscribed to queue: {$queue}");
+    }
+
+    // 消费失败的回调
+    $client->onConsumeFailure(function (\Throwable $exception, $package) {
+        console("[QUEUE FAILURE]: Queue {$package['queue']} consumption failed: " . $exception->getMessage(), 'error');
+
+        // 检查是否是最后一次尝试
+        if ($package['attempts'] >= $package['max_attempts']) {
+            console("[QUEUE FAILURE]: Task in queue {$package['queue']} has failed {$package['attempts']} times and will not be retried.", 'error');
+        }
+
+        return $package;
+    });
+
+    // 定时检查内存使用情况
+    Timer::add(MEMORY_CHECK_INTERVAL, function () {
+        $memory = memory_get_usage(true);
+        if ($memory > MEMORY_LIMIT) {
+            console('[QUEUE]: Memory usage exceeded limit (' . round($memory / 1024 / 1024) . 'MB), restarting worker...', 'warning');
+            Worker::stopAll();
         }
     });
 };

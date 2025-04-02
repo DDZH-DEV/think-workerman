@@ -137,12 +137,17 @@ if (!function_exists('json')) {
                 'code' => $code,
                 'msg' => $msg
             ];
-        }
-        
-        echo json_encode($result, JSON_UNESCAPED_UNICODE);
-         
+        } 
+        echo json_encode($result, JSON_UNESCAPED_UNICODE); 
     }
 }
+
+
+function ret(){
+    if(!IS_CLI){exit;}
+    throw new \system\JumpException('jump_exit');
+}
+
 
  
 
@@ -387,30 +392,103 @@ function staticFix($url) {
 if (!function_exists('addToQueue')) {
     /**
      * 加入处理队列
-     * @param $type
-     * @param $data
+     * @param string $name 任务类型
+     * @param array $data 任务数据
+     * @param int $delay 延迟执行时间(秒)
+     * @param callable|null $callback 回调函数
+     * @return bool
      */
-    function addToQueue($type, $data, $callback = null) {
-        static $Queue;
-        static $queue_key;
-        $queue_key = $queue_key ? $queue_key : str_replace(['-', '.', '*'], '_', gethostname() . '_QUEUES');
-        // console('QUEUE KEY :' . $queue_key);
-
-        if (!$Queue) {
-            /**
-             * @var \Redis $_redis
-             */
-            $_redis = new \Redis();
-            $_redis->connect('127.0.0.1');
-            $_redis->setOption(\Redis::OPT_PREFIX, $queue_key);
-            $Queue = new \Phive\Queue\RedisQueue($_redis);
+    function addToQueue($name, $data=[],  $callback = null,$delay = 0) {
+        static $client;
+        
+        if ($callback instanceof \Closure) {
+            echo 'callback must be a static function';
+            return false;
         }
-        $data['_type'] = $type;
-        $callback && $data['_callback'] = $callback;
 
-        //console('[add_queue]:'.$type.'|'.$queue_key);
-
-        $Queue->push(json_encode($data, JSON_UNESCAPED_UNICODE));
+        if (!$client) {
+            // 获取队列配置
+            $redis_host = config('queue.host', '127.0.0.1');
+            $redis_port = config('queue.port', 6379);
+            $redis_auth = config('queue.auth', '');
+            $redis_db = config('queue.db', 0);
+            $max_attempts = config('queue.max_attempts', 5);
+            $retry_seconds = config('queue.retry_seconds', 5);
+            
+            // 构建Redis连接字符串
+            $redis_address = "redis://{$redis_host}:{$redis_port}";
+            
+            // 如果是Workerman环境，使用客户端
+            if (defined('IS_CLI') && IS_CLI && class_exists('\Workerman\RedisQueue\Client')) {
+                $client = new \Workerman\RedisQueue\Client($redis_address, [
+                    'auth' => $redis_auth,
+                    'db' => $redis_db,
+                    'max_attempts' => $max_attempts,
+                    'retry_seconds' => $retry_seconds
+                ]);
+            } else {
+                // 非Workerman环境使用Redis直接操作
+                $client = new \Redis();
+                $client->connect($redis_host, $redis_port);
+                
+                if ($redis_auth) {
+                    $client->auth($redis_auth);
+                }
+                
+                if ($redis_db > 0) {
+                    $client->select($redis_db);
+                }
+            }
+        }
+        
+        // 队列名称
+        $queue = $data['_queue'] ?? config('queue.default_queue', 'default');
+     
+        if(is_array($data)){
+            unset($data['_queue']);
+        } 
+        // 设置任务类型和回调
+        $data['_name_'] = $name;
+        if ($callback && is_callable($callback)) {
+            $data['_callback_'] = $callback;
+        } 
+        // 发送到队列
+        if ($client instanceof \Redis) {
+            // 非Workerman环境，使用Redis直接发送
+            return redis_queue_send($client, $queue, $data, $delay);
+        } else {
+            // Workerman环境，使用Client发送
+            return $client->send($queue, $data, $delay);
+        }
+    }
+    
+    /**
+     * 在非Workerman环境向队列发送消息
+     * @param \Redis $redis Redis实例
+     * @param string $queue 队列名
+     * @param mixed $data 数据
+     * @param int $delay 延迟时间(秒)
+     * @return bool
+     */
+    function redis_queue_send($redis, $queue, $data, $delay = 0) {
+        $queue_waiting = '{redis-queue}-waiting';
+        $queue_delay = '{redis-queue}-delayed';
+        
+        $now = time();
+        $package_str = json_encode([
+            'id'          => rand(),
+            'time'        => $now,
+            'delay'       => $delay,
+            'attempts'    => 0,
+            'queue'       => $queue,
+            'data'        => $data
+        ]);
+        
+        if ($delay) {
+            return $redis->zAdd($queue_delay, $now + $delay, $package_str);
+        }
+        
+        return $redis->lPush($queue_waiting.$queue, $package_str);
     }
 }
 

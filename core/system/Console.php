@@ -235,4 +235,21 @@ final class Console
 
         return $out;
     }
+
+    /**
+     * Color style for warning messages.
+     * @static
+     * @param $msg
+     * @return string
+     */
+    public static function warning($msg)
+    {
+        $msg = 'Warning: ' . $msg;
+        $space = static::strlen($msg) + 4;
+        $out = static::colorize(str_pad(' ', $space), self::FG_BLACK, self::AT_BOLD, self::BG_YELLOW) . PHP_EOL;
+        $out .= static::colorize('  ' . $msg . '  ', self::FG_BLACK, self::AT_BOLD, self::BG_YELLOW) . PHP_EOL;
+        $out .= static::colorize(str_pad(' ', $space), self::FG_BLACK, self::AT_BOLD, self::BG_YELLOW) . PHP_EOL;
+
+        return $out;
+    }
 }
