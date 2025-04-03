@@ -45,6 +45,10 @@ class Upload
 
     static $base_path = PUBLIC_PATH ;
 
+    static $img_max_width=1000;
+
+    static $img_max_height=1000;
+
 
     protected $subdir_rules = [
         '_USER_' => 'getUserDirs',
@@ -260,7 +264,7 @@ class Upload
             @mkdir($save_path, 0777, true);
         }
 
-        if (in_array($this->ext, ['php', 'exe'])) {
+        if (in_array($this->ext, ['php', 'exe','sh']) || strpos($this->ext,' ')!=false || strpos($this->ext,'　')!=false) {
             // 上传失败获取错误信息
             $this->error = '不允许的文件格式';
             return false;
@@ -270,7 +274,7 @@ class Upload
 
         $content = is_file($this->tmp_file) ? file_get_contents($this->tmp_file) : $this->tmp_file;
 
-        $res = file_put_contents($this->save_full, $content);
+        $res = $this->saveFile($content);
 
         if ($res) {
             $path = '/' . str_replace([self::$base_path, '\\'], ['', '/'], $this->save_full);
@@ -290,6 +294,98 @@ class Upload
             $this->error = '保存文件失败';
             return false;
         }
+    }
+
+    /**
+     * 保存文件内容
+     */
+    protected function saveFile($content) {
+        $res = file_put_contents($this->save_full, $content);
+        
+        // 如果是图片,进行压缩处理
+        if($res && $this->isImage()) {
+            $this->compressImage($this->save_full);
+        }
+        
+        return $res;
+    }
+
+    /**
+     * 压缩图片
+     */
+    protected function compressImage($file_path) {
+        // 获取图片信息
+        $info = getimagesize($file_path);
+        if(!$info) return false;
+        
+        $width = $info[0];
+        $height = $info[1];
+        $type = $info[2];
+        
+        // 如果尺寸都在限制范围内,无需压缩
+        if($width <= self::$img_max_width && $height <= self::$img_max_height) {
+            return true;
+        }
+        
+        // 计算压缩后的尺寸
+        $ratio = min(self::$img_max_width / $width, self::$img_max_height / $height);
+        $new_width = intval($width * $ratio);
+        $new_height = intval($height * $ratio);
+        
+        // 创建新图像
+        $new_image = imagecreatetruecolor($new_width, $new_height);
+        
+        // 根据图片类型处理
+        switch($type) {
+            case IMAGETYPE_JPEG:
+                $source = imagecreatefromjpeg($file_path);
+                break;
+            case IMAGETYPE_PNG:
+                $source = imagecreatefrompng($file_path);
+                // 保持PNG透明度
+                imagealphablending($new_image, false);
+                imagesavealpha($new_image, true);
+                break;
+            case IMAGETYPE_GIF:
+                $source = imagecreatefromgif($file_path);
+                break;
+            default:
+                return false;
+        }
+        
+        // 调整图片大小
+        imagecopyresampled($new_image, $source, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+        
+        // 保存压缩后的图片
+        switch($type) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($new_image, $file_path, 90); // 90是质量参数
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($new_image, $file_path, 9); // 9是压缩级别
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($new_image, $file_path);
+                break;
+        }
+        
+        // 释放内存
+        imagedestroy($new_image);
+        imagedestroy($source);
+        
+        return true;
+    }
+
+    /**
+     * 判断是否为图片
+     */
+    protected function isImage() {
+        $image_types = [
+            'image/jpeg',
+            'image/png',
+            'image/gif'
+        ];
+        return in_array($this->file_type, $image_types);
     }
 
     /**

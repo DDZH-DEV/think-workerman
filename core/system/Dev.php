@@ -40,6 +40,10 @@ class Dev
             }
         }  
 
+        if ($appName === 'update') {
+            return self::updateFramework();
+        }
+
         if ($appName && !$onlyProject) {
             return self::initApp($appName, $depends);
         } else { 
@@ -52,6 +56,10 @@ class Dev
         self::moveStaticFiles();
     }
 
+    /**
+     * 初始化cli文件
+     * @return void
+     */
     public static function initCliFiles()
     {
 
@@ -97,6 +105,10 @@ class Dev
         self::build_start_file();
     }
 
+    /**
+     * 扫描应用配置
+     * @return array
+     */
     protected static function scanAppConfigs()
     {
         $appConfigs = [];
@@ -117,6 +129,10 @@ class Dev
         return $appConfigs;
     }
 
+    /**
+     * 移动静态文件
+     * @return void
+     */
     public static function moveStaticFiles()
     {
         $appConfigs = self::scanAppConfigs();
@@ -330,6 +346,11 @@ class Dev
         }
     }
 
+    /**
+     * 删除文件夹
+     * @param string $path
+     * @return void
+     */
     static function deldir($path)
     {
         //如果是目录则继续
@@ -365,6 +386,11 @@ class Dev
         echo "应用 {$appName} 已创建,依赖项已设置。\n";
     }
 
+    /**
+     * 更新应用配置
+     * @param string $onlyProject
+     * @return void
+     */
     protected static function updateAppConfigs($onlyProject)
     {
         $appDirs = glob(APP_PATH . '*', GLOB_ONLYDIR);
@@ -379,5 +405,107 @@ class Dev
                 file_put_contents($jsonPath, json_encode($appConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             }
         }
+    }
+
+    /**
+     * 更新框架核心文件
+     */
+    protected static function updateFramework()
+    {
+        echo "开始更新框架...\n";
+        
+        // 下载最新版本
+        $tempDir = ROOT_PATH . 'temp_update';
+        $zipUrl = 'https://github.com/DDZH-DEV/think-workerman/archive/refs/heads/master.zip';
+        
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        
+        // 下载zip文件
+        echo "正在下载最新版本...\n";
+        $zipFile = $tempDir . DIRECTORY_SEPARATOR . 'latest.zip';
+        if (!file_put_contents($zipFile, file_get_contents($zipUrl))) {
+            echo "下载失败，请检查网络连接\n";
+            return false;
+        }
+        
+        // 解压文件
+        echo "正在解压文件...\n";
+        $zip = new \ZipArchive();
+        if ($zip->open($zipFile) !== true) {
+            echo "解压失败\n";
+            return false;
+        }
+        
+        // 创建临时目录
+        $extractDir = $tempDir . DIRECTORY_SEPARATOR . 'extract';
+        if (!is_dir($extractDir)) {
+            mkdir($extractDir, 0777, true);
+        }
+        
+        // 解压到临时目录
+        $zip->extractTo($extractDir);
+        $zip->close();
+        
+        // 获取解压后的core目录路径
+        $sourceCoreDir = glob($extractDir . DIRECTORY_SEPARATOR . 'think-workerman-master' . DIRECTORY_SEPARATOR . 'core')[0];
+        $targetCoreDir = ROOT_PATH . 'core';
+        
+        // 备份当前core目录
+        echo "正在备份当前core目录...\n";
+        $backupDir = ROOT_PATH . 'backup_' . date('YmdHis');
+        if (is_dir($targetCoreDir)) {
+            self::copy_dir($targetCoreDir, $backupDir);
+            self::deldir($targetCoreDir);
+        }
+        
+        // 更新core目录
+        echo "正在更新core目录...\n";
+        self::copy_dir($sourceCoreDir, $targetCoreDir);
+        
+        // 更新composer.json
+        echo "正在更新composer.json...\n";
+        $sourceComposer = $extractDir . DIRECTORY_SEPARATOR . 'think-workerman-master' . DIRECTORY_SEPARATOR . 'composer.json';
+        $targetComposer = ROOT_PATH . 'composer.json';
+        
+        if (file_exists($sourceComposer) && file_exists($targetComposer)) {
+            $sourceJson = json_decode(file_get_contents($sourceComposer), true);
+            $targetJson = json_decode(file_get_contents($targetComposer), true);
+            
+            // 需要同步的包
+            $syncPackages = [
+                'workerman/workerman',
+                'workerman/gateway-worker',
+                'workerman/gatewayclient',
+                'workerman/crontab',
+                'workerman/redis-queue',
+                'jbzoo/event',
+                'topthink/think-orm',
+                'topthink/think-cache',
+                'topthink/think-log',
+                'wikimedia/minify'
+            ];
+            
+            // 更新指定包的版本
+            foreach ($syncPackages as $package) {
+                if (isset($sourceJson['require'][$package])) {
+                    $targetJson['require'][$package] = $sourceJson['require'][$package];
+                }
+            }
+            
+            // 保存更新后的composer.json，添加 JSON_UNESCAPED_SLASHES 选项
+            file_put_contents($targetComposer, json_encode($targetJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+        
+        // 清理临时文件
+        echo "正在清理临时文件...\n";
+        self::deldir($tempDir);
+        
+        echo "更新完成！\n";
+        echo "已备份原core目录到: " . $backupDir . "\n";
+        echo "请运行 composer update 更新依赖包\n";
+        
+        return true;
     }
 }

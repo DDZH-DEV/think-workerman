@@ -31,13 +31,6 @@ return [
         ],
     ],
 
-
-    'socket_log' => [
-        'enable' => false,
-        'server' => 'http://127.0.0.1:1116/',
-        'client' => 'debug',
-        'show_included_files' => false
-    ],
     //一般不需要修改
     'cache' => [
         'default' => 'file',
