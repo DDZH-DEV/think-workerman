@@ -38,9 +38,9 @@ class Dev
             } elseif (strpos($arg, '--only=') === 0) {
                 $onlyProject = substr($arg, 7);
             }
-        }  
+        }   
 
-        if ($appName === 'update') {
+        if (strpos($appName ,'-update')!==false) {
             return self::updateFramework();
         }
 
@@ -417,6 +417,12 @@ class Dev
         // 下载最新版本
         $tempDir = ROOT_PATH . 'temp_update';
         $zipUrl = 'https://github.com/DDZH-DEV/think-workerman/archive/refs/heads/master.zip';
+
+        $proxys=[
+            'https://gh.llkk.cc/',
+	    'https://github.akams.cn/',
+            'https://github.proxy.class3.fun/',
+        ];
         
         if (!is_dir($tempDir)) {
             mkdir($tempDir, 0777, true);
@@ -425,8 +431,32 @@ class Dev
         // 下载zip文件
         echo "正在下载最新版本...\n";
         $zipFile = $tempDir . DIRECTORY_SEPARATOR . 'latest.zip';
-        if (!file_put_contents($zipFile, file_get_contents($zipUrl))) {
-            echo "下载失败，请检查网络连接\n";
+        
+        // 尝试直接下载
+        $content = @file_get_contents($zipUrl);
+        if ($content === false) {
+            echo "直接下载失败，尝试使用代理下载...\n";
+            
+            // 尝试使用代理下载
+            $success = false;
+            foreach ($proxys as $index => $proxy) {
+                echo "正在尝试使用代理 " . ($index + 1) . ": " . $proxy . "\n";
+                $proxyUrl = $proxy . $zipUrl;
+                $content = @file_get_contents($proxyUrl);
+                if ($content !== false) {
+                    $success = true;
+                    break;
+                }
+            }
+            
+            if (!$success) {
+                echo "所有下载方式均失败，请检查网络连接或手动下载\n";
+                return false;
+            }
+        }
+        
+        if (!file_put_contents($zipFile, $content)) {
+            echo "保存文件失败\n";
             return false;
         }
         
