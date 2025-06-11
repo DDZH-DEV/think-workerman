@@ -205,7 +205,7 @@ class Assets
      * @param  array   $config Configurable options.
      */
     public function config(array $config)
-    {
+    { 
         // Set regex options
         foreach(array('asset_regex', 'css_regex', 'js_regex', 'no_minification_regex') as $option)
             if(isset($config[$option]) and (@preg_match($config[$option], null) !== false))

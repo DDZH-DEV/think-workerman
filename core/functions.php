@@ -139,12 +139,12 @@ if (!function_exists('json')) {
             ];
         } 
         echo json_encode($result, JSON_UNESCAPED_UNICODE); 
+        ret();
     }
 }
 
 
-function ret(){
-    if(!IS_CLI){exit;}
+function ret(){ 
     throw new \system\JumpException('jump_exit');
 }
 
@@ -332,9 +332,13 @@ if (!function_exists('is_mobile')) {
      * 判断是否是手机
      * @return int
      */
-    function is_mobile($agent = '') {
+    function is_mobile($agent = '') { 
         if(!$agent){
-            $agent = g('SERVER')['HTTP_USER_AGENT'];
+            $agent = g('SERVER')['HTTP_USER_AGENT']??'';
+        }
+
+        if(!$agent){
+            return false;
         }
         // 现代移动设备检测正则表达式
         $regex_match = "/(

@@ -12,9 +12,7 @@ use think\facade\Log;
 class App extends Facade {
     protected static function init() {
         self::init_dir();
-        self::init_error_log();
-        
-        
+        self::init_error_log(); 
         //初始化数据库
         app('db')::setConfig(config('database'));
         //缓存设置
@@ -23,8 +21,7 @@ class App extends Facade {
         app('log')::init(config('log'));
 
         app('assets')->config(config('assets'));
- 
-        
+  
     }
 
     /**
@@ -87,6 +84,18 @@ class App extends Facade {
             // 静态文件
             foreach (glob(APP_PATH . '*') as $dir) {
                 if (is_dir($dir)) {
+                    // 新增：判断app.json enable
+                    $appJson = $dir . '/app.json';
+                    $enable = true;
+                    if (is_file($appJson)) {
+                        $json = json_decode(file_get_contents($appJson), true);
+                        if (isset($json['enable']) && !$json['enable']) {
+                            $enable = false;
+                        }
+                    }
+                    if (!$enable) {
+                        continue;
+                    }
                     $app_static_config = is_file($dir . '/view/static.php') ? include($dir . '/view/static.php') : [];
                     //获取最后文件夹名称
                     $layer = basename($dir);

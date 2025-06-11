@@ -44,12 +44,13 @@ class WebServer {
             $routes = include $cacheFile;
         } else {
             $routes = [];
+            
             foreach (glob(APP_PATH . '*', GLOB_ONLYDIR) as $dir) {
                 // 检查 app.json 文件
                 $app_json_file = $dir . '/app.json';
 
                 if (file_exists($app_json_file)) {
-                    $app_config = json_decode(file_get_contents($app_json_file), true);
+                    $app_config = json_decode(file_get_contents($app_json_file), true); 
                     if (!isset($app_config['enable']) || !$app_config['enable']) {
                         continue; // 如果应用未启用,跳过此应用
                     }
@@ -178,13 +179,14 @@ class WebServer {
         // 获取请求的 URI 并移除查询字符串
         $uri = $server['REQUEST_URI'];
         $path = parse_url($uri, PHP_URL_PATH);
+  
         // 检查是否是根目录或以 /index.php 开头
         if ($path === '/' || strpos($path, '/index.php') === 0) {
             // 根目录执行路由
             self::executeRoute($connection, $object, $request, $match);
             return;
         }
-
+        
         // 文件直接输出
         $file = PUBLIC_PATH . ltrim($path, '/');
 
@@ -214,9 +216,7 @@ class WebServer {
             if (ob_get_level() > 0) {
                 ob_end_clean();
             }
-            ob_start();
-            
-           
+            ob_start();  
             try {
                 call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
             } catch (Exception $e) {
@@ -224,13 +224,13 @@ class WebServer {
                 if (!($e instanceof \system\JumpException)) { 
                     if (APP_DEBUG) {
                         p($e->getMessage(), $e->getTraceAsString());
-                        !IS_CLI && die();
+                        // !IS_CLI && die();
                     }
                     Debug::log_exception($e);
                 }
             }
- 
- 
+            
+            
             self::response($connection, $request);
         } else {
             $message = strpos(g('SERVER')['REQUEST_URI'], '.php') !== false ?
@@ -252,7 +252,7 @@ class WebServer {
         $headers = g('HEADER') ?: [];
         $cookies = g('COOKIE') ?: []; 
         $_SESSION = g('SESSION') ?: [];
-
+   
         if (PHP_SAPI === 'cli') {
             $content = ob_get_clean();
             $response = new Response(200, $headers, $content);
