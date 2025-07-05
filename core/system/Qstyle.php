@@ -11,7 +11,7 @@ namespace system;
 
 class Qstyle
 {
-    public $templates_dir = array(ROOT_PATH . 'template');       //模板路径,支持数组叠代多层目录,最后面的优先搜索;
+    public $templates_dir = array(ROOT_PATH . 'template/');       //模板路径,支持数组叠代多层目录,最后面的优先搜索;
     public $templates_cache = RUNTIME_PATH . 'tpl/';            //缓存模板路径;
     public $templates_postfix = '.html';                        //模板后缀;
     public $templates_caching = '.php';                            //缓存后缀;
