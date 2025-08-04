@@ -1,6 +1,7 @@
 <?php
 
 use system\Config;
+use Redis;
 
 if (!function_exists('app')) {
     /**
@@ -118,36 +119,21 @@ if (!function_exists('convert')) {
 
 if (!function_exists('json')) {
     /**
-     * 前端json
-     * @param $data
-     * @param $status
-     * @return void
+     * 前端json, 返回一个 Response 对象
+     * @param mixed $data
+     * @param int $code
+     * @param string|null $msg
+     * @param array $debug
+     * @return \system\Response
      */
-    function json($data, $code = 200, $msg = null, $debug = []) {
-        if (is_string($data) && $msg === null) {
-            $msg = $data;
-            $data = '';
-        }
-
-        if ($code === true) {
-            $result = $data;
-        } else {
-            $result = [
-                'data' => $data,
-                'code' => $code,
-                'msg' => $msg
-            ];
-        } 
-        echo json_encode($result, JSON_UNESCAPED_UNICODE); 
-        ret();
+    function json($data, int $code = 200, string $msg = null, array $debug = []): \system\Response {
+        $response = new \system\Response($data, $code, $msg, $debug);
+   
+        throw new \system\JumpException($response);
     }
 }
 
-
-function ret(){ 
-    throw new \system\JumpException('jump_exit');
-}
-
+ 
 
  
 
@@ -269,6 +255,13 @@ if (!function_exists('input')) {
             $has = true;
         }
 
+        // 处理类型指定语法 如 ids/a 表示数组, value/d 表示整数
+        $type = '';
+        if ($pos = strpos($key, '/')) {
+            $type = substr($key, $pos + 1);
+            $key = substr($key, 0, $pos);
+        }
+
         if ($pos = strpos($key, '.')) {
             // 指定参数来源
             $method = substr($key, 0, $pos);
@@ -286,17 +279,41 @@ if (!function_exists('input')) {
 
         if (!$key) return $method === 'params' ? $params : (array)g(strtoupper($method));
 
+        // 获取原始值
         if ($method === 'params') {
-            return isset($params[$key]) ?
-                (is_callable($filter) ? call_user_func($filter, $params[$key]) : $params[$key]) :
-                $default_value;
+            $value = isset($params[$key]) ? $params[$key] : $default_value;
         } else {
             $find = g(strtoupper($method));
-            if ($find && isset($find[$key])) {
-                return is_callable($filter) ? call_user_func($filter, $find[$key]) : $find[$key];
-            }
-            return $default_value;
+            $value = ($find && isset($find[$key])) ? $find[$key] : $default_value;
         }
+
+        // 根据类型进行转换
+        if ($type !== '') {
+            switch (strtolower($type)) {
+                case 'a': // 数组
+                    $value = is_array($value) ? $value : (empty($value) ? [] : explode(',', $value));
+                    break;
+                case 'd': // 整数
+                    $value = intval($value);
+                    break;
+                case 'f': // 浮点数
+                    $value = floatval($value);
+                    break;
+                case 'b': // 布尔值
+                    $value = (bool)$value;
+                    break;
+                case 's': // 字符串
+                    $value = (string)$value;
+                    break;
+            }
+        }
+
+        // 应用过滤器
+        if (is_callable($filter)) {
+            $value = call_user_func($filter, $value);
+        }
+
+        return $value;
     }
 }
 if (!function_exists('ip')) {
@@ -432,15 +449,19 @@ if (!function_exists('addToQueue')) {
                 ]);
             } else {
                 // 非Workerman环境使用Redis直接操作
-                $client = new \Redis();
-                $client->connect($redis_host, $redis_port);
-                
-                if ($redis_auth) {
-                    $client->auth($redis_auth);
-                }
-                
-                if ($redis_db > 0) {
-                    $client->select($redis_db);
+                if (class_exists('Redis')) {
+                    $client = new \Redis();
+                    $client->connect($redis_host, $redis_port);
+                    
+                    if ($redis_auth) {
+                        $client->auth($redis_auth);
+                    }
+                    
+                    if ($redis_db > 0) {
+                        $client->select($redis_db);
+                    }
+                } else {
+                    return false;
                 }
             }
         }
@@ -457,18 +478,19 @@ if (!function_exists('addToQueue')) {
             $data['_callback_'] = $callback;
         } 
         // 发送到队列
-        if ($client instanceof \Redis) {
+        if ($client instanceof \Redis || (is_object($client) && get_class($client) === 'Redis')) {
             // 非Workerman环境，使用Redis直接发送
             return redis_queue_send($client, $queue, $data, $delay);
-        } else {
+        } else if ($client) {
             // Workerman环境，使用Client发送
             return $client->send($queue, $data, $delay);
         }
+        return false;
     }
     
     /**
      * 在非Workerman环境向队列发送消息
-     * @param \Redis $redis Redis实例
+     * @param object $redis Redis实例
      * @param string $queue 队列名
      * @param mixed $data 数据
      * @param int $delay 延迟时间(秒)
@@ -604,9 +626,9 @@ function assets($type, $act_type = 'add') {
 
 /**
  * 钩子机制
- * @param $name
- * @param $params
- * @param $single
+ * @param string $name 钩子名称
+ * @param array $params 传入参数
+ * @param bool $single 是否只返回一个结果
  * @return mixed
  */
 function hook($name = '', $params = [], $single = false) {
@@ -634,12 +656,25 @@ function loadHooks($hooks) {
 
                 try {
                     if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
-                        $result = call_user_func_array($hook['event'], [$hook_params, $config, $return]);
+                        $result = call_user_func_array($hook['event'], [$hook_params, $config, &$return]);
+                        if ($result !== null) {
+                            if (is_array($return)) {
+                                $return[] = $result;
+                            } else {
+                                $return = $result;
+                            }
+                        }
                     } else if (is_callable($hook['event'])) {
-                        $result = call_user_func($hook['event'], $hook_params, $config, $return);
+                        $args = [$hook_params, $config, &$return];
+                        $result = call_user_func_array($hook['event'], $args);
+                        if ($result !== null) {
+                            if (is_array($return)) {
+                                $return[] = $result;
+                            } else {
+                                $return = $result;
+                            }
+                        }
                     }
-
-                    $return = $result ?? $return;
                 } catch (\Exception $e) {
                     \system\Debug::log_exception($e);
                     $return = $e->getMessage();
@@ -704,4 +739,15 @@ function mergeFiles() {
     }
 
     return [$merged_config, $merged_hooks, $merged_functions];
+}
+
+if (!function_exists('db_config')) {
+    /**
+     * 设置数据库配置，以与App.php中的初始化保持一致
+     * @param array $config 数据库配置
+     * @return void
+     */
+    function db_config(array $config) {
+        app('db')::setConfig($config);
+    }
 }

@@ -111,7 +111,6 @@ class Debug
     {
         if (strpos($e->getMessage(), 'stream_select') === false && $e->getMessage()!=='jump_exit' ) {
             $message = "\r\nMessage: {$e->getMessage()}; \r\nFile: {$e->getFile()} => Line: {$e->getLine()};" . "\r\n" . $e->getTraceAsString();
-            !IS_CLI && APP_DEBUG && p($message);
             Log::write($message . PHP_EOL, $type);
         }
     }

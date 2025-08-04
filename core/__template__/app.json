@@ -1,7 +1,15 @@
 {
-    "name": "__TEMPLATE__模块",
+    "name": "__TEMPLATE__应用",
     "version": "0.0.1",
     "enable": true,
-    "description": "__TEMPLATE__模块的描述",
-    "depends":[]
+    "description": "__TEMPLATE__应用的描述",
+    "depends":[
+        
+    ],
+    "tables": [
+        
+    ],
+    "data": [
+        
+    ]
 }

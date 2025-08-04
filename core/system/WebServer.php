@@ -7,11 +7,23 @@ use GatewayWorker\Lib\Gateway;
 use Workerman\Worker;
 use Workerman\Connection\TcpConnection;
 use Workerman\Protocols\Http\Request;
-use Workerman\Protocols\Http\Response;
+use Workerman\Protocols\Http\Response as WorkermanResponse;
 use Workerman\Protocols\Http\Session;
+use system\Response;
+use system\HttpException;
 
 define("IS_LOW_WORKERMAN", version_compare(Worker::VERSION, '3.5.3', '<'));
 class JumpException extends \Exception {
+    /**
+     * @var Response
+     */
+    public $response;
+
+    public function __construct(Response $response)
+    {
+        parent::__construct();
+        $this->response = $response;
+    }
 }
 class WebServer {
     protected $worker;
@@ -209,36 +221,47 @@ class WebServer {
             g('CONTROLLER', $match['controller']);
             g('ACTION', $match['action']);
             g('IS_MOBILE', is_mobile(g('SERVER')['HTTP_USER_AGENT'] ?? ''));
-            // 释放 Qstyle 中的变量
+            
             View::release();
 
-            // 检查是否有活动的输出缓冲区
+            // 检查是否有活动的输出缓冲区，在新的响应机制下，我们依然清空以防万一
             if (ob_get_level() > 0) {
                 ob_end_clean();
             }
-            ob_start();  
+            
+            $response = null;
             try {
-                call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
-            } catch (Exception $e) {
-           
-                if (!($e instanceof \system\JumpException)) { 
-                    if (APP_DEBUG) {
-                        p($e->getMessage(), $e->getTraceAsString());
-                        // !IS_CLI && die();
-                    }
-                    Debug::log_exception($e);
+                // 执行控制器方法，并捕获其返回值
+                $response = call_user_func_array([new $class, $match['action']], [$match['params'], $connection, $request]);
+            } catch (\system\JumpException $e) {
+                // 捕获为了提前终止流程的异常
+                $response = $e->response;
+            } catch (\Throwable $e) {
+                // 捕获所有可抛出的错误 (包括Error和Exception)
+                Debug::log_exception($e);
+                
+                // 检查异常是否包含自定义的状态码
+                $statusCode = property_exists($e, 'statusCode') ? $e->statusCode : 500;
+                
+                $message = APP_DEBUG ? '服务器错误: ' . $e->getMessage() : '服务器内部错误';
+                if ($statusCode !== 500) {
+                    $message = $e->getMessage(); // 对于非500错误，通常可以直接显示消息
                 }
+                
+                // 发生未捕获异常时，创建一个响应
+                $response = new Response(null, $statusCode, $message);
             }
             
+            // 将控制器返回的结果（可能是Response对象或旧的输出）传递给response方法
+            self::response($connection, $request, $response);
             
-            self::response($connection, $request);
         } else {
             $message = strpos(g('SERVER')['REQUEST_URI'], '.php') !== false ?
                 '当前请求的[' . basename(g('SERVER')['REQUEST_URI']) . '] 文件不存在!' :
                 '当前请求的[' . $class . '::' . $match['action'] . '] 方法不存在!';
 
             if (IS_CLI) {
-                $response = new Response(404, [], $message);
+                $response = new WorkermanResponse(404, [], $message);
                 $connection->send($response);
                 return;
             }
@@ -248,35 +271,52 @@ class WebServer {
         }
     }
 
-    protected static function response($connection, $request) {
+    protected static function response($connection, $request, ?Response $controllerResponse = null) {
+        // 优先处理从控制器返回的Response对象
+        if ($controllerResponse) {
+            $content = $controllerResponse->getBody();
+            $statusCode = $controllerResponse->getStatusCode();
+            $headers = $controllerResponse->headers;
+        } else {
+            // 兼容旧的输出模式，从ob缓冲和全局变量中获取
+            if (ob_get_level() > 0) {
+                $content = ob_get_clean();
+            } else {
+                $content = '';
+            }
+            $statusCode = 200;
         $headers = g('HEADER') ?: [];
+        }
+
         $cookies = g('COOKIE') ?: []; 
         $_SESSION = g('SESSION') ?: [];
    
         if (PHP_SAPI === 'cli') {
-            $content = ob_get_clean();
-            $response = new Response(200, $headers, $content);
+            $response = new WorkermanResponse($statusCode, $headers, $content);
 
             foreach ($cookies as $name => $value) {
                 $response->cookie($name, $value);
             }
 
+            if ($request && method_exists($request, 'session')) {
             $session = $request->session();
             $session->put($_SESSION);
+            }
 
             $connection->send($response);
         } else {
+            http_response_code($statusCode);
             foreach ($cookies as $name => $value) {
                 setcookie($name, $value, 0, '/', '', false, true);
             }
             foreach ($headers as $name => $value) {
                 header("$name: $value");
             }
-            $content = ob_get_clean();
+            
             echo $content;
         }
 
-        if (PHP_SAPI !== 'cli') {
+        if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
     }
@@ -300,7 +340,7 @@ class WebServer {
 
             // 判断是否在 CLI 模式下
             if (PHP_SAPI === 'cli' && $connection) {
-                $response = new Response(200, [
+                $response = new WorkermanResponse(200, [
                     'Content-Type' => $mimeType,
                     'Content-Length' => strlen($content),
                 ], $content);
@@ -313,7 +353,7 @@ class WebServer {
             }
         } else {
             if (PHP_SAPI === 'cli' && $connection) {
-                $response = new Response(404, [], 'File not found');
+                $response = new WorkermanResponse(404, [], 'File not found');
                 $connection->send($response);
             } else {
                 header("HTTP/1.1 404 Not Found");

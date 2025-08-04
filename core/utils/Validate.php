@@ -1161,7 +1161,15 @@ class Validate
             $param = null;
         }
 
-        return false !== filter_var($value, is_int($rule) ? $rule : filter_id($rule), $param);
+        $filterId = is_int($rule) ? $rule : filter_id($rule);
+
+        if (null === $param) {
+            // Deprecated: Passing null to parameter #3 is deprecated.
+            // Fix: When no options are present, call the 2-argument version of filter_var.
+            return false !== filter_var($value, $filterId);
+        }
+
+        return false !== filter_var($value, $filterId, $param);
     }
 
     /**
