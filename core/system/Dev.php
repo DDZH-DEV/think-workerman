@@ -40,7 +40,7 @@ class Dev
             }
         }   
 
-        if (strpos($appName ,'-update')!==false) {
+        if (is_string($appName) && strpos($appName, '-update') !== false) {
             return self::updateFramework();
         }
 

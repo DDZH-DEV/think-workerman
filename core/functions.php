@@ -1,7 +1,6 @@
 <?php
 
 use system\Config;
-use Redis;
 
 if (!function_exists('app')) {
     /**
@@ -141,12 +140,14 @@ if (!function_exists('data')) {
     /**
      * 数据操作函数
      * @param string $name
-     * @param string $value
+     * @param mixed $value
      * @param string $layer
      * @return array|bool|mixed
      */
     function data($name = '', $value = '', $layer = 'SESSION') {
         $data = g($layer);
+        $argCount = func_num_args();
+        $hasValueArg = $argCount >= 2;
 
         if (is_array($name)) {
             try {
@@ -162,24 +163,6 @@ if (!function_exists('data')) {
             // 清除,奇葩的workmanSession机制
             $data = ['destroy' => date('YmdHis')];
             g($layer, $data);
-            //            p('clear');
-            return true;
-        } elseif ($name && !$value && !is_null($value)) {
-            // 判断或获取
-            if (!isset($data[$name])) {
-                return '';
-            }
-            // 如果已经是数组则直接返回
-            if (is_array($data[$name])) {
-                return $data[$name];
-            }
-            // 尝试 JSON 解码
-            return json_decode($data[$name], true) ?: $data[$name];
-        } elseif (is_null($value)) {
-            // 删除
-            if (isset($data[$name])) unset($data[$name]);
-            g($layer, $data);
-            //            p('delete item '.$name);
             return true;
         } elseif ($name === '') {
             // 读取所有
@@ -189,12 +172,28 @@ if (!function_exists('data')) {
                     $tmp[$k] = is_string($v) ? json_decode($v, true) : $v;
                 }
             }
-            //            p('read all');
             return $tmp;
-        } else {
-            $data[$name] = $value;
-            //            p('set item '.$name,$data);
+        } elseif (!$hasValueArg) {
+            // 只传name，读取单项
+            if (!isset($data[$name])) {
+                return '';
+            }
+            if (is_array($data[$name])) {
+                return $data[$name];
+            }
+            return json_decode($data[$name], true) ?: $data[$name];
+        } elseif (is_null($value)) {
+            // 删除
+            if (isset($data[$name])) {
+                unset($data[$name]);
+            }
             g($layer, $data);
+            return true;
+        } else {
+            // 设置（支持 '', 0, false 等值）
+            $data[$name] = $value;
+            g($layer, $data);
+            return true;
         }
     }
 }
