@@ -30,15 +30,35 @@ class Dev
         $appName = $argv[1] ?? null;
         $depends = [];
         $onlyProject = null;
-        
-        // 遍历参数寻找 --depends 和 --only
+        $customName = null;
+
+        // 遍历参数寻找 --depends、--only、--name
         foreach ($argv as $arg) {
             if (strpos($arg, '--depends=') === 0) {
                 $depends = explode(',', substr($arg, 10));
             } elseif (strpos($arg, '--only=') === 0) {
                 $onlyProject = substr($arg, 7);
+            } elseif (strpos($arg, '--name=') === 0) {
+                $customName = substr($arg, 7);
             }
-        }   
+        }
+
+        // php twcli mergecomposer - 合并已启用应用的 composer 依赖到根 composer.json
+        if ($appName === 'composer') {
+            return self::mergeAppComposerDeps();
+        }
+
+        // php twcli addworker workername [--name=start_worker_xxx.php]
+        if ($appName === 'addworker') {
+            $workerName = $argv[2] ?? '';
+            if ($workerName === '') {
+                echo "用法: php twcli addworker <workername> [--name=自定义文件名.php]\n";
+                echo "示例: php twcli addworker mytask\n";
+                echo "示例: php twcli addworker mytask --name=start_worker_mytask.php\n";
+                return false;
+            }
+            return self::addWorker($workerName, $customName);
+        }
 
         if (is_string($appName) && strpos($appName, '-update') !== false) {
             return self::updateFramework();
@@ -46,14 +66,50 @@ class Dev
 
         if ($appName && !$onlyProject) {
             return self::initApp($appName, $depends);
-        } else { 
+        } else {
             if ($onlyProject) {
                 self::updateAppConfigs($onlyProject);
-            } 
+            }
             return self::initCliFiles();
         }
 
         self::moveStaticFiles();
+    }
+
+    /**
+     * 基于模板动态添加 worker 启动文件到 server 目录
+     * @param string $workerName worker 名称（用于 $worker->name 及默认文件名）
+     * @param string|null $customName 自定义输出文件名，如 start_worker_xxx.php
+     * @return bool
+     */
+    public static function addWorker(string $workerName, ?string $customName = null): bool
+    {
+        $templatePath = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__' . DIRECTORY_SEPARATOR . 'client_service' . DIRECTORY_SEPARATOR . 'start_worker.php';
+        $serverDir = ROOT_PATH . 'server';
+
+        if (!file_exists($templatePath)) {
+            echo "模板文件不存在: {$templatePath}\n";
+            return false;
+        }
+
+        !is_dir($serverDir) && mkdir($serverDir, 0777, true);
+
+        $outputFile = $customName
+            ? (strpos($customName, '.php') !== false ? $customName : $customName . '.php')
+            : 'start_worker_' . $workerName . '.php';
+        $outputPath = $serverDir . DIRECTORY_SEPARATOR . $outputFile;
+
+        $content = file_get_contents($templatePath);
+        $content = str_replace('__WORKER_NAME__', $workerName, $content);
+
+        if (file_put_contents($outputPath, $content) === false) {
+            echo "写入失败: {$outputPath}\n";
+            return false;
+        }
+
+        echo "已生成: server/{$outputFile}\n";
+        echo "Worker 名称: {$workerName}\n";
+        return true;
     }
 
     /**
@@ -103,6 +159,65 @@ class Dev
 
         // 生成启动文件
         self::build_start_file();
+
+        // 合并已启用应用的 composer 依赖到根 composer.json
+        self::mergeAppComposerDeps();
+    }
+
+    /**
+     * 将已启用应用（enable: true）的 app.json 中 composer 依赖合并到根 composer.json
+     * @return bool
+     */
+    public static function mergeAppComposerDeps(): bool
+    {
+        $composerPath = ROOT_PATH . 'composer.json';
+        if (!file_exists($composerPath)) {
+            echo "composer.json 不存在\n";
+            return false;
+        }
+
+        $composer = json_decode(file_get_contents($composerPath), true);
+        if (!is_array($composer)) {
+            echo "composer.json 解析失败\n";
+            return false;
+        }
+
+        $require = $composer['require'] ?? [];
+        if (!is_array($require)) {
+            $require = [];
+        }
+
+        $appConfigs = self::scanAppConfigs();
+        $merged = [];
+        foreach ($appConfigs as $appName => $appConfig) {
+            if (empty($appConfig['enable']) && empty($appConfig['enabled'])) {
+                continue;
+            }
+            $appComposer = $appConfig['composer'] ?? [];
+            if (!is_array($appComposer)) {
+                continue;
+            }
+            foreach ($appComposer as $pkg => $ver) {
+                if (is_string($pkg) && is_string($ver) && $pkg !== '' && $ver !== '') {
+                    $merged[$pkg] = $ver;
+                }
+            }
+        }
+
+        $require = array_merge($require, $merged);
+        ksort($require);
+        $composer['require'] = $require;
+
+        $json = json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (file_put_contents($composerPath, $json) === false) {
+            echo "写入 composer.json 失败\n";
+            return false;
+        }
+
+        if (!empty($merged)) {
+            echo "已合并 " . count($merged) . " 个应用依赖到 composer.json\n";
+        }
+        return true;
     }
 
     /**

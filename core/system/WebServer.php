@@ -50,8 +50,7 @@ class WebServer {
     }
 
     private static function loadAppsRouters() {
-        $cacheFile = RUNTIME_PATH . '/router_cache.php';
-
+        $cacheFile = RUNTIME_PATH . '/router_cache.php'; 
         if (!APP_DEBUG && file_exists($cacheFile)) {
             $routes = include $cacheFile;
         } else {
@@ -59,10 +58,10 @@ class WebServer {
             
             foreach (glob(APP_PATH . '*', GLOB_ONLYDIR) as $dir) {
                 // 检查 app.json 文件
-                $app_json_file = $dir . '/app.json';
-
+                $app_json_file = $dir . '/app.json'; 
                 if (file_exists($app_json_file)) {
                     $app_config = json_decode(file_get_contents($app_json_file), true); 
+        
                     if (!isset($app_config['enable']) || !$app_config['enable']) {
                         continue; // 如果应用未启用,跳过此应用
                     }
@@ -79,8 +78,7 @@ class WebServer {
             if (!APP_DEBUG) {
                 file_put_contents($cacheFile, '<?php return ' . var_export($routes, true) . ';');
             }
-        }
-
+        } 
         app('router')->addRoutes($routes);
     }
 
@@ -224,10 +222,11 @@ class WebServer {
             
             View::release();
 
-            // 检查是否有活动的输出缓冲区，在新的响应机制下，我们依然清空以防万一
-            if (ob_get_level() > 0) {
+            // 始终开启输出缓冲：避免模板/echo 直接发送导致 headers already sent
+            while (ob_get_level() > 0) {
                 ob_end_clean();
             }
+            ob_start();
             
             $response = null;
             try {
@@ -271,9 +270,13 @@ class WebServer {
         }
     }
 
-    protected static function response($connection, $request, ?Response $controllerResponse = null) {
+    protected static function response($connection, $request, $controllerResponse = null) {
         // 优先处理从控制器返回的Response对象
-        if ($controllerResponse) {
+        if ($controllerResponse instanceof Response) {
+            // 丢弃旧的输出缓冲，避免和 Response 重复输出/提前输出冲突
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
             $content = $controllerResponse->getBody();
             $statusCode = $controllerResponse->getStatusCode();
             $headers = $controllerResponse->headers;
@@ -284,8 +287,14 @@ class WebServer {
             } else {
                 $content = '';
             }
+
+            // 兼容“直接 return 字符串内容”的控制器：仅当没有任何输出时才使用返回值作为内容
+            if ($content === '' && $controllerResponse !== null && $controllerResponse !== true && (is_scalar($controllerResponse) || (is_object($controllerResponse) && method_exists($controllerResponse, '__toString')))) {
+                $content = (string)$controllerResponse;
+            }
+
             $statusCode = 200;
-        $headers = g('HEADER') ?: [];
+            $headers = g('HEADER') ?: [];
         }
 
         $cookies = g('COOKIE') ?: []; 
@@ -305,14 +314,16 @@ class WebServer {
 
             $connection->send($response);
         } else {
-            http_response_code($statusCode);
-            foreach ($cookies as $name => $value) {
-                setcookie($name, $value, 0, '/', '', false, true);
+            // 如果已经有输出导致 headers 发送，则退化为只输出内容，避免 warning
+            if (!headers_sent()) {
+                http_response_code($statusCode);
+                foreach ($cookies as $name => $value) {
+                    setcookie($name, $value, 0, '/', '', false, true);
+                }
+                foreach ($headers as $name => $value) {
+                    header("$name: $value");
+                }
             }
-            foreach ($headers as $name => $value) {
-                header("$name: $value");
-            }
-            
             echo $content;
         }
 

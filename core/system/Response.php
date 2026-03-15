@@ -12,6 +12,7 @@ class Response
     public $msg;
     public $debug;
     public $headers = [];
+    public $raw = false;
 
     /**
      * Response constructor.
@@ -31,6 +32,20 @@ class Response
         $this->code = $code;
         $this->msg = $msg;
         $this->debug = $debug;
+
+        if (!isset($this->headers['Content-Type'])) {
+            $this->headers['Content-Type'] = 'application/json; charset=utf-8';
+        }
+    }
+
+    /**
+     * 设置为原样输出模式（不包裹 data/code/msg 结构）
+     * @return $this
+     */
+    public function asRaw(): self
+    {
+        $this->raw = true;
+        return $this;
     }
 
     /**
@@ -51,6 +66,16 @@ class Response
      */
     public function getBody()
     {
+        if ($this->raw) {
+            if (is_array($this->data) || is_object($this->data)) {
+                return json_encode($this->data, JSON_UNESCAPED_UNICODE);
+            }
+            if (is_null($this->data)) {
+                return '';
+            }
+            return (string)$this->data;
+        }
+
         $result = [
             'data' => $this->data,
             'code' => $this->code,

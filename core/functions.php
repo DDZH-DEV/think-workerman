@@ -120,15 +120,52 @@ if (!function_exists('json')) {
     /**
      * 前端json, 返回一个 Response 对象
      * @param mixed $data
-     * @param int $code
+     * @param mixed $code 兼容历史：true=原样输出并强制200
      * @param string|null $msg
      * @param array $debug
      * @return \system\Response
      */
-    function json($data, int $code = 200, string $msg = null, array $debug = []): \system\Response {
-        $response = new \system\Response($data, $code, $msg, $debug);
-   
+    function json($data, $code = 200, string $msg = null, array $debug = []): \system\Response {
+        // 兼容旧写法：json($data, true) => 直接输出 $data，HTTP 200，并跳出流程
+        if ($code === true) {
+            $response = (new \system\Response($data, 200, null, $debug))->asRaw();
+            throw new \system\JumpException($response);
+        }
+
+        $response = new \system\Response($data, (int)$code, $msg, $debug);
         throw new \system\JumpException($response);
+    }
+}
+
+if (!function_exists('ret')) {
+    /**
+     * 立即终止当前请求并返回已输出内容（兼容历史 ret()）
+     * - ret()：返回当前输出缓冲区内容（HTML 等）
+     * - ret($content, $code, $headers)：自定义返回内容
+     */
+    function ret($content = null, int $code = 200, array $headers = []): void
+    {
+        if ($content === null) {
+            $content = ob_get_level() > 0 ? ob_get_clean() : '';
+        } else {
+            // 若已有缓冲区，避免后续重复输出
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+        }
+
+        // Response 构造函数会在 $msg 为 null 且 $data 为 string 时将其视为 msg 并清空 data
+        // 这里传入空字符串 msg，确保 $content 作为 raw body 保留
+        $resp = (new \system\Response((string)$content, $code, ''))->asRaw();
+
+        // 默认按 HTML 输出，避免被当成 JSON 包裹
+        $resp->withHeader('Content-Type', 'text/html; charset=utf-8');
+
+        foreach ($headers as $k => $v) {
+            $resp->withHeader((string)$k, (string)$v);
+        }
+
+        throw new \system\JumpException($resp);
     }
 }
 
@@ -142,12 +179,17 @@ if (!function_exists('data')) {
      * @param string $name
      * @param mixed $value
      * @param string $layer
+     * @param bool|null $hasValueArgOverride 强制是否视为传入了$value参数（用于封装函数保持正确语义）
      * @return array|bool|mixed
      */
-    function data($name = '', $value = '', $layer = 'SESSION') {
+    function data($name = '', $value = '', $layer = 'SESSION', $hasValueArgOverride = null) {
         $data = g($layer);
         $argCount = func_num_args();
         $hasValueArg = $argCount >= 2;
+
+        if ($hasValueArgOverride !== null) {
+            $hasValueArg = (bool)$hasValueArgOverride;
+        }
 
         if (is_array($name)) {
             try {
@@ -206,7 +248,7 @@ if (!function_exists('session')) {
      * @return array|bool|mixed
      */
     function session($name = '', $value='') {
-        return data($name, $value, 'SESSION');
+        return data($name, $value, 'SESSION', func_num_args() >= 2);
     }
 }
 
@@ -218,10 +260,14 @@ if (!function_exists('cookie')) {
      * @return array|bool|mixed
      */
     function cookie($name = '', $value = '') {
-        if (!IS_CLI && $name && $value) {
-            setcookie($name, $value, 0, '/');
+        if (!IS_CLI && func_num_args() >= 2 && $name) {
+            if (is_null($value)) {
+                setcookie($name, '', time() - 3600, '/');
+            } else {
+                setcookie($name, (string)$value, 0, '/');
+            }
         }
-        return data($name, $value, 'COOKIE');
+        return data($name, $value, 'COOKIE', func_num_args() >= 2);
     }
 }
 
@@ -233,10 +279,10 @@ if (!function_exists('_header')) {
      * @return array|bool|mixed
      */
     function _header($name = '', $value = '') {
-        if (!IS_CLI && $name && $value) {
+        if (!IS_CLI && func_num_args() >= 2 && $name && !is_null($value)) {
             return header($name . ":" . $value);
         }
-        return data($name, $value, 'HEADER');
+        return data($name, $value, 'HEADER', func_num_args() >= 2);
     }
 }
 
