@@ -137,7 +137,7 @@ class Qstyle
         // 支持对模板block独立调用
         if (!is_bool($returnpath)) {
             $this->parse_tpl_block($this->templates_file[$PHPnew_file_name], $returnpath);
-            throw new \system\JumpException('jump_exit');
+            throw new \system\JumpException((new \system\Response('', 200))->asRaw());
         }
 
         $htmlname = basename($PHPnew_file_name);
@@ -157,7 +157,7 @@ class Qstyle
 
                 if (stripos($this->templates_message, '[qstyle debug]') !== false || stripos($this->templates_message, '{qstyle debug}') !== false) {
                     echo highlight_string($this->templates_message);
-                    throw new \system\JumpException('jump_exit');
+                    throw new \system\JumpException((new \system\Response('', 200))->asRaw());
                 }
 
                 if ($this->templates_message && !$this->preg__file($PHPnew_path, $this->templates_message, true)) {

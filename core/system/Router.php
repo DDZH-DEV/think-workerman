@@ -270,7 +270,12 @@ class Router
         $url = preg_replace('/\([^\)]*\)\?/', '', $url); // 移除剩余的可选块
         $url = preg_replace('/\/+/', '/', $url);         // 移除重复的斜杠
 
-        return rtrim($url, '/').'.html';
+        $url = rtrim($url, '/');
+        // 根路径不要生成 "/.html"
+        if ($url === '') {
+            return '/';
+        }
+        return $url . '.html';
     }
 
     /**

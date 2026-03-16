@@ -439,7 +439,7 @@ if (!function_exists('console')) {
         if (defined('WEB_SERVER') || !IS_CLI) {
             return;
         }
-        $message = is_string($message) ? $message : json_encode($message);
+        $message = is_string($message) ? $message : json_encode($message,JSON_UNESCAPED_UNICODE);
         echo system\Console::$type($message);
     }
 }

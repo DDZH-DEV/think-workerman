@@ -48,13 +48,13 @@ class Dev
             return self::mergeAppComposerDeps();
         }
 
-        // php twcli addworker workername [--name=start_worker_xxx.php]
+        // php twcli addworker workername [--name=自定义后缀]（不改变 start_worker_ 前缀）
         if ($appName === 'addworker') {
             $workerName = $argv[2] ?? '';
             if ($workerName === '') {
-                echo "用法: php twcli addworker <workername> [--name=自定义文件名.php]\n";
+                echo "用法: php twcli addworker <workername> [--name=自定义后缀]\n";
                 echo "示例: php twcli addworker mytask\n";
-                echo "示例: php twcli addworker mytask --name=start_worker_mytask.php\n";
+                echo "示例: php twcli addworker mytask --name=custom  → 生成 start_worker_custom.php\n";
                 return false;
             }
             return self::addWorker($workerName, $customName);
@@ -79,7 +79,7 @@ class Dev
     /**
      * 基于模板动态添加 worker 启动文件到 server 目录
      * @param string $workerName worker 名称（用于 $worker->name 及默认文件名）
-     * @param string|null $customName 自定义输出文件名，如 start_worker_xxx.php
+     * @param string|null $customName 自定义 start_worker_ 后的后缀，如 custom → start_worker_custom.php，不改变前缀
      * @return bool
      */
     public static function addWorker(string $workerName, ?string $customName = null): bool
@@ -94,9 +94,13 @@ class Dev
 
         !is_dir($serverDir) && mkdir($serverDir, 0777, true);
 
-        $outputFile = $customName
-            ? (strpos($customName, '.php') !== false ? $customName : $customName . '.php')
-            : 'start_worker_' . $workerName . '.php';
+        // --name 仅自定义 start_worker_ 后的后缀，不改变前缀
+        if ($customName !== null && $customName !== '') {
+            $suffix = preg_replace('/\.php$/i', '', $customName);
+            $outputFile = 'start_worker_' . $suffix . '.php';
+        } else {
+            $outputFile = 'start_worker_' . $workerName . '.php';
+        }
         $outputPath = $serverDir . DIRECTORY_SEPARATOR . $outputFile;
 
         $content = file_get_contents($templatePath);
@@ -123,7 +127,8 @@ class Dev
 
         $from_dir = ROOT_PATH . 'core' . DIRECTORY_SEPARATOR . '__template__' . DIRECTORY_SEPARATOR . 'client_service';
         $to_dir = ROOT_PATH . 'server';
-        self::copy_dir($from_dir, $to_dir);
+        // 不带参数执行 twcli 时，不要把 start_worker.php 带到 server 目录
+        self::copy_dir($from_dir, $to_dir, ['start_worker.php']);
 
         $funs = [];
 
@@ -285,14 +290,17 @@ class Dev
      * @param $dst
      * @return void
      */
-    protected static function copy_dir($src, $dst)
+    protected static function copy_dir($src, $dst, array $excludeFiles = [])
     {  // 原目录，复制到的目录
         $dir = opendir($src);
         !is_dir($dst) && mkdir($dst, 0777, true);
         while (false !== ($file = readdir($dir))) {
             if (($file != '.') && ($file != '..')) {
+                if (in_array($file, $excludeFiles, true)) {
+                    continue;
+                }
                 if (is_dir($src . '/' . $file)) {
-                    self::copy_dir($src . '/' . $file, $dst . '/' . $file);
+                    self::copy_dir($src . '/' . $file, $dst . '/' . $file, $excludeFiles);
                 } else {
                     if (!file_exists($dst . '/' . $file)) {
                         copy($src . '/' . $file, $dst . '/' . $file);
