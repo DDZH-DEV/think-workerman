@@ -120,7 +120,10 @@ if (!function_exists('json')) {
     /**
      * 前端json, 返回一个 Response 对象
      * @param mixed $data
-     * @param mixed $code 兼容历史：true=原样输出并强制200
+     * @param mixed $code
+     *   - 兼容历史：true=原样输出并强制200
+     *   - 若为常见/合法 HTTP 状态码(100-599)，则作为 HTTP code
+     *   - 否则视为业务 code：HTTP 强制 200，并输出 {data,code,msg}
      * @param string|null $msg
      * @param array $debug
      * @return \system\Response
@@ -132,7 +135,28 @@ if (!function_exists('json')) {
             throw new \system\JumpException($response);
         }
 
-        $response = new \system\Response($data, (int)$code, $msg, $debug);
+        // 兼容老写法：json('success', 1) / json('xxx', 0)
+        // 当 $code 不是合法 HTTP 状态码时，视为业务 code，HTTP 固定 200
+        $httpCode = (int)$code;
+        $isValidHttpCode = ($httpCode >= 100 && $httpCode <= 599);
+
+        if (!$isValidHttpCode) {
+            // 兼容 env.php 旧语义：字符串且未传 msg 时，视为 msg
+            if (is_string($data) && $msg === null) {
+                $msg = $data;
+                $data = '';
+            }
+            $payload = [
+                'data' => $data,
+                'code' => $code,
+                'msg'  => $msg,
+            ];
+            // 直接按旧结构输出，避免再次被 Response 包裹
+            $response = (new \system\Response($payload, 200, null, $debug))->asRaw();
+            throw new \system\JumpException($response);
+        }
+
+        $response = new \system\Response($data, $httpCode, $msg, $debug);
         throw new \system\JumpException($response);
     }
 }
@@ -439,7 +463,7 @@ if (!function_exists('console')) {
         if (defined('WEB_SERVER') || !IS_CLI) {
             return;
         }
-        $message = is_string($message) ? $message : json_encode($message,JSON_UNESCAPED_UNICODE);
+        $message = is_string($message) ? $message : json_encode($message);
         echo system\Console::$type($message);
     }
 }
@@ -678,7 +702,18 @@ function assets($type, $act_type = 'add') {
  */
 function hook($name = '', $params = [], $single = false) {
     $return = [];
-    app('hook')->trigger($name, [$single, $params, &$return]);
+    try {
+        app('hook')->trigger($name, [$single, $params, &$return]);
+    } catch (\JBZoo\Event\ExceptionStop $e) {
+        // 主动中断 hook 链：不视为错误
+    } catch (\Throwable $e) {
+        // 兜底：捕获 Error/TypeError 等，避免无日志直接 502
+        \system\Debug::log_exception($e);
+        if ($single) {
+            return null;
+        }
+        return [];
+    }
     return $single && $return && is_array($return) ? $return[0] : $return;
 }
 
@@ -691,10 +726,12 @@ function abort_hook() {
 }
 
 // 提取公共函数到单独的方法中
-function loadHooks($hooks) {
+function loadHooks($hooks) { 
     foreach ($hooks as $hook) {
+      
         if ($hook['status']) {
             app('hook')->on($hook['hook'], function ($single, $hook_params = [], &$return = null) use ($hook) {
+                
                 //$hook_params 是调用时传的参数  如hook('demo',$hook_params=[])
                 //$config 是配置的参数
                 $config = $hook['config'] ?? [];
@@ -720,15 +757,17 @@ function loadHooks($hooks) {
                             }
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (\JBZoo\Event\ExceptionStop $e) {
+                    // 允许 hook 主动中断，不记为错误
+                    throw $e;
+                } catch (\Throwable $e) {
                     \system\Debug::log_exception($e);
                     $return = $e->getMessage();
                 }
 
                 if ($return === false || ($return && $single)) {
                     throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
-                }
-
+                } 
                 return $return;
             }, $hook['sort']);
         }
