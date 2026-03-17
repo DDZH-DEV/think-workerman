@@ -701,7 +701,7 @@ function assets($type, $act_type = 'add') {
  * @return mixed
  */
 function hook($name = '', $params = [], $single = false) {
-    $return = [];
+    $return = $single ? null : [];
     try {
         app('hook')->trigger($name, [$single, $params, &$return]);
     } catch (\JBZoo\Event\ExceptionStop $e) {
@@ -714,7 +714,7 @@ function hook($name = '', $params = [], $single = false) {
         }
         return [];
     }
-    return $single && $return && is_array($return) ? $return[0] : $return;
+    return $return;
 }
 
 /**
@@ -740,6 +740,10 @@ function loadHooks($hooks) {
                     if (is_array($hook['event']) && isset($hook['event'][1]) && method_exists($hook['event'][0], $hook['event'][1])) {
                         $result = call_user_func_array($hook['event'], [$hook_params, $config, &$return]);
                         if ($result !== null) {
+                            if ($single) {
+                                $return = $result;
+                                throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
+                            }
                             if (is_array($return)) {
                                 $return[] = $result;
                             } else {
@@ -750,6 +754,10 @@ function loadHooks($hooks) {
                         $args = [$hook_params, $config, &$return];
                         $result = call_user_func_array($hook['event'], $args);
                         if ($result !== null) {
+                            if ($single) {
+                                $return = $result;
+                                throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
+                            }
                             if (is_array($return)) {
                                 $return[] = $result;
                             } else {
@@ -765,7 +773,7 @@ function loadHooks($hooks) {
                     $return = $e->getMessage();
                 }
 
-                if ($return === false || ($return && $single)) {
+                if ($return === false) {
                     throw new \JBZoo\Event\ExceptionStop($hook['name'] . '运行结束');
                 } 
                 return $return;
