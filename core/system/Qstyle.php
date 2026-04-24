@@ -1263,6 +1263,22 @@ $template = preg_replace_callback(
                 }
             }
         }
+
+        // 兼容常见模板比较关键字（如 Think 风格）：eq/neq/gt/egt/lt/elt
+        // 避免在模板中写了 {if $a eq 1} 被原样输出成非法 PHP。
+        $operatorMap = array(
+            'eq' => '==',
+            'neq' => '!=',
+            'gt' => '>',
+            'egt' => '>=',
+            'lt' => '<',
+            'elt' => '<='
+        );
+        $condition = preg_replace_callback('/\b(eq|neq|gt|egt|lt|elt)\b/i', function ($matches) use ($operatorMap) {
+            $key = strtolower($matches[1]);
+            return isset($operatorMap[$key]) ? $operatorMap[$key] : $matches[1];
+        }, $condition);
+
         return $condition;
     }
 

@@ -238,17 +238,49 @@ class WebServer {
             } catch (\Throwable $e) {
                 // 捕获所有可抛出的错误 (包括Error和Exception)
                 Debug::log_exception($e);
-                
-                // 检查异常是否包含自定义的状态码
-                $statusCode = property_exists($e, 'statusCode') ? $e->statusCode : 500;
-                
-                $message = APP_DEBUG ? '服务器错误: ' . $e->getMessage() : '服务器内部错误';
-                if ($statusCode !== 500) {
-                    $message = $e->getMessage(); // 对于非500错误，通常可以直接显示消息
+
+                $statusCode = property_exists($e, 'statusCode') ? (int)$e->statusCode : 500;
+                if ($statusCode < 100 || $statusCode > 599) {
+                    $statusCode = 500;
                 }
-                
-                // 发生未捕获异常时，创建一个响应
-                $response = new Response(null, $statusCode, $message);
+
+                $isAjax = (bool)g('IS_AJAX');
+
+                if ($isAjax) {
+                    // AJAX：保持 JSON；调试模式下附带堆栈，便于前端/接口联调
+                    $msg = APP_DEBUG ? ('服务器错误: ' . $e->getMessage()) : '服务器内部错误';
+                    $debug = [];
+                    if (APP_DEBUG) {
+                        $debug = [
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                            'trace' => $e->getTraceAsString(),
+                        ];
+                    }
+                    $response = new Response(null, $statusCode, $msg, $debug);
+                } else {
+                    // 普通页面请求：输出完整 HTML（调试模式下含 getTraceAsString），避免浏览器只看到一段 JSON
+                    if (APP_DEBUG) {
+                        $esc = static function ($s) {
+                            return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        };
+                        $body = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
+                            . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+                            . '<title>Application Error</title></head><body style="font-family:system-ui,sans-serif;padding:16px;">'
+                            . '<h1 style="margin:0 0 12px;">服务器错误</h1>'
+                            . '<p style="margin:0 0 8px;"><strong>' . $esc($e->getMessage()) . '</strong></p>'
+                            . '<p style="color:#666;font-size:14px;margin:0 0 16px;">' . $esc($e->getFile()) . ':' . (int)$e->getLine() . '</p>'
+                            . '<pre style="background:#f6f8fa;border:1px solid #ddd;border-radius:6px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45;">'
+                            . $esc($e->getTraceAsString())
+                            . '</pre></body></html>';
+                    } else {
+                        $body = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>Error</title></head><body>'
+                            . '<p>服务器内部错误</p></body></html>';
+                    }
+                    $response = (new Response($body, $statusCode, ''))
+                        ->asRaw()
+                        ->withHeader('Content-Type', 'text/html; charset=utf-8');
+                }
             }
             
             // 将控制器返回的结果（可能是Response对象或旧的输出）传递给response方法
